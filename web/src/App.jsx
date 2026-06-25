@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps'
 import './App.css'
 
@@ -24,7 +24,7 @@ const STYLE_LABELS = {
 
 function SprayCan({ color, size = 28 }) {
   return (
-    <svg width={size} height={size * 1.35} viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width={size} height={size * 1.35} viewBox="0 0 24 32" fill="none">
       <circle cx="20" cy="4" r="1.2" fill={color} opacity="0.7"/>
       <circle cx="22" cy="7" r="1" fill={color} opacity="0.5"/>
       <circle cx="19" cy="8" r="0.8" fill={color} opacity="0.4"/>
@@ -38,24 +38,11 @@ function SprayCan({ color, size = 28 }) {
   )
 }
 
-function GraffitiMarker({ graffiti, onClick, isSelected }) {
-  const color = STYLE_COLORS[graffiti.style] || '#888'
-  return (
-    <AdvancedMarker
-      position={{ lat: graffiti.lat, lng: graffiti.lng }}
-      onClick={() => onClick(graffiti)}
-      zIndex={isSelected ? 100 : 1}
-    >
-      <SprayCan color={color} size={isSelected ? 32 : 22} />
-    </AdvancedMarker>
-  )
-}
-
 function StreetViewPanel({ selected, apiKey }) {
   if (!selected) {
     return (
       <div className="sv-empty">
-        <SprayCan color="#ccc" size={36} />
+        <SprayCan color="#444" size={36} />
         <p>Select a marker to view Street View</p>
       </div>
     )
@@ -63,35 +50,52 @@ function StreetViewPanel({ selected, apiKey }) {
   const svUrl = `https://www.google.com/maps/embed/v1/streetview?key=${apiKey}&location=${selected.lat},${selected.lng}&fov=90&pitch=0`
   return (
     <div className="sv-panel">
-      <div className="sv-label">Street View</div>
-      <iframe
-        title="Street View"
-        src={svUrl}
-        allowFullScreen
-        loading="lazy"
-        referrerPolicy="no-referrer-when-downgrade"
-      />
+      <iframe title="Street View" src={svUrl} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
     </div>
   )
 }
 
-function Sidebar({ graffiti, selected, onSelect, loading, filters, onFilterChange }) {
+function Sidebar({ graffiti, allGraffiti, selected, onSelect, loading, filters, onFilterChange }) {
+  const [imgExpanded, setImgExpanded] = useState(false)
+  useEffect(() => { setImgExpanded(false) }, [selected])
+
   const total = graffiti.length
   const typeCounts = {}
   const sizeCounts = { small: 0, medium: 0, large: 0 }
+  const yearSet = new Set()
 
-  graffiti.forEach(g => {
+  allGraffiti.forEach(g => {
     typeCounts[g.style] = (typeCounts[g.style] || 0) + 1
-    if (!g.size_m2 || g.size_m2 < 0.5) sizeCounts.small++
-    else if (g.size_m2 < 2.0) sizeCounts.medium++
+    const s = g.size_m2 || 0
+    if (s < 0.5) sizeCounts.small++
+    else if (s < 2.0) sizeCounts.medium++
     else sizeCounts.large++
+    if (g.year) yearSet.add(g.year)
   })
 
-  const toggleFilter = (key, value) => {
-    onFilterChange(prev => ({
-      ...prev,
-      [key]: prev[key] === value ? null : value
-    }))
+  const years = Array.from(yearSet).sort()
+
+  const toggleStyle = (style) => onFilterChange(prev => {
+    const styles = new Set(prev.styles)
+    styles.has(style) ? styles.delete(style) : styles.add(style)
+    return { ...prev, styles }
+  })
+
+  const toggleSize = (size) => onFilterChange(prev => {
+    const sizes = new Set(prev.sizes)
+    sizes.has(size) ? sizes.delete(size) : sizes.add(size)
+    return { ...prev, sizes }
+  })
+
+  const toggleYear = (year) => onFilterChange(prev => {
+    const yr = new Set(prev.years)
+    yr.has(year) ? yr.delete(year) : yr.add(year)
+    return { ...prev, years: yr }
+  })
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return null
+    return new Date(dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
   }
 
   return (
@@ -110,85 +114,109 @@ function Sidebar({ graffiti, selected, onSelect, loading, filters, onFilterChang
           <span className="stat-lbl">In view</span>
         </div>
         <div className="stat-box">
-          <span className="stat-num">
-            {graffiti.reduce((a, g) => a + (g.size_m2 || 0), 0).toFixed(0)}
-          </span>
+          <span className="stat-num">{graffiti.reduce((a, g) => a + (g.size_m2 || 0), 0).toFixed(0)}</span>
           <span className="stat-lbl">m&#178; flagged</span>
         </div>
       </div>
 
       <div className="filter-section">
-        <div className="filter-label">
-          TYPE <span className="filter-hint">click to filter</span>
-        </div>
+        <div className="filter-label">TYPE <span className="filter-hint">toggle to filter</span></div>
         <div className="filter-row">
-          {['tag', 'throwup', 'piece'].map(style => (
-            <button
-              key={style}
-              className={'filter-btn' + (filters.style === style ? ' active' : '')}
-              style={{
-                borderColor: filters.style === style ? STYLE_COLORS[style] : 'transparent',
-                background: filters.style === style ? STYLE_COLORS[style] + '18' : '#fff',
-              }}
-              onClick={() => toggleFilter('style', style)}
-            >
-              <span className="filter-dot" style={{ background: STYLE_COLORS[style] }} />
-              <span className="filter-count">{typeCounts[style] || 0}</span>
-              <span className="filter-name">{STYLE_LABELS[style]}</span>
-            </button>
-          ))}
+          {['tag', 'throwup', 'piece'].map(style => {
+            const active = filters.styles.has(style)
+            return (
+              <button key={style} className={'filter-btn' + (active ? ' active' : '')}
+                style={{ borderColor: active ? STYLE_COLORS[style] : '#E0DDCF', background: active ? STYLE_COLORS[style] + '18' : '#fff' }}
+                onClick={() => toggleStyle(style)}>
+                <span className="filter-dot" style={{ background: STYLE_COLORS[style] }} />
+                <span className="filter-count">{typeCounts[style] || 0}</span>
+                <span className="filter-name">{STYLE_LABELS[style]}</span>
+              </button>
+            )
+          })}
         </div>
       </div>
 
       <div className="filter-section">
-        <div className="filter-label">SIZE</div>
+        <div className="filter-label">SIZE <span className="filter-hint">toggle to filter</span></div>
         <div className="filter-row">
           {[
             { key: 'small', label: 'Small', sub: '< 0.5 m\u00B2' },
             { key: 'medium', label: 'Medium', sub: '0.5\u20132 m\u00B2' },
             { key: 'large', label: 'Large', sub: '\u22652 m\u00B2' },
-          ].map(({ key, label, sub }) => (
-            <button
-              key={key}
-              className={'filter-btn' + (filters.size === key ? ' active' : '')}
-              style={{
-                borderColor: filters.size === key ? '#E85D26' : 'transparent',
-                background: filters.size === key ? '#E85D2618' : '#fff',
-              }}
-              onClick={() => toggleFilter('size', key)}
-            >
-              <span className="filter-count">{sizeCounts[key]}</span>
-              <span className="filter-name">{label}</span>
-              <span className="filter-sub">{sub}</span>
-            </button>
-          ))}
+          ].map(({ key, label, sub }) => {
+            const active = filters.sizes.has(key)
+            return (
+              <button key={key} className={'filter-btn' + (active ? ' active' : '')}
+                style={{ borderColor: active ? '#E85D26' : '#E0DDCF', background: active ? '#E85D2618' : '#fff' }}
+                onClick={() => toggleSize(key)}>
+                <span className="filter-count">{sizeCounts[key]}</span>
+                <span className="filter-name">{label}</span>
+                <span className="filter-sub">{sub}</span>
+              </button>
+            )
+          })}
         </div>
       </div>
+
+      {years.length > 1 && (
+        <div className="filter-section">
+          <div className="filter-label">YEAR <span className="filter-hint">toggle to filter</span></div>
+          <div className="filter-row">
+            {years.map(year => {
+              const active = filters.years.has(year)
+              return (
+                <button key={year} className={'filter-btn' + (active ? ' active' : '')}
+                  style={{ borderColor: active ? '#1A1917' : '#E0DDCF', background: active ? '#1A191718' : '#fff' }}
+                  onClick={() => toggleYear(year)}>
+                  <span className="filter-count">{year}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="detail-wrap">
         {selected ? (
           <div className="detail">
-            <button className="back-btn" onClick={() => onSelect(null)}>
-              &#8592; Back
-            </button>
+            <button className="back-btn" onClick={() => onSelect(null)}>&#8592; Back</button>
             {selected.image_url && (
-              <div className="detail-img">
-                <img src={selected.image_url} alt="Cube face" />
-              </div>
+              <>
+                <div className="detail-img" onClick={() => setImgExpanded(true)}>
+                  <img src={selected.image_url} alt="Cube face" />
+                  {selected.date_observed && <div className="img-date">{formatDate(selected.date_observed)}</div>}
+                  <div className="img-expand-hint">&#8599; enlarge</div>
+                </div>
+                {imgExpanded && (
+                  <div className="img-overlay" onClick={() => setImgExpanded(false)}>
+                    <div className="img-overlay-inner" onClick={e => e.stopPropagation()}>
+                      <button className="img-overlay-close" onClick={() => setImgExpanded(false)}>&#x2715;</button>
+                      <img src={selected.image_url} alt="Cube face enlarged" />
+                      {selected.date_observed && (
+                        <div className="img-overlay-date">{formatDate(selected.date_observed)}</div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
             <div className="detail-body">
-              <div className="detail-top">
-                <span className="style-badge" style={{ background: STYLE_COLORS[selected.style] || '#888' }}>
-                  {STYLE_LABELS[selected.style] || selected.style}
-                </span>
-                <span className="verified">&#10003; GraffitiAtlas</span>
-              </div>
+              <span className="style-badge" style={{ background: STYLE_COLORS[selected.style] || '#888' }}>
+                {STYLE_LABELS[selected.style] || selected.style}
+              </span>
               <p className="detail-desc">{selected.description_fr}</p>
               <div className="meta-box">
                 {selected.city && (
                   <div className="meta-row">
                     <span className="meta-lbl">City</span>
                     <span className="meta-val" style={{ textTransform: 'capitalize' }}>{selected.city}</span>
+                  </div>
+                )}
+                {selected.date_observed && (
+                  <div className="meta-row">
+                    <span className="meta-lbl">Captured</span>
+                    <span className="meta-val">{formatDate(selected.date_observed)}</span>
                   </div>
                 )}
                 {selected.size_m2 && (
@@ -209,22 +237,12 @@ function Sidebar({ graffiti, selected, onSelect, loading, filters, onFilterChang
                 </div>
               </div>
               <div className="action-btns">
-                <a
-                  className="action-btn gsv"
+                <a className="action-btn gsv"
                   href={'https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=' + selected.lat + ',' + selected.lng}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Google Street View &#8599;
-                </a>
-                <a
-                  className="action-btn pano"
+                  target="_blank" rel="noreferrer">Google Street View &#8599;</a>
+                <a className="action-btn pano"
                   href={'https://panoramax.ign.fr/#focus=map&map=17/' + selected.lat + '/' + selected.lng}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Panoramax &#8599;
-                </a>
+                  target="_blank" rel="noreferrer">Panoramax &#8599;</a>
               </div>
             </div>
           </div>
@@ -232,13 +250,9 @@ function Sidebar({ graffiti, selected, onSelect, loading, filters, onFilterChang
           <div className="no-selection">
             <SprayCan color="#D0CEC8" size={36} />
             <p className="no-sel-title">No detection selected.</p>
-            <p className="no-sel-sub">Click a spray-can marker to see all flagged faces, evidence images and details here.</p>
+            <p className="no-sel-sub">Click a spray-can marker to see flagged faces, evidence images and details here.</p>
             <div className="pano-credit">
-              <span>
-                360&#176; imagery sourced from{' '}
-                <a href="https://panoramax.ign.fr" target="_blank" rel="noreferrer">Panoramax</a>
-                {' '}(IGN open data) and scanned by Rando360. Google Street View is for reference only.
-              </span>
+              <span>360&#176; imagery sourced from <a href="https://panoramax.ign.fr" target="_blank" rel="noreferrer">Panoramax</a> (IGN open data) and scanned by Rando360. Google Street View is for reference only.</span>
             </div>
           </div>
         )}
@@ -252,35 +266,31 @@ export default function App() {
   const [allGraffiti, setAllGraffiti] = useState([])
   const [selected, setSelected] = useState(null)
   const [loading, setLoading] = useState(false)
-  const [filters, setFilters] = useState({ style: null, size: null })
+  const [filters, setFilters] = useState({ styles: new Set(), sizes: new Set(), years: new Set() })
 
   const fetchGraffiti = useCallback(async (bounds) => {
     if (!bounds) return
     setLoading(true)
     try {
       const { north, south, east, west } = bounds
-      const res = await fetch(
-        API_URL + '/map/graffiti?north=' + north + '&south=' + south + '&east=' + east + '&west=' + west
-      )
+      const res = await fetch(API_URL + '/map/graffiti?north=' + north + '&south=' + south + '&east=' + east + '&west=' + west)
       const data = await res.json()
       setAllGraffiti(data.features)
-    } catch (err) {
-      console.error('Failed to fetch graffiti:', err)
-    } finally {
-      setLoading(false)
-    }
+    } catch (err) { console.error(err) }
+    finally { setLoading(false) }
   }, [])
 
-  const handleBoundsChanged = useCallback((event) => {
-    fetchGraffiti(event.detail.bounds)
-  }, [fetchGraffiti])
+  const handleBoundsChanged = useCallback((e) => fetchGraffiti(e.detail.bounds), [fetchGraffiti])
 
   const filtered = allGraffiti.filter(g => {
-    if (filters.style && g.style !== filters.style) return false
-    if (filters.size) {
-      if (filters.size === 'small' && (g.size_m2 || 0) >= 0.5) return false
-      if (filters.size === 'medium' && ((g.size_m2 || 0) < 0.5 || (g.size_m2 || 0) >= 2.0)) return false
-      if (filters.size === 'large' && (g.size_m2 || 0) < 2.0) return false
+    if (filters.styles.size > 0 && !filters.styles.has(g.style)) return false
+    if (filters.years.size > 0 && !filters.years.has(g.year)) return false
+    if (filters.sizes.size > 0) {
+      const s = g.size_m2 || 0
+      const ok = (filters.sizes.has('small') && s < 0.5)
+        || (filters.sizes.has('medium') && s >= 0.5 && s < 2.0)
+        || (filters.sizes.has('large') && s >= 2.0)
+      if (!ok) return false
     }
     return true
   })
@@ -289,6 +299,7 @@ export default function App() {
     <div className="app">
       <Sidebar
         graffiti={filtered}
+        allGraffiti={allGraffiti}
         selected={selected}
         onSelect={setSelected}
         loading={loading}
@@ -305,14 +316,22 @@ export default function App() {
               mapId="graffiti-atlas-map"
               style={{ width: '100%', height: '100%' }}
               onBoundsChanged={handleBoundsChanged}
+              mapTypeControl={false}
+              streetViewControl={false}
+              fullscreenControl={false}
             >
               {filtered.map(g => (
-                <GraffitiMarker
+                <AdvancedMarker
                   key={g.id}
-                  graffiti={g}
-                  onClick={setSelected}
-                  isSelected={selected?.id === g.id}
-                />
+                  position={{ lat: g.lat, lng: g.lng }}
+                  onClick={() => setSelected(g)}
+                  zIndex={selected?.id === g.id ? 100 : 1}
+                >
+                  <SprayCan
+                    color={STYLE_COLORS[g.style] || '#888'}
+                    size={selected?.id === g.id ? 32 : 22}
+                  />
+                </AdvancedMarker>
               ))}
             </Map>
           </APIProvider>

@@ -22,12 +22,9 @@ def get_map_graffiti(
     style: str = Query(None),
 ):
     supabase = get_supabase()
-
     result = supabase.rpc("get_graffiti_in_bbox", {
-        "min_lat": south,
-        "min_lng": west,
-        "max_lat": north,
-        "max_lng": east,
+        "min_lat": south, "min_lng": west,
+        "max_lat": north, "max_lng": east,
     }).execute()
 
     features = []
@@ -35,6 +32,8 @@ def get_map_graffiti(
         s3_key = r.get("s3_key_full", "")
         image_url = f"{CLOUDFRONT}/{s3_key}" if s3_key else None
         display_source = "GraffitiAtlas" if r.get("source") == "rando360" else "Community"
+        date = r.get("date_observed")
+        year = str(date)[:4] if date else None
 
         features.append({
             "id": r["id"],
@@ -47,18 +46,16 @@ def get_map_graffiti(
             "description_fr": r.get("description_fr"),
             "image_url": image_url,
             "source": display_source,
+            "date_observed": str(date) if date else None,
+            "year": year,
         })
 
-    # Apply filters
     if city:
         features = [f for f in features if f["city"] == city]
     if style:
         features = [f for f in features if f["style"] == style]
 
-    return {
-        "count": len(features),
-        "features": features
-    }
+    return {"count": len(features), "features": features}
 
 
 @router.get("/cities")

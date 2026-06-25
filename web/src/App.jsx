@@ -43,7 +43,7 @@ function StreetViewPanel({ selected, apiKey }) {
     return (
       <div className="sv-empty">
         <SprayCan color="#444" size={36} />
-        <p>Select a marker to view Street View</p>
+        <p>Sélectionnez un marqueur pour voir Street View</p>
       </div>
     )
   }
@@ -57,7 +57,41 @@ function StreetViewPanel({ selected, apiKey }) {
 
 function Sidebar({ graffiti, allGraffiti, selected, onSelect, loading, filters, onFilterChange }) {
   const [imgExpanded, setImgExpanded] = useState(false)
-  useEffect(() => { setImgExpanded(false) }, [selected])
+  const [allImages, setAllImages] = useState([])
+  const [activeImageIdx, setActiveImageIdx] = useState(0)
+  const [loadingImages, setLoadingImages] = useState(false)
+
+  // Reset when selection changes
+  useEffect(() => {
+    setImgExpanded(false)
+    setAllImages([])
+    setActiveImageIdx(0)
+
+    if (!selected) return
+
+    // Fetch all images for this graffiti point
+    setLoadingImages(true)
+    fetch(API_URL + '/graffiti/' + selected.id + '/images')
+      .then(r => r.json())
+      .then(data => {
+        // Deduplicate by image_url — group classifications under each unique face
+        const seen = {}
+        const faces = []
+        data.images.forEach(img => {
+          if (!seen[img.image_url]) {
+            seen[img.image_url] = { ...img, detections: [img] }
+            faces.push(seen[img.image_url])
+          } else {
+            seen[img.image_url].detections.push(img)
+          }
+        })
+        setAllImages(faces)
+      })
+      .catch(err => console.error(err))
+      .finally(() => setLoadingImages(false))
+  }, [selected])
+
+  const activeImage = allImages[activeImageIdx] || null
 
   const total = graffiti.length
   const typeCounts = {}
@@ -111,16 +145,16 @@ function Sidebar({ graffiti, allGraffiti, selected, onSelect, loading, filters, 
       <div className="stats-grid">
         <div className="stat-box">
           <span className="stat-num">{total}</span>
-          <span className="stat-lbl">In view</span>
+          <span className="stat-lbl">En vue</span>
         </div>
         <div className="stat-box">
           <span className="stat-num">{graffiti.reduce((a, g) => a + (g.size_m2 || 0), 0).toFixed(0)}</span>
-          <span className="stat-lbl">m&#178; flagged</span>
+          <span className="stat-lbl">m&#178; détectés</span>
         </div>
       </div>
 
       <div className="filter-section">
-        <div className="filter-label">TYPE <span className="filter-hint">toggle to filter</span></div>
+        <div className="filter-label">TYPE <span className="filter-hint">filtrer</span></div>
         <div className="filter-row">
           {['tag', 'throwup', 'piece'].map(style => {
             const active = filters.styles.has(style)
@@ -138,12 +172,12 @@ function Sidebar({ graffiti, allGraffiti, selected, onSelect, loading, filters, 
       </div>
 
       <div className="filter-section">
-        <div className="filter-label">SIZE <span className="filter-hint">toggle to filter</span></div>
+        <div className="filter-label">TAILLE <span className="filter-hint">filtrer</span></div>
         <div className="filter-row">
           {[
-            { key: 'small', label: 'Small', sub: '< 0.5 m\u00B2' },
-            { key: 'medium', label: 'Medium', sub: '0.5\u20132 m\u00B2' },
-            { key: 'large', label: 'Large', sub: '\u22652 m\u00B2' },
+            { key: 'small', label: 'Petit', sub: '< 0.5 m\u00B2' },
+            { key: 'medium', label: 'Moyen', sub: '0.5\u20132 m\u00B2' },
+            { key: 'large', label: 'Grand', sub: '\u22652 m\u00B2' },
           ].map(({ key, label, sub }) => {
             const active = filters.sizes.has(key)
             return (
@@ -161,7 +195,7 @@ function Sidebar({ graffiti, allGraffiti, selected, onSelect, loading, filters, 
 
       {years.length > 1 && (
         <div className="filter-section">
-          <div className="filter-label">YEAR <span className="filter-hint">toggle to filter</span></div>
+          <div className="filter-label">ANNÉE <span className="filter-hint">filtrer</span></div>
           <div className="filter-row">
             {years.map(year => {
               const active = filters.years.has(year)
@@ -180,19 +214,66 @@ function Sidebar({ graffiti, allGraffiti, selected, onSelect, loading, filters, 
       <div className="detail-wrap">
         {selected ? (
           <div className="detail">
-            <button className="back-btn" onClick={() => onSelect(null)}>&#8592; Back</button>
-            {selected.image_url && (
+            <button className="back-btn" onClick={() => onSelect(null)}>&#8592; Retour</button>
+
+            {/* Main image */}
+            {loadingImages ? (
+              <div className="img-loading">Chargement des images...</div>
+            ) : activeImage ? (
               <>
                 <div className="detail-img" onClick={() => setImgExpanded(true)}>
-                  <img src={selected.image_url} alt="Cube face" />
-                  {selected.date_observed && <div className="img-date">{formatDate(selected.date_observed)}</div>}
-                  <div className="img-expand-hint">&#8599; enlarge</div>
+                  <img src={activeImage.image_url} alt="Cube face" />
+                  {selected.date_observed && (
+                    <div className="img-date">{formatDate(selected.date_observed)}</div>
+                  )}
+                  <div className="img-expand-hint">&#8599; agrandir</div>
                 </div>
+
+                {/* Thumbnail strip — only show if more than 1 face */}
+                {allImages.length > 1 && (
+                  <div className="thumb-strip">
+                    {allImages.map((img, idx) => {
+                      const primaryStyle = img.detections[0]?.style
+                      const color = STYLE_COLORS[primaryStyle] || '#888'
+                      return (
+                        <div
+                          key={idx}
+                          className={'thumb-item' + (idx === activeImageIdx ? ' active' : '')}
+                          onClick={() => setActiveImageIdx(idx)}
+                          style={{ borderColor: idx === activeImageIdx ? color : 'transparent' }}
+                        >
+                          <img src={img.image_url} alt={'Face ' + (idx + 1)} />
+                          <div className="thumb-dot" style={{ background: color }} />
+                          <div className="thumb-count">
+                            {img.detections.length > 1 ? img.detections.length + ' détections' : STYLE_LABELS[primaryStyle] || primaryStyle}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+
+                {/* Floating overlay */}
                 {imgExpanded && (
                   <div className="img-overlay" onClick={() => setImgExpanded(false)}>
                     <div className="img-overlay-inner" onClick={e => e.stopPropagation()}>
                       <button className="img-overlay-close" onClick={() => setImgExpanded(false)}>&#x2715;</button>
-                      <img src={selected.image_url} alt="Cube face enlarged" />
+                      {allImages.length > 1 && (
+                        <button className="img-overlay-arrow left"
+                          onClick={e => { e.stopPropagation(); setActiveImageIdx(i => (i - 1 + allImages.length) % allImages.length) }}>
+                          &#8592;
+                        </button>
+                      )}
+                      <img src={activeImage.image_url} alt="Agrandie" />
+                      {allImages.length > 1 && (
+                        <div className="img-overlay-counter">{activeImageIdx + 1} / {allImages.length}</div>
+                      )}
+                      {allImages.length > 1 && (
+                        <button className="img-overlay-arrow right"
+                          onClick={e => { e.stopPropagation(); setActiveImageIdx(i => (i + 1) % allImages.length) }}>
+                          &#8594;
+                        </button>
+                      )}
                       {selected.date_observed && (
                         <div className="img-overlay-date">{formatDate(selected.date_observed)}</div>
                       )}
@@ -200,29 +281,33 @@ function Sidebar({ graffiti, allGraffiti, selected, onSelect, loading, filters, 
                   </div>
                 )}
               </>
-            )}
+            ) : null}
+
             <div className="detail-body">
-              <span className="style-badge" style={{ background: STYLE_COLORS[selected.style] || '#888' }}>
-                {STYLE_LABELS[selected.style] || selected.style}
-              </span>
-              <p className="detail-desc">{selected.description_fr}</p>
+              {/* Show all detections for active face */}
+              {activeImage && activeImage.detections.map((det, idx) => (
+                <div key={idx} className="detection-item">
+                  <span className="style-badge" style={{ background: STYLE_COLORS[det.style] || '#888' }}>
+                    {STYLE_LABELS[det.style] || det.style}
+                  </span>
+                  {det.size_m2 && (
+                    <span className="det-size">{det.size_m2} m&#178;</span>
+                  )}
+                  <p className="detail-desc">{det.description_fr}</p>
+                </div>
+              ))}
+
               <div className="meta-box">
                 {selected.city && (
                   <div className="meta-row">
-                    <span className="meta-lbl">City</span>
+                    <span className="meta-lbl">Ville</span>
                     <span className="meta-val" style={{ textTransform: 'capitalize' }}>{selected.city}</span>
                   </div>
                 )}
                 {selected.date_observed && (
                   <div className="meta-row">
-                    <span className="meta-lbl">Captured</span>
+                    <span className="meta-lbl">Capturé le</span>
                     <span className="meta-val">{formatDate(selected.date_observed)}</span>
-                  </div>
-                )}
-                {selected.size_m2 && (
-                  <div className="meta-row">
-                    <span className="meta-lbl">Size</span>
-                    <span className="meta-val">{selected.size_m2} m&#178;</span>
                   </div>
                 )}
                 {selected.surface_type && (
@@ -236,6 +321,7 @@ function Sidebar({ graffiti, allGraffiti, selected, onSelect, loading, filters, 
                   <span className="meta-val">{selected.lat.toFixed(5)}, {selected.lng.toFixed(5)}</span>
                 </div>
               </div>
+
               <div className="action-btns">
                 <a className="action-btn gsv"
                   href={'https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=' + selected.lat + ',' + selected.lng}
@@ -249,10 +335,10 @@ function Sidebar({ graffiti, allGraffiti, selected, onSelect, loading, filters, 
         ) : (
           <div className="no-selection">
             <SprayCan color="#D0CEC8" size={36} />
-            <p className="no-sel-title">No detection selected.</p>
-            <p className="no-sel-sub">Click a spray-can marker to see flagged faces, evidence images and details here.</p>
+            <p className="no-sel-title">Aucune détection sélectionnée.</p>
+            <p className="no-sel-sub">Cliquez sur un marqueur pour voir les images et détails ici.</p>
             <div className="pano-credit">
-              <span>360&#176; imagery sourced from <a href="https://panoramax.ign.fr" target="_blank" rel="noreferrer">Panoramax</a> (IGN open data) and scanned by Rando360. Google Street View is for reference only.</span>
+              <span>Images 360&#176; fournies par <a href="https://panoramax.ign.fr" target="_blank" rel="noreferrer">Panoramax</a> (IGN, données ouvertes), scannées par Rando360. Google Street View est fourni à titre de référence.</span>
             </div>
           </div>
         )}

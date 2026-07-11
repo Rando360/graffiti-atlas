@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect } from 'react'
-import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps'
+import { useState, useCallback, useEffect, useRef } from 'react'
+import { APIProvider, Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
 import './App.css'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
@@ -38,6 +38,101 @@ function SprayCan({ color, size = 28 }) {
   )
 }
 
+// ── SEARCH BAR ────────────────────────────────────────
+function SearchBar({ onResult }) {
+  const [query, setQuery] = useState('')
+  const [suggestions, setSuggestions] = useState([])
+  const [loading, setLoading] = useState(false)
+  const debounceRef = useRef(null)
+
+  const search = useCallback(async (q) => {
+    if (q.length < 3) { setSuggestions([]); return }
+    setLoading(true)
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&countrycodes=fr&accept-language=fr`
+      )
+      const data = await res.json()
+      setSuggestions(data)
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  const handleChange = (e) => {
+    const v = e.target.value
+    setQuery(v)
+    clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => search(v), 350)
+  }
+
+  const handleSelect = (item) => {
+    setQuery(item.display_name.split(',').slice(0, 2).join(','))
+    setSuggestions([])
+    onResult({ lat: parseFloat(item.lat), lng: parseFloat(item.lon), name: item.display_name })
+  }
+
+  return (
+    <div className="search-wrap">
+      <div className="search-box">
+        <span className="search-icon">&#128269;</span>
+        <input
+          type="text"
+          placeholder="Rechercher une ville ou une adresse..."
+          value={query}
+          onChange={handleChange}
+          onKeyDown={e => e.key === 'Escape' && setSuggestions([])}
+        />
+        {loading && <span className="search-spinner" />}
+        {query && <button className="search-clear" onClick={() => { setQuery(''); setSuggestions([]) }}>&#x2715;</button>}
+      </div>
+      {suggestions.length > 0 && (
+        <div className="search-dropdown">
+          {suggestions.map((s, i) => (
+            <div key={i} className="search-item" onClick={() => handleSelect(s)}>
+              <span className="search-item-main">{s.display_name.split(',')[0]}</span>
+              <span className="search-item-sub">{s.display_name.split(',').slice(1, 3).join(',')}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── HEADER ────────────────────────────────────────────
+function Header({ onSearchResult }) {
+  return (
+    <header className="app-header">
+      <div className="header-logo">
+        <SprayCan color="#E85D26" size={22} />
+        <span className="header-title">GraffitiAtlas</span>
+      </div>
+      <div className="header-center">
+        <SearchBar onResult={onSearchResult} />
+      </div>
+      <div className="header-right">
+        <button className="header-btn">&#9881; Paramètres</button>
+        <button className="header-btn primary">Connexion</button>
+      </div>
+    </header>
+  )
+}
+
+// ── MAP PAN CONTROLLER ────────────────────────────────
+function MapController({ panTo }) {
+  const map = useMap()
+  useEffect(() => {
+    if (!map || !panTo) return
+    map.panTo({ lat: panTo.lat, lng: panTo.lng })
+    map.setZoom(15)
+  }, [map, panTo])
+  return null
+}
+
+// ── STREET VIEW ───────────────────────────────────────
 function StreetViewPanel({ selected, apiKey }) {
   if (!selected) {
     return (
@@ -55,26 +150,103 @@ function StreetViewPanel({ selected, apiKey }) {
   )
 }
 
+// ── ZOOMABLE IMAGE OVERLAY ────────────────────────────
+function ZoomableOverlay({ images, activeIdx, onClose, onPrev, onNext, dateStr }) {
+  const [scale, setScale] = useState(1)
+  const [pos, setPos] = useState({ x: 0, y: 0 })
+  const [dragging, setDragging] = useState(false)
+  const dragStart = useRef(null)
+  const imgRef = useRef(null)
+
+  // Reset zoom when image changes
+  useEffect(() => { setScale(1); setPos({ x: 0, y: 0 }) }, [activeIdx])
+
+  const handleWheel = (e) => {
+    e.preventDefault()
+    setScale(s => Math.min(5, Math.max(1, s - e.deltaY * 0.005)))
+  }
+
+  const handleMouseDown = (e) => {
+    if (scale <= 1) return
+    setDragging(true)
+    dragStart.current = { x: e.clientX - pos.x, y: e.clientY - pos.y }
+  }
+
+  const handleMouseMove = (e) => {
+    if (!dragging) return
+    setPos({ x: e.clientX - dragStart.current.x, y: e.clientY - dragStart.current.y })
+  }
+
+  const handleMouseUp = () => setDragging(false)
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return null
+    return new Date(dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+  }
+
+  const activeImage = images[activeIdx]
+
+  return (
+    <div className="img-overlay" onClick={onClose}>
+      <div className="img-overlay-inner" onClick={e => e.stopPropagation()}>
+        <button className="img-overlay-close" onClick={onClose}>&#x2715;</button>
+
+        {images.length > 1 && (
+          <button className="img-overlay-arrow left" onClick={e => { e.stopPropagation(); onPrev() }}>&#8592;</button>
+        )}
+
+        <div
+          className="img-zoom-container"
+          onWheel={handleWheel}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          style={{ cursor: scale > 1 ? (dragging ? 'grabbing' : 'grab') : 'zoom-in' }}
+        >
+          <img
+            ref={imgRef}
+            src={activeImage.image_url}
+            alt="Graffiti agrandi"
+            style={{
+              transform: `scale(${scale}) translate(${pos.x / scale}px, ${pos.y / scale}px)`,
+              transition: dragging ? 'none' : 'transform 0.1s',
+            }}
+          />
+        </div>
+
+        {images.length > 1 && (
+          <button className="img-overlay-arrow right" onClick={e => { e.stopPropagation(); onNext() }}>&#8594;</button>
+        )}
+
+        <div className="img-overlay-footer">
+          {images.length > 1 && (
+            <span className="img-overlay-counter">{activeIdx + 1} / {images.length}</span>
+          )}
+          {dateStr && <span className="img-overlay-date">{formatDate(dateStr)}</span>}
+          <span className="img-zoom-hint">Scroll pour zoomer · Glisser pour déplacer</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── SIDEBAR ───────────────────────────────────────────
 function Sidebar({ graffiti, allGraffiti, selected, onSelect, loading, filters, onFilterChange }) {
   const [imgExpanded, setImgExpanded] = useState(false)
   const [allImages, setAllImages] = useState([])
   const [activeImageIdx, setActiveImageIdx] = useState(0)
   const [loadingImages, setLoadingImages] = useState(false)
 
-  // Reset when selection changes
   useEffect(() => {
     setImgExpanded(false)
     setAllImages([])
     setActiveImageIdx(0)
-
     if (!selected) return
-
-    // Fetch all images for this graffiti point
     setLoadingImages(true)
     fetch(API_URL + '/graffiti/' + selected.id + '/images')
       .then(r => r.json())
       .then(data => {
-        // Deduplicate by image_url — group classifications under each unique face
         const seen = {}
         const faces = []
         data.images.forEach(img => {
@@ -87,7 +259,7 @@ function Sidebar({ graffiti, allGraffiti, selected, onSelect, loading, filters, 
         })
         setAllImages(faces)
       })
-      .catch(err => console.error(err))
+      .catch(console.error)
       .finally(() => setLoadingImages(false))
   }, [selected])
 
@@ -132,16 +304,11 @@ function Sidebar({ graffiti, allGraffiti, selected, onSelect, loading, filters, 
     return new Date(dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
   }
 
+  const prevImage = () => setActiveImageIdx(i => (i - 1 + allImages.length) % allImages.length)
+  const nextImage = () => setActiveImageIdx(i => (i + 1) % allImages.length)
+
   return (
     <div className="sidebar">
-      <div className="sidebar-top">
-        <div className="sidebar-logo">
-          <SprayCan color="#E85D26" size={20} />
-          <span>GraffitiAtlas</span>
-        </div>
-        {loading && <span className="loading-dot" />}
-      </div>
-
       <div className="stats-grid">
         <div className="stat-box">
           <span className="stat-num">{total}</span>
@@ -151,6 +318,7 @@ function Sidebar({ graffiti, allGraffiti, selected, onSelect, loading, filters, 
           <span className="stat-num">{graffiti.reduce((a, g) => a + (g.size_m2 || 0), 0).toFixed(0)}</span>
           <span className="stat-lbl">m&#178; détectés</span>
         </div>
+        {loading && <div className="stat-loading"><span className="loading-dot" /></div>}
       </div>
 
       <div className="filter-section">
@@ -216,32 +384,26 @@ function Sidebar({ graffiti, allGraffiti, selected, onSelect, loading, filters, 
           <div className="detail">
             <button className="back-btn" onClick={() => onSelect(null)}>&#8592; Retour</button>
 
-            {/* Main image */}
             {loadingImages ? (
               <div className="img-loading">Chargement des images...</div>
             ) : activeImage ? (
               <>
                 <div className="detail-img" onClick={() => setImgExpanded(true)}>
                   <img src={activeImage.image_url} alt="Cube face" />
-                  {selected.date_observed && (
-                    <div className="img-date">{formatDate(selected.date_observed)}</div>
-                  )}
+                  {selected.date_observed && <div className="img-date">{formatDate(selected.date_observed)}</div>}
                   <div className="img-expand-hint">&#8599; agrandir</div>
                 </div>
 
-                {/* Thumbnail strip — only show if more than 1 face */}
                 {allImages.length > 1 && (
                   <div className="thumb-strip">
                     {allImages.map((img, idx) => {
                       const primaryStyle = img.detections[0]?.style
                       const color = STYLE_COLORS[primaryStyle] || '#888'
                       return (
-                        <div
-                          key={idx}
+                        <div key={idx}
                           className={'thumb-item' + (idx === activeImageIdx ? ' active' : '')}
                           onClick={() => setActiveImageIdx(idx)}
-                          style={{ borderColor: idx === activeImageIdx ? color : 'transparent' }}
-                        >
+                          style={{ borderColor: idx === activeImageIdx ? color : 'transparent' }}>
                           <img src={img.image_url} alt={'Face ' + (idx + 1)} />
                           <div className="thumb-dot" style={{ background: color }} />
                           <div className="thumb-count">
@@ -253,46 +415,26 @@ function Sidebar({ graffiti, allGraffiti, selected, onSelect, loading, filters, 
                   </div>
                 )}
 
-                {/* Floating overlay */}
                 {imgExpanded && (
-                  <div className="img-overlay" onClick={() => setImgExpanded(false)}>
-                    <div className="img-overlay-inner" onClick={e => e.stopPropagation()}>
-                      <button className="img-overlay-close" onClick={() => setImgExpanded(false)}>&#x2715;</button>
-                      {allImages.length > 1 && (
-                        <button className="img-overlay-arrow left"
-                          onClick={e => { e.stopPropagation(); setActiveImageIdx(i => (i - 1 + allImages.length) % allImages.length) }}>
-                          &#8592;
-                        </button>
-                      )}
-                      <img src={activeImage.image_url} alt="Agrandie" />
-                      {allImages.length > 1 && (
-                        <div className="img-overlay-counter">{activeImageIdx + 1} / {allImages.length}</div>
-                      )}
-                      {allImages.length > 1 && (
-                        <button className="img-overlay-arrow right"
-                          onClick={e => { e.stopPropagation(); setActiveImageIdx(i => (i + 1) % allImages.length) }}>
-                          &#8594;
-                        </button>
-                      )}
-                      {selected.date_observed && (
-                        <div className="img-overlay-date">{formatDate(selected.date_observed)}</div>
-                      )}
-                    </div>
-                  </div>
+                  <ZoomableOverlay
+                    images={allImages}
+                    activeIdx={activeImageIdx}
+                    onClose={() => setImgExpanded(false)}
+                    onPrev={prevImage}
+                    onNext={nextImage}
+                    dateStr={selected.date_observed}
+                  />
                 )}
               </>
             ) : null}
 
             <div className="detail-body">
-              {/* Show all detections for active face */}
               {activeImage && activeImage.detections.map((det, idx) => (
                 <div key={idx} className="detection-item">
                   <span className="style-badge" style={{ background: STYLE_COLORS[det.style] || '#888' }}>
                     {STYLE_LABELS[det.style] || det.style}
                   </span>
-                  {det.size_m2 && (
-                    <span className="det-size">{det.size_m2} m&#178;</span>
-                  )}
+                  {det.size_m2 && <span className="det-size">{det.size_m2} m&#178;</span>}
                   <p className="detail-desc">{det.description_fr}</p>
                 </div>
               ))}
@@ -347,12 +489,14 @@ function Sidebar({ graffiti, allGraffiti, selected, onSelect, loading, filters, 
   )
 }
 
+// ── APP ───────────────────────────────────────────────
 export default function App() {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
   const [allGraffiti, setAllGraffiti] = useState([])
   const [selected, setSelected] = useState(null)
   const [loading, setLoading] = useState(false)
   const [filters, setFilters] = useState({ styles: new Set(), sizes: new Set(), years: new Set() })
+  const [panTo, setPanTo] = useState(null)
 
   const fetchGraffiti = useCallback(async (bounds) => {
     if (!bounds) return
@@ -383,44 +527,45 @@ export default function App() {
 
   return (
     <div className="app">
-      <Sidebar
-        graffiti={filtered}
-        allGraffiti={allGraffiti}
-        selected={selected}
-        onSelect={setSelected}
-        loading={loading}
-        filters={filters}
-        onFilterChange={setFilters}
-      />
-      <div className="right-panel">
-        <StreetViewPanel selected={selected} apiKey={apiKey} />
-        <div className="map-wrap">
-          <APIProvider apiKey={apiKey}>
-            <Map
-              defaultZoom={12}
-              defaultCenter={{ lat: 45.7640, lng: 4.8357 }}
-              mapId="graffiti-atlas-map"
-              style={{ width: '100%', height: '100%' }}
-              onBoundsChanged={handleBoundsChanged}
-              mapTypeControl={false}
-              streetViewControl={false}
-              fullscreenControl={false}
-            >
-              {filtered.map(g => (
-                <AdvancedMarker
-                  key={g.id}
-                  position={{ lat: g.lat, lng: g.lng }}
-                  onClick={() => setSelected(g)}
-                  zIndex={selected?.id === g.id ? 100 : 1}
-                >
-                  <SprayCan
-                    color={STYLE_COLORS[g.style] || '#888'}
-                    size={selected?.id === g.id ? 32 : 22}
-                  />
-                </AdvancedMarker>
-              ))}
-            </Map>
-          </APIProvider>
+      <Header onSearchResult={setPanTo} />
+      <div className="app-body">
+        <Sidebar
+          graffiti={filtered}
+          allGraffiti={allGraffiti}
+          selected={selected}
+          onSelect={setSelected}
+          loading={loading}
+          filters={filters}
+          onFilterChange={setFilters}
+        />
+        <div className="right-panel">
+          <StreetViewPanel selected={selected} apiKey={apiKey} />
+          <div className="map-wrap">
+            <APIProvider apiKey={apiKey}>
+              <Map
+                defaultZoom={12}
+                defaultCenter={{ lat: 45.7640, lng: 4.8357 }}
+                mapId="graffiti-atlas-map"
+                style={{ width: '100%', height: '100%' }}
+                onBoundsChanged={handleBoundsChanged}
+                mapTypeControl={false}
+                streetViewControl={false}
+                fullscreenControl={false}
+              >
+                <MapController panTo={panTo} />
+                {filtered.map(g => (
+                  <AdvancedMarker
+                    key={g.id}
+                    position={{ lat: g.lat, lng: g.lng }}
+                    onClick={() => setSelected(g)}
+                    zIndex={selected?.id === g.id ? 100 : 1}
+                  >
+                    <SprayCan color={STYLE_COLORS[g.style] || '#888'} size={selected?.id === g.id ? 32 : 22} />
+                  </AdvancedMarker>
+                ))}
+              </Map>
+            </APIProvider>
+          </div>
         </div>
       </div>
     </div>

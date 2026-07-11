@@ -1,5 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { APIProvider, Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
+import AuthModal from './AuthModal'
+import { supabase } from './supabase'
 import './App.css'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
@@ -103,7 +105,7 @@ function SearchBar({ onResult }) {
 }
 
 // ── HEADER ────────────────────────────────────────────
-function Header({ onSearchResult }) {
+function Header({ onSearchResult, user, onLoginClick, onLogout }) {
   return (
     <header className="app-header">
       <div className="header-logo">
@@ -115,7 +117,16 @@ function Header({ onSearchResult }) {
       </div>
       <div className="header-right">
         <button className="header-btn">&#9881; Paramètres</button>
-        <button className="header-btn primary">Connexion</button>
+        {user ? (
+          <div className="header-user">
+            <span className="header-username">
+              {user.user_metadata?.full_name || user.email?.split('@')[0]}
+            </span>
+            <button className="header-btn" onClick={onLogout}>Déconnexion</button>
+          </div>
+        ) : (
+          <button className="header-btn primary" onClick={onLoginClick}>Connexion</button>
+        )}
       </div>
     </header>
   )
@@ -156,9 +167,7 @@ function ZoomableOverlay({ images, activeIdx, onClose, onPrev, onNext, dateStr }
   const [pos, setPos] = useState({ x: 0, y: 0 })
   const [dragging, setDragging] = useState(false)
   const dragStart = useRef(null)
-  const imgRef = useRef(null)
 
-  // Reset zoom when image changes
   useEffect(() => { setScale(1); setPos({ x: 0, y: 0 }) }, [activeIdx])
 
   const handleWheel = (e) => {
@@ -190,11 +199,9 @@ function ZoomableOverlay({ images, activeIdx, onClose, onPrev, onNext, dateStr }
     <div className="img-overlay" onClick={onClose}>
       <div className="img-overlay-inner" onClick={e => e.stopPropagation()}>
         <button className="img-overlay-close" onClick={onClose}>&#x2715;</button>
-
         {images.length > 1 && (
           <button className="img-overlay-arrow left" onClick={e => { e.stopPropagation(); onPrev() }}>&#8592;</button>
         )}
-
         <div
           className="img-zoom-container"
           onWheel={handleWheel}
@@ -205,7 +212,6 @@ function ZoomableOverlay({ images, activeIdx, onClose, onPrev, onNext, dateStr }
           style={{ cursor: scale > 1 ? (dragging ? 'grabbing' : 'grab') : 'zoom-in' }}
         >
           <img
-            ref={imgRef}
             src={activeImage.image_url}
             alt="Graffiti agrandi"
             style={{
@@ -214,11 +220,9 @@ function ZoomableOverlay({ images, activeIdx, onClose, onPrev, onNext, dateStr }
             }}
           />
         </div>
-
         {images.length > 1 && (
           <button className="img-overlay-arrow right" onClick={e => { e.stopPropagation(); onNext() }}>&#8594;</button>
         )}
-
         <div className="img-overlay-footer">
           {images.length > 1 && (
             <span className="img-overlay-counter">{activeIdx + 1} / {images.length}</span>
@@ -383,7 +387,6 @@ function Sidebar({ graffiti, allGraffiti, selected, onSelect, loading, filters, 
         {selected ? (
           <div className="detail">
             <button className="back-btn" onClick={() => onSelect(null)}>&#8592; Retour</button>
-
             {loadingImages ? (
               <div className="img-loading">Chargement des images...</div>
             ) : activeImage ? (
@@ -393,7 +396,6 @@ function Sidebar({ graffiti, allGraffiti, selected, onSelect, loading, filters, 
                   {selected.date_observed && <div className="img-date">{formatDate(selected.date_observed)}</div>}
                   <div className="img-expand-hint">&#8599; agrandir</div>
                 </div>
-
                 {allImages.length > 1 && (
                   <div className="thumb-strip">
                     {allImages.map((img, idx) => {
@@ -414,7 +416,6 @@ function Sidebar({ graffiti, allGraffiti, selected, onSelect, loading, filters, 
                     })}
                   </div>
                 )}
-
                 {imgExpanded && (
                   <ZoomableOverlay
                     images={allImages}
@@ -438,7 +439,6 @@ function Sidebar({ graffiti, allGraffiti, selected, onSelect, loading, filters, 
                   <p className="detail-desc">{det.description_fr}</p>
                 </div>
               ))}
-
               <div className="meta-box">
                 {selected.city && (
                   <div className="meta-row">
@@ -463,7 +463,6 @@ function Sidebar({ graffiti, allGraffiti, selected, onSelect, loading, filters, 
                   <span className="meta-val">{selected.lat.toFixed(5)}, {selected.lng.toFixed(5)}</span>
                 </div>
               </div>
-
               <div className="action-btns">
                 <a className="action-btn gsv"
                   href={'https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=' + selected.lat + ',' + selected.lng}
@@ -497,6 +496,19 @@ export default function App() {
   const [loading, setLoading] = useState(false)
   const [filters, setFilters] = useState({ styles: new Set(), sizes: new Set(), years: new Set() })
   const [panTo, setPanTo] = useState(null)
+  const [user, setUser] = useState(null)
+  const [showAuth, setShowAuth] = useState(false)
+
+  // Auth state
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+    })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
 
   const fetchGraffiti = useCallback(async (bounds) => {
     if (!bounds) return
@@ -527,7 +539,13 @@ export default function App() {
 
   return (
     <div className="app">
-      <Header onSearchResult={setPanTo} />
+      <Header
+        onSearchResult={setPanTo}
+        user={user}
+        onLoginClick={() => setShowAuth(true)}
+        onLogout={() => supabase.auth.signOut()}
+      />
+      {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
       <div className="app-body">
         <Sidebar
           graffiti={filtered}

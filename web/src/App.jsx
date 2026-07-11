@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps'
 import './App.css'
 
-const API_URL = 'http://127.0.0.1:8000'
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
 
 const STYLE_COLORS = {
   tag: '#7B5CF5',

@@ -1,6 +1,8 @@
 import { useState, useCallback, useEffect, useRef, useMemo, memo } from 'react'
 import { APIProvider, Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
 import AuthModal from './AuthModal'
+import UploadModal from './UploadModal'
+import ModerationPanel from './ModerationPanel'
 import { supabase } from './supabase'
 import './App.css'
 
@@ -213,7 +215,7 @@ function SettingsMenu() {
 /* ══════════════════════════════════════════════════════
    HEADER
    ══════════════════════════════════════════════════════ */
-function Header({ onSearchResult, user, onLoginClick, onLogout }) {
+function Header({ onSearchResult, user, onLoginClick, onLogout, onUploadClick, isAdmin, onModClick }) {
   return (
     <header className="app-header">
       <div className="header-logo">
@@ -224,6 +226,16 @@ function Header({ onSearchResult, user, onLoginClick, onLogout }) {
         <SearchBar onResult={onSearchResult} />
       </div>
       <div className="header-right">
+        {user && (
+          <button className="header-btn upload" onClick={onUploadClick}>
+            + Signaler
+          </button>
+        )}
+        {isAdmin && (
+          <button className="header-btn mod" onClick={onModClick}>
+            Modération
+          </button>
+        )}
         <SettingsMenu />
         {user ? (
           <div className="header-user">
@@ -786,6 +798,10 @@ export default function App() {
   const [panTo, setPanTo] = useState(null)
   const [user, setUser] = useState(null)
   const [showAuth, setShowAuth] = useState(false)
+  const [showUpload, setShowUpload] = useState(false)
+  const [showMod, setShowMod] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const mapCenterRef = useRef({ lat: 45.7640, lng: 4.8357 })
   const [cities, setCities] = useState([])
   const [sheetOpen, setSheetOpen] = useState(false)
 
@@ -799,6 +815,14 @@ export default function App() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setUser(s?.user ?? null))
     return () => subscription.unsubscribe()
   }, [])
+
+  /* Moderator / admin role */
+  useEffect(() => {
+    if (!user) { setIsAdmin(false); return }
+    supabase.from('profiles').select('role').eq('id', user.id).single()
+      .then(({ data }) => setIsAdmin(data?.role === 'admin' || data?.role === 'moderator'))
+      .catch(() => setIsAdmin(false))
+  }, [user])
 
   /* Covered cities — powers the "zone non cartographiée" recovery state */
   useEffect(() => {
@@ -895,6 +919,10 @@ export default function App() {
 
   const handleBoundsChanged = useCallback((e) => {
     const bounds = e.detail.bounds
+    mapCenterRef.current = {
+      lat: (bounds.north + bounds.south) / 2,
+      lng: (bounds.east + bounds.west) / 2,
+    }
     clearTimeout(boundsDebounceRef.current)
     boundsDebounceRef.current = setTimeout(() => fetchGraffiti(bounds), 250)
   }, [fetchGraffiti])
@@ -927,9 +955,19 @@ export default function App() {
         user={user}
         onLoginClick={() => setShowAuth(true)}
         onLogout={() => supabase.auth.signOut()}
+        onUploadClick={() => setShowUpload(true)}
+        isAdmin={isAdmin}
+        onModClick={() => setShowMod(true)}
       />
 
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+      {showUpload && (
+        <UploadModal
+          onClose={() => setShowUpload(false)}
+          initialCenter={mapCenterRef.current}
+        />
+      )}
+      {showMod && <ModerationPanel onClose={() => setShowMod(false)} />}
 
       {error && (
         <div className="error-banner" role="alert">

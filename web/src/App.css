@@ -31,9 +31,10 @@
 body {
   font-family: 'Inter', -apple-system, sans-serif;
   background: #FAF8F2;
-  overflow: hidden;
   -webkit-font-smoothing: antialiased;
 }
+/* The map route locks scrolling via .map-locked on <html> (see index.css).
+   body overflow must NOT be hidden globally, or the landing page can't scroll. */
 
 button { font-family: inherit; }
 

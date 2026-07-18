@@ -2,14 +2,15 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps'
 import exifr from 'exifr'
 import { supabase } from './supabase'
+import { t } from './i18n'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
 const GOOGLE_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
 
 const STYLE_OPTIONS = [
-  { key: 'tag',     label: 'Tag',       hint: 'Signature rapide, un seul trait, souvent une couleur.' },
-  { key: 'throwup', label: 'Throw-up',  hint: 'Lettres en bulles, contour + remplissage (2 couleurs).' },
-  { key: 'piece',   label: 'Piece',     hint: 'Œuvre complète et travaillée, multicolore et détaillée.' },
+  { key: 'tag',     labelKey: 'style.tag',     hintKey: 'upload.hint.tag' },
+  { key: 'throwup', labelKey: 'style.throwup', hintKey: 'upload.hint.throwup' },
+  { key: 'piece',   labelKey: 'style.piece',   hintKey: 'upload.hint.piece' },
 ]
 
 export default function UploadModal({ onClose, initialCenter }) {
@@ -29,8 +30,8 @@ export default function UploadModal({ onClose, initialCenter }) {
   // Handle photo selection → preview + try to read GPS from EXIF
   const handleFile = useCallback(async (f) => {
     if (!f) return
-    if (!f.type.startsWith('image/')) { setError('Veuillez choisir une image.'); return }
-    if (f.size > 15 * 1024 * 1024) { setError('Image trop lourde (max 15 Mo).'); return }
+    if (!f.type.startsWith('image/')) { setError(t('upload.err.notImage')); return }
+    if (f.size > 15 * 1024 * 1024) { setError(t('upload.err.tooBig')); return }
     setError(null)
     setFile(f)
     setPreview(URL.createObjectURL(f))
@@ -61,7 +62,7 @@ export default function UploadModal({ onClose, initialCenter }) {
     setError(null)
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) throw new Error('Vous devez être connecté.')
+      if (!session) throw new Error(t('upload.err.login'))
 
       const form = new FormData()
       form.append('photo', file)
@@ -77,7 +78,8 @@ export default function UploadModal({ onClose, initialCenter }) {
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        throw new Error(err.detail || 'Échec de l\'envoi.')
+        if (err.detail === 'content_rejected') throw new Error(t('upload.err.rejected'))
+        throw new Error(err.detail || t('upload.err.failed'))
       }
       setStep(3)
     } catch (e) {
@@ -92,22 +94,22 @@ export default function UploadModal({ onClose, initialCenter }) {
   return (
     <div className="ul-overlay" onClick={onClose}>
       <div className="ul-modal" onClick={e => e.stopPropagation()}>
-        <button className="ul-close" onClick={onClose} aria-label="Fermer">✕</button>
+        <button className="ul-close" onClick={onClose} aria-label={t('common.close')}>✕</button>
 
         {step === 3 ? (
           <div className="ul-done">
             <div className="ul-done-icon">✓</div>
-            <h3>Merci pour votre contribution&nbsp;!</h3>
-            <p>Votre graffiti a bien été envoyé. Il apparaîtra sur la carte après vérification par notre équipe.</p>
-            <button className="ul-submit" onClick={onClose}>Fermer</button>
+            <h3>{t('upload.done.title')}</h3>
+            <p>{t('upload.done.body')}</p>
+            <button className="ul-submit" onClick={onClose}>{t('common.close')}</button>
           </div>
         ) : (
           <>
             <div className="ul-head">
-              <h3>Signaler un graffiti</h3>
+              <h3>{t('upload.title')}</h3>
               <div className="ul-steps">
-                <span className={step >= 1 ? 'on' : ''}>1. Photo &amp; lieu</span>
-                <span className={step >= 2 ? 'on' : ''}>2. Détails</span>
+                <span className={step >= 1 ? 'on' : ''}>{t('upload.step1')}</span>
+                <span className={step >= 2 ? 'on' : ''}>{t('upload.step2')}</span>
               </div>
             </div>
 
@@ -121,8 +123,8 @@ export default function UploadModal({ onClose, initialCenter }) {
                     onDrop={onDrop}
                   >
                     <div className="ul-drop-icon">📷</div>
-                    <p className="ul-drop-main">Glissez une photo ici ou cliquez pour choisir</p>
-                    <p className="ul-drop-sub">JPEG, PNG ou WebP · 15 Mo max</p>
+                    <p className="ul-drop-main">{t('upload.drop.main')}</p>
+                    <p className="ul-drop-sub">{t('upload.drop.sub')}</p>
                     <input
                       ref={fileInputRef}
                       type="file"
@@ -135,16 +137,14 @@ export default function UploadModal({ onClose, initialCenter }) {
                 ) : (
                   <>
                     <div className="ul-preview">
-                      <img src={preview} alt="Aperçu" />
+                      <img src={preview} alt="" />
                       <button className="ul-change" onClick={() => { setFile(null); setPreview(null); setPin(null) }}>
-                        Changer de photo
+                        {t('upload.changePhoto')}
                       </button>
                     </div>
 
                     <div className="ul-loc-label">
-                      {gpsFromPhoto
-                        ? '📍 Position détectée depuis la photo — ajustez si besoin'
-                        : '📍 Placez le marqueur à l\'emplacement du graffiti'}
+                      {gpsFromPhoto ? t('upload.gpsFound') : t('upload.gpsMissing')}
                     </div>
 
                     <div className="ul-map">
@@ -169,16 +169,16 @@ export default function UploadModal({ onClose, initialCenter }) {
                         </Map>
                       </APIProvider>
                     </div>
-                    <p className="ul-map-hint">Cliquez sur la carte ou glissez le marqueur pour ajuster.</p>
+                    <p className="ul-map-hint">{t('upload.mapHint')}</p>
                   </>
                 )}
 
                 {error && <div className="ul-error">{error}</div>}
 
                 <div className="ul-actions">
-                  <button className="ul-cancel" onClick={onClose}>Annuler</button>
+                  <button className="ul-cancel" onClick={onClose}>{t('common.cancel')}</button>
                   <button className="ul-submit" disabled={!file || !pin} onClick={() => setStep(2)}>
-                    Continuer
+                    {t('upload.continue')}
                   </button>
                 </div>
               </div>
@@ -186,7 +186,7 @@ export default function UploadModal({ onClose, initialCenter }) {
 
             {step === 2 && (
               <div className="ul-body">
-                <label className="ul-field-label">Type de graffiti <span className="req">obligatoire</span></label>
+                <label className="ul-field-label">{t('upload.type.label')} <span className="req">{t('upload.type.required')}</span></label>
                 <div className="ul-styles">
                   {STYLE_OPTIONS.map(o => (
                     <button
@@ -196,17 +196,17 @@ export default function UploadModal({ onClose, initialCenter }) {
                     >
                       <span className="ul-style-check" aria-hidden="true" />
                       <span className="ul-style-text">
-                        <span className="ul-style-name">{o.label}</span>
-                        <span className="ul-style-hint">{o.hint}</span>
+                        <span className="ul-style-name">{t(o.labelKey)}</span>
+                        <span className="ul-style-hint">{t(o.hintKey)}</span>
                       </span>
                     </button>
                   ))}
                 </div>
 
-                <label className="ul-field-label">Description <span>(optionnel)</span></label>
+                <label className="ul-field-label">{t('upload.desc.label')} <span>{t('upload.desc.optional')}</span></label>
                 <textarea
                   className="ul-note"
-                  placeholder="Couleurs, style, artiste, contexte…"
+                  placeholder={t('upload.desc.placeholder')}
                   value={note}
                   onChange={e => setNote(e.target.value)}
                   maxLength={500}
@@ -216,9 +216,9 @@ export default function UploadModal({ onClose, initialCenter }) {
                 {error && <div className="ul-error">{error}</div>}
 
                 <div className="ul-actions">
-                  <button className="ul-cancel" onClick={() => setStep(1)}>← Retour</button>
+                  <button className="ul-cancel" onClick={() => setStep(1)}>{t('upload.back')}</button>
                   <button className="ul-submit" disabled={submitting || !style} onClick={submit}>
-                    {submitting ? 'Envoi…' : 'Envoyer'}
+                    {submitting ? t('upload.submitting') : t('upload.submit')}
                   </button>
                 </div>
               </div>

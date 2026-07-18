@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from './supabase'
+import { t } from './i18n'
 
 export default function AuthModal({ onClose }) {
   const [mode, setMode] = useState('signin') // 'signin' | 'signup'
@@ -23,7 +24,7 @@ export default function AuthModal({ onClose }) {
       } else {
         const { error } = await supabase.auth.signUp({ email, password })
         if (error) throw error
-        setSuccess('Vérifiez votre email pour confirmer votre compte.')
+        setSuccess(t('auth.confirm'))
       }
     } catch (err) {
       setError(err.message)
@@ -49,7 +50,7 @@ export default function AuthModal({ onClose }) {
         <div className="auth-logo">
           <span className="auth-title">GraffitiAtlas</span>
           <p className="auth-sub">
-            {mode === 'signin' ? 'Connectez-vous pour contribuer' : 'Créez votre compte'}
+            {mode === 'signin' ? t('auth.signin.sub') : t('auth.signup.sub')}
           </p>
         </div>
 
@@ -61,24 +62,24 @@ export default function AuthModal({ onClose }) {
             <path fill="#FBBC05" d="M4.5 10.52a4.8 4.8 0 0 1 0-3.04V5.41H1.83a8 8 0 0 0 0 7.18l2.67-2.07z"/>
             <path fill="#EA4335" d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 0 0 1.83 5.4L4.5 7.49a4.77 4.77 0 0 1 4.48-3.3z"/>
           </svg>
-          Continuer avec Google
+          {t('auth.google')}
         </button>
 
-        <div className="auth-divider"><span>ou</span></div>
+        <div className="auth-divider"><span>{t('auth.or')}</span></div>
 
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="auth-field">
-            <label>Adresse email</label>
+            <label>{t('auth.email')}</label>
             <input
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              placeholder="vous@exemple.com"
+              placeholder={t('auth.email.placeholder')}
               required
             />
           </div>
           <div className="auth-field">
-            <label>Mot de passe</label>
+            <label>{t('auth.password')}</label>
             <input
               type="password"
               value={password}
@@ -93,21 +94,21 @@ export default function AuthModal({ onClose }) {
           {success && <div className="auth-success">{success}</div>}
 
           <button type="submit" className="auth-submit" disabled={loading}>
-            {loading ? 'Chargement...' : mode === 'signin' ? 'Se connecter' : 'Créer un compte'}
+            {loading ? t('auth.loading') : mode === 'signin' ? t('auth.signin.cta') : t('auth.signup.cta')}
           </button>
         </form>
 
         <div className="auth-switch">
           {mode === 'signin' ? (
-            <>Pas encore de compte ?{' '}
+            <>{t('auth.noAccount')}{' '}
               <button onClick={() => { setMode('signup'); setError(null); setSuccess(null) }}>
-                S'inscrire
+                {t('auth.switchSignup')}
               </button>
             </>
           ) : (
-            <>Déjà un compte ?{' '}
+            <>{t('auth.hasAccount')}{' '}
               <button onClick={() => { setMode('signin'); setError(null); setSuccess(null) }}>
-                Se connecter
+                {t('auth.signin.cta')}
               </button>
             </>
           )}

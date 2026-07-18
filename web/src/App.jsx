@@ -3,6 +3,10 @@ import { APIProvider, Map, AdvancedMarker, useMap } from '@vis.gl/react-google-m
 import AuthModal from './AuthModal'
 import UploadModal from './UploadModal'
 import ModerationPanel from './ModerationPanel'
+import CookieBanner, { getConsent } from './CookieBanner'
+import SettingsPanel from './SettingsPanel'
+import { t, syncLanguageFromProfile } from './i18n'
+import { Analytics } from '@vercel/analytics/react'
 import { supabase } from './supabase'
 import './App.css'
 
@@ -18,12 +22,12 @@ const STYLE_COLORS = {
 }
 
 const STYLE_LABELS = {
-  tag: 'Tag',
-  throwup: 'Throw-up',
-  piece: 'Piece',
-  mural: 'Mural',
-  sticker: 'Sticker',
-  other: 'Autre',
+  tag: () => t('style.tag'),
+  throwup: () => t('style.throwup'),
+  piece: () => t('style.piece'),
+  mural: () => t('style.mural'),
+  sticker: () => t('style.sticker'),
+  other: () => t('style.other'),
 }
 
 /* ══════════════════════════════════════════════════════
@@ -70,7 +74,7 @@ const GraffitiMarker = memo(function GraffitiMarker({ g, isSelected, onSelect })
       position={{ lat: g.lat, lng: g.lng }}
       onClick={() => onSelect(g)}
       zIndex={isSelected ? 100 : 1}
-      title={STYLE_LABELS[g.style] || g.style}
+      title={(STYLE_LABELS[g.style] ? STYLE_LABELS[g.style]() : g.style) || g.style}
     >
       <div className={'marker-can' + (isSelected ? ' selected' : '')}>
         <SprayCan color={STYLE_COLORS[g.style] || '#888'} size={24} />
@@ -143,15 +147,15 @@ function SearchBar({ onResult }) {
         </svg>
         <input
           type="text"
-          placeholder="Rechercher une ville ou une adresse…"
+          placeholder={t('header.search.placeholder')}
           value={query}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          aria-label="Rechercher un lieu"
+          aria-label={t('header.search.aria')}
         />
         {loading && <span className="search-spinner" />}
         {query && !loading && (
-          <button className="search-clear" onClick={() => { setQuery(''); setSuggestions([]) }} aria-label="Effacer la recherche">✕</button>
+          <button className="search-clear" onClick={() => { setQuery(''); setSuggestions([]) }} aria-label={t('header.search.clear')}>✕</button>
         )}
       </div>
       {suggestions.length > 0 && (
@@ -192,20 +196,20 @@ function SettingsMenu() {
 
   return (
     <div className="settings-wrap" ref={ref}>
-      <button className="header-btn icon-btn" onClick={() => setOpen(o => !o)} aria-label="Paramètres" aria-expanded={open}>
+      <button className="header-btn icon-btn" onClick={() => setOpen(o => !o)} aria-label={t('header.settings')} aria-expanded={open}>
         <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
           <circle cx="8" cy="8" r="2.4" stroke="currentColor" strokeWidth="1.4"/>
           <path d="M8 1.6v1.8M8 12.6v1.8M14.4 8h-1.8M3.4 8H1.6M12.5 3.5l-1.3 1.3M4.8 11.2l-1.3 1.3M12.5 12.5l-1.3-1.3M4.8 4.8L3.5 3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
         </svg>
-        <span className="btn-text">Paramètres</span>
+        <span className="btn-text">{t('header.settings')}</span>
       </button>
       {open && (
         <div className="settings-dropdown">
           <div className="settings-row">
-            <span className="settings-lbl">Langue</span>
+            <span className="settings-lbl">{t('set.language')}</span>
             <span className="settings-val">Français</span>
           </div>
-          <div className="settings-note">Plus d'options bientôt disponibles</div>
+          <div className="settings-note">{''}</div>
         </div>
       )}
     </div>
@@ -215,7 +219,7 @@ function SettingsMenu() {
 /* ══════════════════════════════════════════════════════
    HEADER
    ══════════════════════════════════════════════════════ */
-function Header({ onSearchResult, user, onLoginClick, onLogout, onUploadClick, isAdmin, onModClick }) {
+function Header({ onSearchResult, user, onLoginClick, onLogout, onUploadClick, isAdmin, onModClick, onSettingsClick }) {
   return (
     <header className="app-header">
       <div className="header-logo">
@@ -228,24 +232,30 @@ function Header({ onSearchResult, user, onLoginClick, onLogout, onUploadClick, i
       <div className="header-right">
         {user && (
           <button className="header-btn upload" onClick={onUploadClick}>
-            + Signaler
+            {t('header.report')}
           </button>
         )}
         {isAdmin && (
           <button className="header-btn mod" onClick={onModClick}>
-            Modération
+            {t('header.moderation')}
           </button>
         )}
-        <SettingsMenu />
+        <button className="header-btn icon-btn" onClick={onSettingsClick} aria-label={t('header.settings')}>
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <circle cx="8" cy="8" r="2.4" stroke="currentColor" strokeWidth="1.4"/>
+            <path d="M8 1.6v1.8M8 12.6v1.8M14.4 8h-1.8M3.4 8H1.6M12.5 3.5l-1.3 1.3M4.8 11.2l-1.3 1.3M12.5 12.5l-1.3-1.3M4.8 4.8L3.5 3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+          </svg>
+          <span className="btn-text">{t('header.settings')}</span>
+        </button>
         {user ? (
           <div className="header-user">
             <span className="header-username">
               {user.user_metadata?.full_name || user.email?.split('@')[0]}
             </span>
-            <button className="header-btn" onClick={onLogout}>Déconnexion</button>
+            <button className="header-btn" onClick={onLogout}>{t('header.logout')}</button>
           </div>
         ) : (
-          <button className="header-btn primary" onClick={onLoginClick}>Connexion</button>
+          <button className="header-btn primary" onClick={onLoginClick}>{t('header.login')}</button>
         )}
       </div>
     </header>
@@ -370,12 +380,12 @@ function ZoomableOverlay({ images, activeIdx, onClose, onPrev, onNext, dateStr }
   const activeImage = images[activeIdx]
 
   return (
-    <div className="img-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-label="Image agrandie">
+    <div className="img-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-label={t('lightbox.enlarged')}>
       <div className="img-overlay-inner" onClick={e => e.stopPropagation()}>
-        <button className="img-overlay-close" onClick={onClose} aria-label="Fermer (Échap)">✕</button>
+        <button className="img-overlay-close" onClick={onClose} aria-label={t('lightbox.close')}>✕</button>
 
         {images.length > 1 && (
-          <button className="img-overlay-arrow left" onClick={e => { e.stopPropagation(); onPrev() }} aria-label="Image précédente">←</button>
+          <button className="img-overlay-arrow left" onClick={e => { e.stopPropagation(); onPrev() }} aria-label={t('lightbox.prev')}>←</button>
         )}
 
         <div
@@ -394,7 +404,7 @@ function ZoomableOverlay({ images, activeIdx, onClose, onPrev, onNext, dateStr }
           <img
             key={activeImage.image_url}
             src={activeImage.image_url}
-            alt="Graffiti agrandi"
+            alt={t('lightbox.graffitiAlt')}
             draggable="false"
             style={{
               transform: `scale(${scale}) translate(${pos.x / scale}px, ${pos.y / scale}px)`,
@@ -404,7 +414,7 @@ function ZoomableOverlay({ images, activeIdx, onClose, onPrev, onNext, dateStr }
         </div>
 
         {images.length > 1 && (
-          <button className="img-overlay-arrow right" onClick={e => { e.stopPropagation(); onNext() }} aria-label="Image suivante">→</button>
+          <button className="img-overlay-arrow right" onClick={e => { e.stopPropagation(); onNext() }} aria-label={t('lightbox.next')}>→</button>
         )}
 
         {scale > 1 && (
@@ -416,7 +426,7 @@ function ZoomableOverlay({ images, activeIdx, onClose, onPrev, onNext, dateStr }
         <div className="img-overlay-footer">
           {images.length > 1 && <span className="img-overlay-counter">{activeIdx + 1} / {images.length}</span>}
           {dateStr && <span className="img-overlay-date">{formatDate(dateStr)}</span>}
-          <span className="img-zoom-hint">Double-clic ou molette pour zoomer · ← → pour naviguer</span>
+          <span className="img-zoom-hint">{t('lightbox.hint')}</span>
         </div>
       </div>
     </div>
@@ -524,24 +534,24 @@ function Sidebar({
   return (
     <aside className={'sidebar' + (sheetOpen ? ' sheet-open' : '')}>
       {/* Mobile drag handle */}
-      <button className="sheet-handle" onClick={onToggleSheet} aria-label={sheetOpen ? 'Réduire le panneau' : 'Ouvrir le panneau'}>
+      <button className="sheet-handle" onClick={onToggleSheet} aria-label={sheetOpen ? t('empty.panel.collapse') : t('empty.panel.open')}>
         <span className="sheet-grip" />
       </button>
 
       <div className="stats-grid">
         <div className="stat-box">
           <span className="stat-num">{graffiti.length}</span>
-          <span className="stat-lbl">En vue</span>
+          <span className="stat-lbl">{t('stats.inView')}</span>
         </div>
         <div className="stat-box">
           <span className="stat-num">{totalM2.toFixed(0)}</span>
-          <span className="stat-lbl">m² détectés</span>
+          <span className="stat-lbl">{t('stats.m2')}</span>
         </div>
         {loading && <div className="stat-loading"><span className="loading-dot" /></div>}
       </div>
 
       <div className="filters-block">
-        <FilterSection title="TYPE" activeCount={filters.styles.size}>
+        <FilterSection title={t('filter.type')} activeCount={filters.styles.size}>
           {['tag', 'throwup', 'piece'].map(style => {
             const active = filters.styles.has(style)
             return (
@@ -553,17 +563,17 @@ function Sidebar({
               >
                 <span className="filter-dot" style={{ background: STYLE_COLORS[style] }} />
                 <span className="filter-count">{typeCounts[style] || 0}</span>
-                <span className="filter-name">{STYLE_LABELS[style]}</span>
+                <span className="filter-name">{(STYLE_LABELS[style] ? STYLE_LABELS[style]() : style)}</span>
               </button>
             )
           })}
         </FilterSection>
 
-        <FilterSection title="TAILLE" activeCount={filters.sizes.size}>
+        <FilterSection title={t('filter.size')} activeCount={filters.sizes.size}>
           {[
-            { key: 'small', label: 'Petit', sub: '< 0,5 m²' },
-            { key: 'medium', label: 'Moyen', sub: '0,5–2 m²' },
-            { key: 'large', label: 'Grand', sub: '≥ 2 m²' },
+            { key: 'small', label: t('filter.size.small'), sub: '< 0,5 m²' },
+            { key: 'medium', label: t('filter.size.medium'), sub: '0,5–2 m²' },
+            { key: 'large', label: t('filter.size.large'), sub: '≥ 2 m²' },
           ].map(({ key, label, sub }) => {
             const active = filters.sizes.has(key)
             return (
@@ -582,7 +592,7 @@ function Sidebar({
         </FilterSection>
 
         {years.length > 1 && (
-          <FilterSection title="ANNÉE" activeCount={filters.years.size}>
+          <FilterSection title={t('filter.year')} activeCount={filters.years.size}>
             {years.map(year => {
               const active = filters.years.has(year)
               return (
@@ -613,12 +623,12 @@ function Sidebar({
             <button className="back-btn" onClick={() => onSelect(null)}>← Retour</button>
 
             {loadingImages ? (
-              <div className="img-loading skeleton" aria-label="Chargement des images" />
+              <div className="img-loading skeleton" aria-label={t('detail.imagesLoading')} />
             ) : activeImage ? (
               <>
                 <div className="detail-img" onClick={() => setImgExpanded(true)} role="button" tabIndex={0}
                   onKeyDown={e => e.key === 'Enter' && setImgExpanded(true)}>
-                  <img key={activeImage.image_url} src={activeImage.image_url} alt="Face du cube" className="fade-img" />
+                  <img key={activeImage.image_url} src={activeImage.image_url} alt={t('detail.cubeFace')} className="fade-img" />
                   {selected.date_observed && <div className="img-date">{formatDate(selected.date_observed)}</div>}
                   <div className="img-expand-hint">↗ agrandir</div>
                 </div>
@@ -638,7 +648,7 @@ function Sidebar({
                           <img src={img.image_url} alt="" />
                           <div className="thumb-dot" style={{ background: color }} />
                           <div className="thumb-count">
-                            {img.detections.length > 1 ? `${img.detections.length} détections` : (STYLE_LABELS[primaryStyle] || primaryStyle)}
+                            {img.detections.length > 1 ? `${img.detections.length} détections` : ((STYLE_LABELS[primaryStyle] ? STYLE_LABELS[primaryStyle]() : primaryStyle) || primaryStyle)}
                           </div>
                           {selected.date_observed && <div className="thumb-date">{formatShortDate(selected.date_observed)}</div>}
                         </button>
@@ -665,41 +675,44 @@ function Sidebar({
                 <div key={idx} className="detection-item">
                   <div className="detection-head">
                     <span className="style-badge" style={{ background: STYLE_COLORS[det.style] || '#888' }}>
-                      {STYLE_LABELS[det.style] || det.style}
+                      {(STYLE_LABELS[det.style] ? STYLE_LABELS[det.style]() : det.style) || det.style}
                     </span>
                     {det.size_m2 && <span className="det-size">{det.size_m2} m²</span>}
                   </div>
                   <p className="detail-desc">{det.description_fr}</p>
+                  {t('desc.frenchOnly') && det.description_fr && (
+                    <p className="detail-desc-note">{t('desc.frenchOnly')}</p>
+                  )}
                 </div>
               ))}
 
               <div className="meta-box">
                 {address && (
                   <div className="meta-row">
-                    <span className="meta-lbl">Adresse</span>
+                    <span className="meta-lbl">{t('detail.address')}</span>
                     <span className="meta-val">{address}</span>
                   </div>
                 )}
                 {selected.city && (
                   <div className="meta-row">
-                    <span className="meta-lbl">Ville</span>
+                    <span className="meta-lbl">{t('detail.city')}</span>
                     <span className="meta-val" style={{ textTransform: 'capitalize' }}>{selected.city}</span>
                   </div>
                 )}
                 {selected.date_observed && (
                   <div className="meta-row">
-                    <span className="meta-lbl">Capturé le</span>
+                    <span className="meta-lbl">{t('detail.captured')}</span>
                     <span className="meta-val">{formatDate(selected.date_observed)}</span>
                   </div>
                 )}
                 {selected.surface_type && (
                   <div className="meta-row">
-                    <span className="meta-lbl">Surface</span>
+                    <span className="meta-lbl">{t('detail.surface')}</span>
                     <span className="meta-val">{selected.surface_type.replace(/_/g, ' ')}</span>
                   </div>
                 )}
                 <div className="meta-row">
-                  <span className="meta-lbl">GPS</span>
+                  <span className="meta-lbl">{t('detail.gps')}</span>
                   <span className="meta-val mono">{selected.lat.toFixed(5)}, {selected.lng.toFixed(5)}</span>
                 </div>
               </div>
@@ -707,17 +720,17 @@ function Sidebar({
               <div className="action-btns">
                 <a className="action-btn gsv"
                   href={`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${selected.lat},${selected.lng}`}
-                  target="_blank" rel="noreferrer">Google Street View ↗</a>
+                  target="_blank" rel="noreferrer">{t('detail.streetview')}</a>
                 <a className="action-btn pano"
                   href={`https://panoramax.ign.fr/#focus=map&map=17/${selected.lat}/${selected.lng}`}
-                  target="_blank" rel="noreferrer">Panoramax ↗</a>
+                  target="_blank" rel="noreferrer">{t('detail.panoramax')}</a>
                 <button className="action-btn share"
                   onClick={() => {
                     navigator.clipboard.writeText(window.location.href)
                     setCopied(true)
                     setTimeout(() => setCopied(false), 2000)
                   }}>
-                  {copied ? 'Lien copié ✓' : 'Partager ce graffiti'}
+                  {copied ? t('detail.linkCopied') : t('detail.share')}
                 </button>
               </div>
             </div>
@@ -727,25 +740,25 @@ function Sidebar({
         ) : noFilterResults ? (
           <div className="no-selection">
             <SprayCan color="#D0CEC8" size={34} />
-            <p className="no-sel-title">Aucun résultat</p>
+            <p className="no-sel-title">{t('empty.noResults')}</p>
             <p className="no-sel-sub">
-              Aucun graffiti ne correspond à vos filtres dans cette zone.
+              {t('empty.noResults.hint')}
               Il y en a {allGraffiti.length} au total ici.
             </p>
-            <button className="reset-filters block" onClick={onResetFilters}>Réinitialiser les filtres</button>
+            <button className="reset-filters block" onClick={onResetFilters}>{t('filter.reset')}</button>
           </div>
 
         /* 3. This area simply isn't mapped yet — the biggest "looks broken" trap */
         ) : noDataInArea ? (
           <div className="no-selection">
             <SprayCan color="#D0CEC8" size={34} />
-            <p className="no-sel-title">Zone non cartographiée</p>
+            <p className="no-sel-title">{t('empty.noZone')}</p>
             <p className="no-sel-sub">
               Nous n'avons pas encore scanné cette zone. GraffitiAtlas se déploie ville par ville.
             </p>
             {cities.length > 0 && (
               <div className="city-list">
-                <span className="city-list-lbl">Villes disponibles</span>
+                <span className="city-list-lbl">{t('empty.cities')}</span>
                 {cities.map(c => (
                   <button key={c.name} className="city-link" onClick={() => onSelect(null, c)}>
                     <span className="city-link-name">{c.name}</span>
@@ -760,7 +773,7 @@ function Sidebar({
         ) : (
           <div className="no-selection">
             <SprayCan color="#D0CEC8" size={34} />
-            <p className="no-sel-title">Aucune détection sélectionnée</p>
+            <p className="no-sel-title">{t('empty.noSelection')}</p>
             <p className="no-sel-sub">Cliquez sur un marqueur pour voir les images et les détails ici.</p>
             <p className="no-sel-tagline">
               GraffitiAtlas cartographie les graffitis des villes françaises grâce à la détection par IA
@@ -800,6 +813,7 @@ export default function App() {
   const [showAuth, setShowAuth] = useState(false)
   const [showUpload, setShowUpload] = useState(false)
   const [showMod, setShowMod] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const mapCenterRef = useRef({ lat: 45.7640, lng: 4.8357 })
   const [cities, setCities] = useState([])
@@ -819,8 +833,11 @@ export default function App() {
   /* Moderator / admin role */
   useEffect(() => {
     if (!user) { setIsAdmin(false); return }
-    supabase.from('profiles').select('role').eq('id', user.id).single()
-      .then(({ data }) => setIsAdmin(data?.role === 'admin' || data?.role === 'moderator'))
+    supabase.from('profiles').select('role, language').eq('id', user.id).single()
+      .then(({ data }) => {
+        setIsAdmin(data?.role === 'admin' || data?.role === 'moderator')
+        if (data?.language) syncLanguageFromProfile(data.language)
+      })
       .catch(() => setIsAdmin(false))
   }, [user])
 
@@ -911,7 +928,7 @@ export default function App() {
     } catch (err) {
       if (err.name === 'AbortError') return
       console.error(err)
-      setError('Impossible de charger les données. Vérifiez votre connexion et réessayez.')
+      setError(t('error.load'))
     } finally {
       setLoading(false)
     }
@@ -958,6 +975,7 @@ export default function App() {
         onUploadClick={() => setShowUpload(true)}
         isAdmin={isAdmin}
         onModClick={() => setShowMod(true)}
+        onSettingsClick={() => setShowSettings(true)}
       />
 
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
@@ -968,11 +986,20 @@ export default function App() {
         />
       )}
       {showMod && <ModerationPanel onClose={() => setShowMod(false)} />}
+      {showSettings && (
+        <SettingsPanel
+          user={user}
+          onClose={() => setShowSettings(false)}
+          onLogout={() => { supabase.auth.signOut(); setShowSettings(false) }}
+        />
+      )}
+      <CookieBanner />
+      {getConsent() === 'accepted' && <Analytics />}
 
       {error && (
         <div className="error-banner" role="alert">
           <span>⚠ {error}</span>
-          <button onClick={() => { setError(null); loadedBoundsRef.current = null }}>Réessayer</button>
+          <button onClick={() => { setError(null); loadedBoundsRef.current = null }}>{t('error.retry')}</button>
         </div>
       )}
 

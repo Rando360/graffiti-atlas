@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react'
 import { supabase } from './supabase'
+import { t } from './i18n'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
 
@@ -14,12 +15,15 @@ export default function BlurEditor({ graffitiId, imageUrl, onDone, onCancel }) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const boxRef = useRef(null)
+  const imgRef = useRef(null)
 
+  const clamp01 = (v) => Math.max(0, Math.min(1, v))
   const toNorm = (px) => {
-    const b = boxRef.current.getBoundingClientRect()
+    const el = imgRef.current || boxRef.current
+    const b = el.getBoundingClientRect()
     return {
-      x: (px.x - b.left) / b.width,
-      y: (px.y - b.top) / b.height,
+      x: clamp01((px.x - b.left) / b.width),
+      y: clamp01((px.y - b.top) / b.height),
     }
   }
 
@@ -57,7 +61,7 @@ export default function BlurEditor({ graffitiId, imageUrl, onDone, onCancel }) {
         },
         body: JSON.stringify({ rects }),
       })
-      if (!res.ok) throw new Error('Le floutage a échoué.')
+      if (!res.ok) throw new Error(t('blur.failed'))
       onDone()   // parent refreshes the thumbnail
     } catch (e) {
       setError(e.message)
@@ -79,8 +83,8 @@ export default function BlurEditor({ graffitiId, imageUrl, onDone, onCancel }) {
       <div className="blur-modal" onClick={e => e.stopPropagation()}>
         <div className="blur-head">
           <div>
-            <h3>Flouter les zones sensibles</h3>
-            <p>Dessinez un rectangle sur chaque visage ou plaque d'immatriculation.</p>
+            <h3>{t('blur.title')}</h3>
+            <p>{t('blur.instructions')}</p>
           </div>
           <button className="blur-close" onClick={onCancel} aria-label="Fermer">✕</button>
         </div>
@@ -93,7 +97,7 @@ export default function BlurEditor({ graffitiId, imageUrl, onDone, onCancel }) {
           onMouseUp={onMouseUp}
           onMouseLeave={onMouseUp}
         >
-          <img src={imageUrl} alt="À modérer" draggable="false" />
+          <img ref={imgRef} src={imageUrl} alt={t('blur.imageAlt')} draggable="false" />
           {rects.map((r, i) => (
             <div
               key={i}
@@ -109,11 +113,11 @@ export default function BlurEditor({ graffitiId, imageUrl, onDone, onCancel }) {
         {error && <div className="blur-error">{error}</div>}
 
         <div className="blur-actions">
-          <span className="blur-count">{rects.length} zone{rects.length !== 1 ? 's' : ''}</span>
+          <span className="blur-count">{rects.length} {rects.length !== 1 ? t('blur.zones') : t('blur.zone')}</span>
           <div className="blur-btns">
-            <button className="blur-cancel" onClick={onCancel}>Annuler</button>
+            <button className="blur-cancel" onClick={onCancel}>{t('common.cancel')}</button>
             <button className="blur-apply" disabled={saving || rects.length === 0} onClick={apply}>
-              {saving ? 'Application…' : 'Appliquer le floutage'}
+              {saving ? t('blur.applying') : t('blur.apply')}
             </button>
           </div>
         </div>

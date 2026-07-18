@@ -821,6 +821,13 @@ export default function App() {
   const loadedBoundsRef = useRef(null)
   const abortRef = useRef(null)
 
+  /* Lock the viewport to full-height only while the map is mounted,
+     so other routes (landing) can scroll normally. */
+  useEffect(() => {
+    document.documentElement.classList.add('map-locked')
+    return () => document.documentElement.classList.remove('map-locked')
+  }, [])
+
   /* Auth */
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null))

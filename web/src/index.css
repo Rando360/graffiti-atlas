@@ -7,8 +7,18 @@ body {
   padding: 0;
 }
 
+/* #root is natural height by default so scrollable pages (the landing) work.
+   The map route locks the viewport itself via the .map-locked class. */
 #root {
   width: 100%;
+}
+
+/* App.jsx adds .map-locked to <html> while the map is mounted, and removes it
+   on unmount — so the full-screen map gets a fixed viewport, but the landing
+   (and any other route) scrolls normally. */
+html.map-locked,
+html.map-locked body,
+html.map-locked #root {
   height: 100vh;
   overflow: hidden;
 }

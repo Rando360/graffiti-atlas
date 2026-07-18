@@ -1302,3 +1302,6 @@ button { font-family: inherit; }
 
 /* Note under French-only descriptions (non-FR languages) */
 .detail-desc-note { font-size: 10px; color: var(--muted); font-style: italic; margin-top: 2px; }
+
+/* Header logo as home link */
+.header-logo { text-decoration: none; color: inherit; cursor: pointer; }

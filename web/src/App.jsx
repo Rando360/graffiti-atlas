@@ -220,10 +220,10 @@ function SettingsMenu() {
 function Header({ onSearchResult, user, onLoginClick, onLogout, onUploadClick, isAdmin, onModClick, onSettingsClick }) {
   return (
     <header className="app-header">
-      <div className="header-logo">
+      <a className="header-logo" href="/" aria-label="Accueil">
         <Logo size={26} />
         <span className="header-title">GraffitiAtlas</span>
-      </div>
+      </a>
       <div className="header-center">
         <SearchBar onResult={onSearchResult} />
       </div>

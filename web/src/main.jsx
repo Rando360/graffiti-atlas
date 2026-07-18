@@ -5,6 +5,10 @@ import './index.css'
 import './landing.css'
 import App from './App.jsx'
 import Landing from './Landing.jsx'
+import PrivacyPage from './PrivacyPage.jsx'
+import TermsPage from './TermsPage.jsx'
+import LegalNoticePage from './LegalNoticePage.jsx'
+import CookiesPage from './CookiesPage.jsx'
 import CookieBanner, { getConsent } from './CookieBanner.jsx'
 import { Analytics } from '@vercel/analytics/react'
 
@@ -22,6 +26,10 @@ createRoot(document.getElementById('root')).render(
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/map" element={<App />} />
+        <Route path="/politique-confidentialite" element={<PrivacyPage />} />
+        <Route path="/conditions-utilisation" element={<TermsPage />} />
+        <Route path="/mentions-legales" element={<LegalNoticePage />} />
+        <Route path="/politique-cookies" element={<CookiesPage />} />
       </Routes>
       <CookieBanner />
       {getConsent() === 'accepted' && <Analytics />}

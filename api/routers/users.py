@@ -10,6 +10,7 @@ User account endpoints for GraffitiAtlas.
 import os
 from datetime import datetime
 
+import boto3
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from supabase import create_client
@@ -18,9 +19,35 @@ from routers.auth_dependency import get_current_user
 
 router = APIRouter()
 
+MEDIA_BUCKET = "graffitiatlas-media"
+
 
 def _service():
     return create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_KEY"])
+
+
+def _s3():
+    return boto3.client(
+        "s3",
+        aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+        aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
+        region_name=os.environ.get("AWS_REGION", "eu-west-3"),
+    )
+
+
+def _delete_graffiti_files(image_row: dict):
+    """Delete every stored size for one graffiti's image from S3 (best-effort)."""
+    keys = [image_row.get(k) for k in ("s3_key_thumb", "s3_key_medium", "s3_key_full", "s3_key_raw")]
+    keys = [k for k in keys if k]
+    if not keys:
+        return
+    try:
+        _s3().delete_objects(
+            Bucket=MEDIA_BUCKET,
+            Delete={"Objects": [{"Key": k} for k in keys]},
+        )
+    except Exception:
+        pass  # never block the user-facing deletion on an S3 hiccup
 
 
 class ProfileUpdate(BaseModel):
@@ -95,11 +122,16 @@ def delete_me(user: dict = Depends(get_current_user)):
     service.table("graffiti").update({"user_id": None}) \
         .eq("user_id", uid).eq("status", "approved").execute()
 
-    # Remove not-yet-public contributions (and their children)
+    # Remove not-yet-public contributions (and their children + S3 files)
     pending = service.table("graffiti").select("id") \
         .eq("user_id", uid).neq("status", "approved").execute()
     for row in pending.data or []:
         gid = row["id"]
+        imgs = service.table("images").select(
+            "s3_key_thumb, s3_key_medium, s3_key_full, s3_key_raw"
+        ).eq("graffiti_id", gid).execute()
+        for img in imgs.data or []:
+            _delete_graffiti_files(img)
         service.table("classifications").delete().eq("graffiti_id", gid).execute()
         service.table("images").delete().eq("graffiti_id", gid).execute()
         service.table("graffiti").delete().eq("id", gid).execute()

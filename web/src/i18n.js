@@ -434,6 +434,91 @@ const STRINGS = {
   'cookies.refuse': { fr: 'Refuser', en: 'Decline', es: 'Rechazar', de: 'Ablehnen', it: 'Rifiuta' },
   'cookies.accept': { fr: 'Accepter', en: 'Accept', es: 'Aceptar', de: 'Akzeptieren', it: 'Accetta' },
 
+  /* ── Landing page ── */
+  'nav.explore': { fr: 'Explorer', en: 'Explore', es: 'Explorar', de: 'Erkunden', it: 'Esplora' },
+  'landing.eyebrow': {
+    fr: "L'atlas du street art urbain", en: 'The urban street-art atlas',
+    es: 'El atlas del arte urbano', de: 'Der Atlas der urbanen Streetart', it: "L'atlante della street art urbana",
+  },
+  'landing.h1': {
+    fr: "Le street art n'est plus éphémère.",
+    en: "Street art doesn't have to be fleeting.",
+    es: 'El arte urbano ya no es efímero.',
+    de: 'Streetart muss nicht vergänglich sein.',
+    it: 'La street art non è più effimera.',
+  },
+  'landing.sub': {
+    fr: 'Explorez, cartographiez et suivez le graffiti de votre ville — rue par rue, œuvre par œuvre.',
+    en: 'Explore, map and follow the graffiti in your city — street by street, piece by piece.',
+    es: 'Explora, cartografía y sigue el grafiti de tu ciudad — calle a calle, obra a obra.',
+    de: 'Entdecke, kartiere und verfolge die Graffiti deiner Stadt — Straße für Straße, Werk für Werk.',
+    it: 'Esplora, mappa e segui i graffiti della tua città — strada per strada, opera per opera.',
+  },
+  'landing.cta': {
+    fr: 'Explorer la carte', en: 'Explore the map', es: 'Explorar el mapa',
+    de: 'Karte erkunden', it: 'Esplora la mappa',
+  },
+  'landing.stat.works': {
+    fr: 'œuvres recensées', en: 'works catalogued', es: 'obras catalogadas',
+    de: 'erfasste Werke', it: 'opere catalogate',
+  },
+  'landing.stat.cities': { fr: 'villes', en: 'cities', es: 'ciudades', de: 'Städte', it: 'città' },
+  'landing.stat.live': {
+    fr: 'mis à jour en continu', en: 'continuously updated', es: 'actualizado continuamente',
+    de: 'laufend aktualisiert', it: 'aggiornato in continuo',
+  },
+  'landing.how.title': {
+    fr: 'Comment ça marche', en: 'How it works', es: 'Cómo funciona',
+    de: "So funktioniert's", it: 'Come funziona',
+  },
+  'landing.how.1.t': { fr: 'Découvrir', en: 'Discover', es: 'Descubrir', de: 'Entdecken', it: 'Scoprire' },
+  'landing.how.1.d': {
+    fr: 'Parcourez une carte vivante du graffiti, des tags aux fresques monumentales.',
+    en: 'Browse a living map of graffiti, from tags to monumental murals.',
+    es: 'Recorre un mapa vivo del grafiti, desde tags hasta murales monumentales.',
+    de: 'Durchstöbere eine lebendige Karte der Graffiti, von Tags bis zu monumentalen Wandbildern.',
+    it: 'Sfoglia una mappa viva dei graffiti, dai tag ai murales monumentali.',
+  },
+  'landing.how.2.t': { fr: 'Contribuer', en: 'Contribute', es: 'Contribuir', de: 'Beitragen', it: 'Contribuire' },
+  'landing.how.2.d': {
+    fr: 'Ajoutez vos trouvailles en quelques secondes. Chaque photo enrichit l\'atlas.',
+    en: 'Add your finds in seconds. Every photo enriches the atlas.',
+    es: 'Añade tus hallazgos en segundos. Cada foto enriquece el atlas.',
+    de: 'Füge deine Funde in Sekunden hinzu. Jedes Foto bereichert den Atlas.',
+    it: "Aggiungi le tue scoperte in pochi secondi. Ogni foto arricchisce l'atlante.",
+  },
+  'landing.how.3.t': { fr: 'Suivre', en: 'Follow', es: 'Seguir', de: 'Verfolgen', it: 'Seguire' },
+  'landing.how.3.d': {
+    fr: 'Voyez le street art apparaître, évoluer et disparaître au fil du temps.',
+    en: 'Watch street art appear, evolve and disappear over time.',
+    es: 'Observa cómo el arte urbano aparece, evoluciona y desaparece con el tiempo.',
+    de: 'Sieh zu, wie Streetart entsteht, sich verändert und verschwindet.',
+    it: 'Osserva la street art apparire, evolversi e scomparire nel tempo.',
+  },
+  'landing.muni.eyebrow': { fr: 'Collectivités', en: 'For cities', es: 'Para municipios', de: 'Für Kommunen', it: 'Per i comuni' },
+  'landing.muni.title': {
+    fr: 'Un outil de suivi pour les villes', en: 'A monitoring tool for municipalities',
+    es: 'Una herramienta de seguimiento para las ciudades',
+    de: 'Ein Monitoring-Werkzeug für Städte', it: 'Uno strumento di monitoraggio per le città',
+  },
+  'landing.muni.desc': {
+    fr: 'Cartographie automatisée, données de terrain et suivi de la propreté urbaine. Discutons de votre territoire.',
+    en: "Automated mapping, field data and urban-cleanliness tracking. Let's talk about your area.",
+    es: 'Cartografía automatizada, datos de campo y seguimiento de la limpieza urbana. Hablemos de tu territorio.',
+    de: 'Automatisierte Kartierung, Felddaten und Sauberkeits-Monitoring. Sprechen wir über Ihre Region.',
+    it: 'Mappatura automatizzata, dati sul campo e monitoraggio della pulizia urbana. Parliamo del tuo territorio.',
+  },
+  'landing.muni.cta': {
+    fr: 'Nous contacter', en: 'Get in touch', es: 'Contáctanos', de: 'Kontakt aufnehmen', it: 'Contattaci',
+  },
+  'landing.footer.tagline': {
+    fr: "L'atlas du street art urbain, ville par ville.",
+    en: 'The urban street-art atlas, city by city.',
+    es: 'El atlas del arte urbano, ciudad a ciudad.',
+    de: 'Der Atlas der urbanen Streetart, Stadt für Stadt.',
+    it: "L'atlante della street art urbana, città per città.",
+  },
+
   /* ── Descriptions (data) ── */
   'desc.frenchOnly': {
     fr: '', // not shown in French

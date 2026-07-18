@@ -1,23 +1,30 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import * as Sentry from '@sentry/react'
-import { Analytics } from '@vercel/analytics/react'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import './index.css'
+import './landing.css'
 import App from './App.jsx'
+import Landing from './Landing.jsx'
+import CookieBanner, { getConsent } from './CookieBanner.jsx'
+import { Analytics } from '@vercel/analytics/react'
 
-// Error tracking — only active when a DSN is configured
-const sentryDsn = import.meta.env.VITE_SENTRY_DSN
-if (sentryDsn) {
-  Sentry.init({
-    dsn: sentryDsn,
-    sendDefaultPii: false,
-    tracesSampleRate: 0.1,
+// ── Analytics load ONLY after the user accepts non-essential cookies ──
+if (getConsent() === 'accepted') {
+  import('@sentry/react').then((Sentry) => {
+    const dsn = import.meta.env.VITE_SENTRY_DSN
+    if (dsn) Sentry.init({ dsn, sendDefaultPii: false, tracesSampleRate: 0.1 })
   })
 }
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
-    <Analytics />
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/map" element={<App />} />
+      </Routes>
+      <CookieBanner />
+      {getConsent() === 'accepted' && <Analytics />}
+    </BrowserRouter>
   </StrictMode>,
 )

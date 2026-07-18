@@ -59,6 +59,27 @@ def _service():
     return create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_KEY"])
 
 
+def _delete_image_files(service, graffiti_id: str):
+    """Best-effort delete of a graffiti's S3 image files (used on reject)."""
+    imgs = service.table("images").select(
+        "s3_key_thumb, s3_key_medium, s3_key_full, s3_key_raw"
+    ).eq("graffiti_id", graffiti_id).execute()
+    keys = []
+    for img in imgs.data or []:
+        for k in ("s3_key_thumb", "s3_key_medium", "s3_key_full", "s3_key_raw"):
+            if img.get(k):
+                keys.append(img[k])
+    if not keys:
+        return
+    try:
+        _s3().delete_objects(
+            Bucket=MEDIA_BUCKET,
+            Delete={"Objects": [{"Key": k} for k in keys]},
+        )
+    except Exception:
+        pass
+
+
 @router.get("/pending")
 def list_pending(user: dict = Depends(require_admin)):
     """Graffiti submissions awaiting review, newest first."""
@@ -117,13 +138,18 @@ def approve_graffiti(graffiti_id: str, body: ApproveBody = None, user: dict = De
 @router.post("/graffiti/{graffiti_id}/reject")
 def reject_graffiti(graffiti_id: str, user: dict = Depends(require_admin)):
     service = _service()
-    res = service.table("graffiti").update({
-        "status": "rejected",
-        "updated_at": datetime.utcnow().isoformat(),
-    }).eq("id", graffiti_id).execute()
 
-    if not res.data:
+    exists = service.table("graffiti").select("id").eq("id", graffiti_id).execute()
+    if not exists.data:
         raise HTTPException(status_code=404, detail="Graffiti introuvable")
+
+    # A rejected community upload is removed entirely, including its S3 files,
+    # so nothing unapproved lingers in storage.
+    _delete_image_files(service, graffiti_id)
+    service.table("classifications").delete().eq("graffiti_id", graffiti_id).execute()
+    service.table("images").delete().eq("graffiti_id", graffiti_id).execute()
+    service.table("graffiti").delete().eq("id", graffiti_id).execute()
+
     return {"status": "rejected", "id": graffiti_id}
 
 

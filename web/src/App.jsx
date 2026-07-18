@@ -3,10 +3,8 @@ import { APIProvider, Map, AdvancedMarker, useMap } from '@vis.gl/react-google-m
 import AuthModal from './AuthModal'
 import UploadModal from './UploadModal'
 import ModerationPanel from './ModerationPanel'
-import CookieBanner, { getConsent } from './CookieBanner'
 import SettingsPanel from './SettingsPanel'
 import { t, syncLanguageFromProfile } from './i18n'
-import { Analytics } from '@vercel/analytics/react'
 import { supabase } from './supabase'
 import './App.css'
 
@@ -993,8 +991,6 @@ export default function App() {
           onLogout={() => { supabase.auth.signOut(); setShowSettings(false) }}
         />
       )}
-      <CookieBanner />
-      {getConsent() === 'accepted' && <Analytics />}
 
       {error && (
         <div className="error-banner" role="alert">

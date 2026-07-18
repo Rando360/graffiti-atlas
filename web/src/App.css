@@ -1305,3 +1305,19 @@ button { font-family: inherit; }
 
 /* Header logo as home link */
 .header-logo { text-decoration: none; color: inherit; cursor: pointer; }
+
+/* ── Marker clusters ──────────────────────────────────── */
+.cluster-bubble {
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: var(--accent, #E85D26);
+  color: #fff;
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 14px;
+  border: 3px solid #fff;
+  box-shadow: 0 3px 10px rgba(42,37,32,0.28);
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+.cluster-bubble:hover { transform: scale(1.08); }

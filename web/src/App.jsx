@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef, useMemo, memo } from 'react'
-import { APIProvider, Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
+import { APIProvider, Map, AdvancedMarker, useMap, useMapsLibrary } from '@vis.gl/react-google-maps'
+import { MarkerClusterer } from '@googlemaps/markerclusterer'
 import AuthModal from './AuthModal'
 import UploadModal from './UploadModal'
 import ModerationPanel from './ModerationPanel'
@@ -80,6 +81,78 @@ const GraffitiMarker = memo(function GraffitiMarker({ g, isSelected, onSelect })
     </AdvancedMarker>
   )
 })
+
+/* Clusters nearby markers into count bubbles that split apart on zoom.
+   Uses Google's MarkerClusterer via refs to the @vis.gl AdvancedMarkers. */
+function ClusteredMarkers({ points, selectedId, onSelect }) {
+  const map = useMap()
+  const markerLib = useMapsLibrary('marker')
+  const [markers, setMarkers] = useState({})
+  const clustererRef = useRef(null)
+
+  // Orange count bubbles, sized by how many markers they contain.
+  const renderer = useMemo(() => {
+    if (!markerLib) return null
+    return {
+      render: ({ count, position }) => {
+        const size = count < 10 ? 40 : count < 50 ? 48 : count < 100 ? 56 : 64
+        const el = document.createElement('div')
+        el.className = 'cluster-bubble'
+        el.style.width = size + 'px'
+        el.style.height = size + 'px'
+        el.textContent = String(count)
+        return new markerLib.AdvancedMarkerElement({ position, content: el, zIndex: 900 })
+      },
+    }
+  }, [markerLib])
+
+  // Create the clusterer once the map + renderer are ready.
+  useEffect(() => {
+    if (!map || !renderer) return
+    if (!clustererRef.current) {
+      clustererRef.current = new MarkerClusterer({ map, renderer })
+    }
+    return () => {
+      clustererRef.current?.clearMarkers()
+      clustererRef.current?.setMap(null)
+      clustererRef.current = null
+    }
+  }, [map, renderer])
+
+  // Keep the clusterer's marker set in sync with what React has mounted.
+  useEffect(() => {
+    const c = clustererRef.current
+    if (!c) return
+    c.clearMarkers(true)
+    c.addMarkers(Object.values(markers), true)
+    c.render()
+  }, [markers])
+
+  const setMarkerRef = useCallback((marker, id) => {
+    setMarkers(prev => {
+      if ((marker && prev[id]) || (!marker && !prev[id])) return prev
+      if (marker) return { ...prev, [id]: marker }
+      const next = { ...prev }
+      delete next[id]
+      return next
+    })
+  }, [])
+
+  return points.map(g => (
+    <AdvancedMarker
+      key={g.id}
+      position={{ lat: g.lat, lng: g.lng }}
+      ref={m => setMarkerRef(m, g.id)}
+      onClick={() => onSelect(g)}
+      zIndex={selectedId === g.id ? 100 : 1}
+      title={(STYLE_LABELS[g.style] ? STYLE_LABELS[g.style]() : g.style) || g.style}
+    >
+      <div className={'marker-can' + (selectedId === g.id ? ' selected' : '')}>
+        <SprayCan color={STYLE_COLORS[g.style] || '#888'} size={24} />
+      </div>
+    </AdvancedMarker>
+  ))
+}
 
 /* ══════════════════════════════════════════════════════
    SEARCH
@@ -1038,14 +1111,11 @@ export default function App() {
                 clickableIcons={false}
               >
                 <MapController panTo={panTo} onBackgroundClick={deselect} />
-                {filtered.map(g => (
-                  <GraffitiMarker
-                    key={g.id}
-                    g={g}
-                    isSelected={selectedId === g.id}
-                    onSelect={handleSelect}
-                  />
-                ))}
+                <ClusteredMarkers
+                  points={filtered}
+                  selectedId={selectedId}
+                  onSelect={handleSelect}
+                />
               </Map>
             </APIProvider>
           </div>

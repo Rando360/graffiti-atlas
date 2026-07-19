@@ -729,10 +729,6 @@ function Sidebar({
                     </span>
                     {det.size_m2 && <span className="det-size">{det.size_m2} m²</span>}
                   </div>
-                  <p className="detail-desc">{det.description_fr}</p>
-                  {t('desc.frenchOnly') && det.description_fr && (
-                    <p className="detail-desc-note">{t('desc.frenchOnly')}</p>
-                  )}
                 </div>
               ))}
 

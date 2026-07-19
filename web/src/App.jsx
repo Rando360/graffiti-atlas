@@ -1,6 +1,5 @@
 import { useState, useCallback, useEffect, useRef, useMemo, memo } from 'react'
-import { APIProvider, Map, AdvancedMarker, useMap, useMapsLibrary } from '@vis.gl/react-google-maps'
-import { MarkerClusterer } from '@googlemaps/markerclusterer'
+import { APIProvider, Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
 import AuthModal from './AuthModal'
 import UploadModal from './UploadModal'
 import ModerationPanel from './ModerationPanel'
@@ -82,76 +81,47 @@ const GraffitiMarker = memo(function GraffitiMarker({ g, isSelected, onSelect })
   )
 })
 
-/* Clusters nearby markers into count bubbles that split apart on zoom.
-   Uses Google's MarkerClusterer via refs to the @vis.gl AdvancedMarkers. */
-function ClusteredMarkers({ points, selectedId, onSelect }) {
-  const map = useMap()
-  const markerLib = useMapsLibrary('marker')
-  const [markers, setMarkers] = useState({})
-  const clustererRef = useRef(null)
-
-  // Orange count bubbles, sized by how many markers they contain.
-  const renderer = useMemo(() => {
-    if (!markerLib) return null
-    return {
-      render: ({ count, position }) => {
-        const size = count < 10 ? 40 : count < 50 ? 48 : count < 100 ? 56 : 64
-        const el = document.createElement('div')
-        el.className = 'cluster-bubble'
-        el.style.width = size + 'px'
-        el.style.height = size + 'px'
-        el.textContent = String(count)
-        return new markerLib.AdvancedMarkerElement({ position, content: el, zIndex: 900 })
-      },
+/* Renders whatever the server sent: cluster bubbles (zoom out) or individual
+   markers (zoom in). Clustering is done server-side in PostGIS, so the browser
+   only ever draws what's in view — this scales to very large datasets.
+   Clicking a cluster zooms the map in toward it, which re-fetches finer data. */
+function ServerMarkers({ points, selectedId, onSelect, onClusterClick }) {
+  return points
+    .filter(g => typeof g.lat === 'number' && typeof g.lng === 'number')
+    .map((g, idx) => {
+    if (g.cluster) {
+      const n = g.count
+      const size = n < 10 ? 40 : n < 50 ? 48 : n < 100 ? 56 : 64
+      return (
+        <AdvancedMarker
+          key={`c-${idx}-${g.lat.toFixed(5)}-${g.lng.toFixed(5)}`}
+          position={{ lat: g.lat, lng: g.lng }}
+          onClick={() => onClusterClick(g)}
+          zIndex={50}
+        >
+          <div
+            className="cluster-bubble"
+            style={{ width: size, height: size }}
+          >
+            {n}
+          </div>
+        </AdvancedMarker>
+      )
     }
-  }, [markerLib])
-
-  // Create the clusterer once the map + renderer are ready.
-  useEffect(() => {
-    if (!map || !renderer) return
-    if (!clustererRef.current) {
-      clustererRef.current = new MarkerClusterer({ map, renderer })
-    }
-    return () => {
-      clustererRef.current?.clearMarkers()
-      clustererRef.current?.setMap(null)
-      clustererRef.current = null
-    }
-  }, [map, renderer])
-
-  // Keep the clusterer's marker set in sync with what React has mounted.
-  useEffect(() => {
-    const c = clustererRef.current
-    if (!c) return
-    c.clearMarkers(true)
-    c.addMarkers(Object.values(markers), true)
-    c.render()
-  }, [markers])
-
-  const setMarkerRef = useCallback((marker, id) => {
-    setMarkers(prev => {
-      if ((marker && prev[id]) || (!marker && !prev[id])) return prev
-      if (marker) return { ...prev, [id]: marker }
-      const next = { ...prev }
-      delete next[id]
-      return next
-    })
-  }, [])
-
-  return points.map(g => (
-    <AdvancedMarker
-      key={g.id}
-      position={{ lat: g.lat, lng: g.lng }}
-      ref={m => setMarkerRef(m, g.id)}
-      onClick={() => onSelect(g)}
-      zIndex={selectedId === g.id ? 100 : 1}
-      title={(STYLE_LABELS[g.style] ? STYLE_LABELS[g.style]() : g.style) || g.style}
-    >
-      <div className={'marker-can' + (selectedId === g.id ? ' selected' : '')}>
-        <SprayCan color={STYLE_COLORS[g.style] || '#888'} size={24} />
-      </div>
-    </AdvancedMarker>
-  ))
+    return (
+      <AdvancedMarker
+        key={g.id}
+        position={{ lat: g.lat, lng: g.lng }}
+        onClick={() => onSelect(g)}
+        zIndex={selectedId === g.id ? 100 : 1}
+        title={(STYLE_LABELS[g.style] ? STYLE_LABELS[g.style]() : g.style) || g.style}
+      >
+        <div className={'marker-can' + (selectedId === g.id ? ' selected' : '')}>
+          <SprayCan color={STYLE_COLORS[g.style] || '#888'} size={24} />
+        </div>
+      </AdvancedMarker>
+    )
+  })
 }
 
 /* ══════════════════════════════════════════════════════
@@ -336,7 +306,7 @@ function Header({ onSearchResult, user, onLoginClick, onLogout, onUploadClick, i
 /* ══════════════════════════════════════════════════════
    MAP CONTROLLER — pan + deselect on background click
    ══════════════════════════════════════════════════════ */
-function MapController({ panTo, onBackgroundClick }) {
+function MapController({ panTo, onBackgroundClick, zoomRef, onZoomReady }) {
   const map = useMap()
 
   useEffect(() => {
@@ -344,6 +314,15 @@ function MapController({ panTo, onBackgroundClick }) {
     map.panTo({ lat: panTo.lat, lng: panTo.lng })
     if (panTo.zoom) map.setZoom(panTo.zoom)
   }, [map, panTo])
+
+  // Keep the shared zoom ref current so fetches always send the real zoom.
+  useEffect(() => {
+    if (!map || !zoomRef) return
+    const sync = () => { zoomRef.current = map.getZoom() }
+    sync()
+    const l = map.addListener('zoom_changed', sync)
+    return () => l.remove()
+  }, [map, zoomRef])
 
   // Clicking empty map deselects — standard expectation
   useEffect(() => {
@@ -525,7 +504,7 @@ function FilterSection({ title, activeCount, children, defaultOpen = true }) {
    SIDEBAR
    ══════════════════════════════════════════════════════ */
 function Sidebar({
-  graffiti, allGraffiti, selected, onSelect, loading, error,
+  graffiti, allGraffiti, inViewTotal, hasClusters, selected, onSelect, loading, error,
   filters, onFilterChange, onResetFilters, cities, sheetOpen, onToggleSheet,
 }) {
   const [imgExpanded, setImgExpanded] = useState(false)
@@ -600,7 +579,7 @@ function Sidebar({
 
   // Which body state are we in?
   const noDataInArea = !loading && !error && allGraffiti.length === 0
-  const noFilterResults = !loading && allGraffiti.length > 0 && graffiti.length === 0
+  const noFilterResults = !loading && !hasClusters && allGraffiti.length > 0 && graffiti.length === 0
 
   return (
     <aside className={'sidebar' + (sheetOpen ? ' sheet-open' : '')}>
@@ -611,7 +590,7 @@ function Sidebar({
 
       <div className="stats-grid">
         <div className="stat-box">
-          <span className="stat-num">{graffiti.length}</span>
+          <span className="stat-num">{inViewTotal}</span>
           <span className="stat-lbl">{t('stats.inView')}</span>
         </div>
         <div className="stat-box">
@@ -891,7 +870,8 @@ export default function App() {
   const [sheetOpen, setSheetOpen] = useState(false)
 
   const boundsDebounceRef = useRef(null)
-  const loadedBoundsRef = useRef(null)
+  const lastZoomRef = useRef(12)
+  const lastBoundsRef = useRef(null)
   const abortRef = useRef(null)
 
   /* Lock the viewport to full-height only while the map is mounted,
@@ -969,14 +949,25 @@ export default function App() {
     }
   }, [])
 
-  /* Data fetching — skips network on zoom-in, pads bounds, cancels stale requests */
-  const fetchGraffiti = useCallback(async (bounds) => {
+  /* Clicking a server cluster zooms in toward it, revealing finer clusters or
+     individual markers (a new fetch runs at the higher zoom). */
+  const handleClusterClick = useCallback((c) => {
+    const current = Math.round(lastZoomRef.current ?? 12)
+    const nextZoom = Math.min(current + 3, 18)
+    setPanTo({ lat: c.lat, lng: c.lng, zoom: nextZoom })
+  }, [])
+
+  /* Data fetching — server clusters by zoom. Skip only when the view is
+     already covered AND zoom hasn't changed; any zoom change refetches. */
+  const loadedRef = useRef(null)   // { bounds, zoom }
+  const fetchGraffiti = useCallback(async (bounds, zoom) => {
     if (!bounds) return
 
-    const loaded = loadedBoundsRef.current
-    if (loaded &&
-        bounds.north <= loaded.north && bounds.south >= loaded.south &&
-        bounds.east <= loaded.east && bounds.west >= loaded.west) {
+    const z0 = Math.round(zoom ?? 12)
+    const done = loadedRef.current
+    if (done && done.zoom === z0 &&
+        bounds.north <= done.bounds.north && bounds.south >= done.bounds.south &&
+        bounds.east <= done.bounds.east && bounds.west >= done.bounds.west) {
       return
     }
 
@@ -994,14 +985,15 @@ export default function App() {
     setLoading(true)
     try {
       const { north, south, east, west } = padded
+      const z = Math.round(zoom ?? 12)
       const res = await fetch(
-        `${API_URL}/map/graffiti?north=${north}&south=${south}&east=${east}&west=${west}`,
+        `${API_URL}/map/graffiti?north=${north}&south=${south}&east=${east}&west=${west}&zoom=${z}`,
         { signal: controller.signal }
       )
       if (!res.ok) throw new Error('HTTP ' + res.status)
       const data = await res.json()
       setAllGraffiti(data.features)
-      loadedBoundsRef.current = padded
+      loadedRef.current = { bounds: padded, zoom: z }
       setError(null)
     } catch (err) {
       if (err.name === 'AbortError') return
@@ -1014,15 +1006,24 @@ export default function App() {
 
   const handleBoundsChanged = useCallback((e) => {
     const bounds = e.detail.bounds
+    const zoom = lastZoomRef.current ?? e.detail.zoom ?? 12
     mapCenterRef.current = {
       lat: (bounds.north + bounds.south) / 2,
       lng: (bounds.east + bounds.west) / 2,
     }
+    lastZoomRef.current = zoom
+    lastBoundsRef.current = bounds
     clearTimeout(boundsDebounceRef.current)
-    boundsDebounceRef.current = setTimeout(() => fetchGraffiti(bounds), 250)
+    boundsDebounceRef.current = setTimeout(() => fetchGraffiti(bounds, zoom), 250)
+  }, [fetchGraffiti])
+
+  const retryFetch = useCallback(() => {
+    if (lastBoundsRef.current) fetchGraffiti(lastBoundsRef.current, lastZoomRef.current)
   }, [fetchGraffiti])
 
   const filtered = useMemo(() => allGraffiti.filter(g => {
+    // Clusters are aggregates with no style/size/year — never filter them out.
+    if (g.cluster) return true
     if (filters.styles.size > 0 && !filters.styles.has(g.style)) return false
     if (filters.years.size > 0 && !filters.years.has(g.year)) return false
     if (filters.sizes.size > 0) {
@@ -1034,6 +1035,17 @@ export default function App() {
     }
     return true
   }), [allGraffiti, filters])
+
+  // Only individual markers count as selectable graffiti (for the sidebar list).
+  const individuals = useMemo(() => filtered.filter(g => !g.cluster), [filtered])
+
+  // True number of graffiti in view = individual markers + everything inside clusters.
+  const hasClusters = useMemo(() => allGraffiti.some(g => g.cluster), [allGraffiti])
+
+  const inViewTotal = useMemo(
+    () => allGraffiti.reduce((sum, g) => sum + (g.cluster ? g.count : 1), 0),
+    [allGraffiti]
+  )
 
   const selectedId = selected?.id ?? null
 
@@ -1075,13 +1087,15 @@ export default function App() {
       {error && (
         <div className="error-banner" role="alert">
           <span>⚠ {error}</span>
-          <button onClick={() => { setError(null); loadedBoundsRef.current = null }}>{t('error.retry')}</button>
+          <button onClick={() => { setError(null); retryFetch() }}>{t('error.retry')}</button>
         </div>
       )}
 
       <div className="app-body">
         <Sidebar
-          graffiti={filtered}
+          graffiti={individuals}
+          inViewTotal={inViewTotal}
+          hasClusters={hasClusters}
           allGraffiti={allGraffiti}
           selected={selected}
           onSelect={handleSelect}
@@ -1110,11 +1124,12 @@ export default function App() {
                 fullscreenControl={false}
                 clickableIcons={false}
               >
-                <MapController panTo={panTo} onBackgroundClick={deselect} />
-                <ClusteredMarkers
+                <MapController panTo={panTo} onBackgroundClick={deselect} zoomRef={lastZoomRef} />
+                <ServerMarkers
                   points={filtered}
                   selectedId={selectedId}
                   onSelect={handleSelect}
+                  onClusterClick={handleClusterClick}
                 />
               </Map>
             </APIProvider>

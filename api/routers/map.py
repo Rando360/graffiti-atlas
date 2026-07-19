@@ -12,48 +12,71 @@ def get_supabase():
 
 CLOUDFRONT = "https://d36hw3x1088tvv.cloudfront.net"
 
+
 @router.get("/graffiti")
 def get_map_graffiti(
     north: float = Query(...),
     south: float = Query(...),
     east: float = Query(...),
     west: float = Query(...),
+    zoom: int = Query(12),
     city: str = Query(None),
     style: str = Query(None),
 ):
+    """
+    Zoom-aware map data. The database clusters server-side:
+      • zoomed out  → returns cluster bubbles (count + centre), few rows
+      • zoomed in   → returns individual graffiti with full detail
+    This scales to very large datasets because the browser never receives
+    more than what's needed for the current view.
+    """
     supabase = get_supabase()
-    result = supabase.rpc("get_graffiti_in_bbox", {
+    result = supabase.rpc("get_map_clusters", {
         "min_lat": south, "min_lng": west,
         "max_lat": north, "max_lng": east,
+        "zoom": zoom,
     }).execute()
 
     features = []
     for r in result.data:
-        s3_key = r.get("s3_key_full", "")
-        image_url = f"{CLOUDFRONT}/{s3_key}" if s3_key else None
-        display_source = "GraffitiAtlas" if r.get("source") == "rando360" else "Community"
-        date = r.get("date_observed")
-        year = str(date)[:4] if date else None
+        if r.get("is_cluster"):
+            # A cluster bubble — minimal payload.
+            features.append({
+                "cluster": True,
+                "count": r["cluster_count"],
+                "lat": r["lat"],
+                "lng": r["lng"],
+                "style": r.get("style"),   # dominant style (optional colouring)
+            })
+        else:
+            # An individual marker — full detail.
+            s3_key = r.get("s3_key_full", "")
+            image_url = f"{CLOUDFRONT}/{s3_key}" if s3_key else None
+            display_source = "GraffitiAtlas" if r.get("source") == "rando360" else "Community"
+            date = r.get("date_observed")
+            year = str(date)[:4] if date else None
 
-        features.append({
-            "id": r["id"],
-            "lat": r["lat"],
-            "lng": r["lng"],
-            "city": r["city"],
-            "style": r.get("style"),
-            "size_m2": r.get("size_m2"),
-            "surface_type": r.get("surface_type"),
-            "description_fr": r.get("description_fr"),
-            "image_url": image_url,
-            "source": display_source,
-            "date_observed": str(date) if date else None,
-            "year": year,
-        })
-
-    if city:
-        features = [f for f in features if f["city"] == city]
-    if style:
-        features = [f for f in features if f["style"] == style]
+            feature = {
+                "cluster": False,
+                "id": r["id"],
+                "lat": r["lat"],
+                "lng": r["lng"],
+                "city": r.get("city"),
+                "style": r.get("style"),
+                "size_m2": r.get("size_m2"),
+                "surface_type": r.get("surface_type"),
+                "description_fr": r.get("description_fr"),
+                "image_url": image_url,
+                "source": display_source,
+                "date_observed": str(date) if date else None,
+                "year": year,
+            }
+            # Optional client-side filters only apply to individual markers.
+            if city and feature["city"] != city:
+                continue
+            if style and feature["style"] != style:
+                continue
+            features.append(feature)
 
     return {"count": len(features), "features": features}
 

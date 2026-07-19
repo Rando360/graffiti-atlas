@@ -437,30 +437,30 @@ const STRINGS = {
   /* ── Landing page ── */
   'nav.explore': { fr: 'Explorer', en: 'Explore', es: 'Explorar', de: 'Erkunden', it: 'Esplora' },
   'landing.eyebrow': {
-    fr: "L'atlas du street art urbain", en: 'The urban street-art atlas',
-    es: 'El atlas del arte urbano', de: 'Der Atlas der urbanen Streetart', it: "L'atlante della street art urbana",
+    fr: 'Inventaire du graffiti urbain', en: 'An inventory of urban graffiti',
+    es: 'Un inventario del grafiti urbano', de: 'Ein Inventar urbaner Graffiti', it: 'Un inventario dei graffiti urbani',
   },
   'landing.h1': {
-    fr: "Le street art n'est plus éphémère.",
-    en: "Street art doesn't have to be fleeting.",
-    es: 'El arte urbano ya no es efímero.',
-    de: 'Streetart muss nicht vergänglich sein.',
-    it: 'La street art non è più effimera.',
+    fr: 'Documenter le graffiti, ville par ville.',
+    en: 'Documenting graffiti, city by city.',
+    es: 'Documentar el grafiti, ciudad a ciudad.',
+    de: 'Graffiti dokumentieren, Stadt für Stadt.',
+    it: 'Documentare i graffiti, città per città.',
   },
   'landing.sub': {
-    fr: 'Explorez, cartographiez et suivez le graffiti de votre ville — rue par rue, œuvre par œuvre.',
-    en: 'Explore, map and follow the graffiti in your city — street by street, piece by piece.',
-    es: 'Explora, cartografía y sigue el grafiti de tu ciudad — calle a calle, obra a obra.',
-    de: 'Entdecke, kartiere und verfolge die Graffiti deiner Stadt — Straße für Straße, Werk für Werk.',
-    it: 'Esplora, mappa e segui i graffiti della tua città — strada per strada, opera per opera.',
+    fr: 'Un relevé cartographique du graffiti urbain — ce qui apparaît, ce qui est recouvert, ce qui reste.',
+    en: 'A cartographic record of urban graffiti — what appears, what gets covered, what remains.',
+    es: 'Un registro cartográfico del grafiti urbano — lo que aparece, lo que se cubre, lo que permanece.',
+    de: 'Eine kartografische Erfassung urbaner Graffiti — was erscheint, was übermalt wird, was bleibt.',
+    it: 'Un rilevamento cartografico dei graffiti urbani — ciò che appare, ciò che viene coperto, ciò che resta.',
   },
   'landing.cta': {
     fr: 'Explorer la carte', en: 'Explore the map', es: 'Explorar el mapa',
     de: 'Karte erkunden', it: 'Esplora la mappa',
   },
   'landing.stat.works': {
-    fr: 'œuvres recensées', en: 'works catalogued', es: 'obras catalogadas',
-    de: 'erfasste Werke', it: 'opere catalogate',
+    fr: 'graffitis recensés', en: 'graffiti recorded', es: 'grafitis registrados',
+    de: 'erfasste Graffiti', it: 'graffiti registrati',
   },
   'landing.stat.cities': { fr: 'villes', en: 'cities', es: 'ciudades', de: 'Städte', it: 'città' },
   'landing.stat.live': {
@@ -473,11 +473,11 @@ const STRINGS = {
   },
   'landing.how.1.t': { fr: 'Découvrir', en: 'Discover', es: 'Descubrir', de: 'Entdecken', it: 'Scoprire' },
   'landing.how.1.d': {
-    fr: 'Parcourez une carte vivante du graffiti, des tags aux fresques monumentales.',
-    en: 'Browse a living map of graffiti, from tags to monumental murals.',
-    es: 'Recorre un mapa vivo del grafiti, desde tags hasta murales monumentales.',
-    de: 'Durchstöbere eine lebendige Karte der Graffiti, von Tags bis zu monumentalen Wandbildern.',
-    it: 'Sfoglia una mappa viva dei graffiti, dai tag ai murales monumentali.',
+    fr: 'Parcourez la carte du graffiti recensé, des tags aux grandes fresques.',
+    en: 'Browse the map of recorded graffiti, from tags to large murals.',
+    es: 'Recorre el mapa del grafiti registrado, desde tags hasta grandes murales.',
+    de: 'Durchsuche die Karte erfasster Graffiti, von Tags bis zu großen Wandbildern.',
+    it: 'Sfoglia la mappa dei graffiti registrati, dai tag alle grandi opere murali.',
   },
   'landing.how.2.t': { fr: 'Contribuer', en: 'Contribute', es: 'Contribuir', de: 'Beitragen', it: 'Contribuire' },
   'landing.how.2.d': {
@@ -489,11 +489,11 @@ const STRINGS = {
   },
   'landing.how.3.t': { fr: 'Suivre', en: 'Follow', es: 'Seguir', de: 'Verfolgen', it: 'Seguire' },
   'landing.how.3.d': {
-    fr: 'Voyez le street art apparaître, évoluer et disparaître au fil du temps.',
-    en: 'Watch street art appear, evolve and disappear over time.',
-    es: 'Observa cómo el arte urbano aparece, evoluciona y desaparece con el tiempo.',
-    de: 'Sieh zu, wie Streetart entsteht, sich verändert und verschwindet.',
-    it: 'Osserva la street art apparire, evolversi e scomparire nel tempo.',
+    fr: 'Gardez la trace de chaque graffiti — même une fois recouvert. L\'historique reste.',
+    en: "Keep a record of every graffiti — even once it's covered. The history stays.",
+    es: 'Conserva el registro de cada grafiti — incluso cuando se cubre. El historial permanece.',
+    de: 'Behalte jedes Graffiti im Blick — auch wenn es übermalt wird. Die Historie bleibt.',
+    it: 'Tieni traccia di ogni graffito — anche dopo che è stato coperto. La storia resta.',
   },
   'landing.muni.eyebrow': { fr: 'Collectivités', en: 'For cities', es: 'Para municipios', de: 'Für Kommunen', it: 'Per i comuni' },
   'landing.muni.title': {
@@ -512,12 +512,48 @@ const STRINGS = {
     fr: 'Nous contacter', en: 'Get in touch', es: 'Contáctanos', de: 'Kontakt aufnehmen', it: 'Contattaci',
   },
   'landing.footer.tagline': {
-    fr: "L'atlas du street art urbain, ville par ville.",
-    en: 'The urban street-art atlas, city by city.',
-    es: 'El atlas del arte urbano, ciudad a ciudad.',
-    de: 'Der Atlas der urbanen Streetart, Stadt für Stadt.',
-    it: "L'atlante della street art urbana, città per città.",
+    fr: 'Un inventaire du graffiti urbain, ville par ville.',
+    en: 'An inventory of urban graffiti, city by city.',
+    es: 'Un inventario del grafiti urbano, ciudad a ciudad.',
+    de: 'Ein Inventar urbaner Graffiti, Stadt für Stadt.',
+    it: 'Un inventario dei graffiti urbani, città per città.',
   },
+
+  /* ── Location model / history ── */
+  'mod.nearby.title': {
+    fr: 'À proximité (10 m)', en: 'Nearby (10 m)', es: 'Cerca (10 m)',
+    de: 'In der Nähe (10 m)', it: 'Nelle vicinanze (10 m)',
+  },
+  'mod.nearby.none': {
+    fr: 'Aucun graffiti connu à moins de 10 m.', en: 'No known graffiti within 10 m.',
+    es: 'Ningún grafiti conocido a menos de 10 m.', de: 'Kein bekanntes Graffiti innerhalb von 10 m.',
+    it: 'Nessun graffito noto entro 10 m.',
+  },
+  'mod.nearby.select': {
+    fr: 'Sélectionnez un graffiti proche pour activer ces actions :',
+    en: 'Select a nearby graffiti to enable these actions:',
+    es: 'Selecciona un grafiti cercano para activar estas acciones:',
+    de: 'Wähle ein nahes Graffiti, um diese Aktionen zu aktivieren:',
+    it: 'Seleziona un graffito vicino per attivare queste azioni:',
+  },
+  'mod.samePhoto': {
+    fr: '📎 Même graffiti (ajouter la photo)', en: '📎 Same graffiti (add photo)',
+    es: '📎 Mismo grafiti (añadir foto)', de: '📎 Gleiches Graffiti (Foto hinzufügen)',
+    it: '📎 Stesso graffito (aggiungi foto)',
+  },
+  'mod.newAtLocation': {
+    fr: '🕘 Nouveau graffiti ici (même emplacement)', en: '🕘 New graffiti here (same spot)',
+    es: '🕘 Nuevo grafiti aquí (mismo lugar)', de: '🕘 Neues Graffiti hier (gleicher Ort)',
+    it: '🕘 Nuovo graffito qui (stesso punto)',
+  },
+  'mod.cleanedBadge': { fr: 'Effacé', en: 'Cleaned', es: 'Borrado', de: 'Entfernt', it: 'Rimosso' },
+  'mod.distAway': { fr: 'm', en: 'm', es: 'm', de: 'm', it: 'm' },
+  'filter.state': { fr: 'ÉTAT', en: 'STATE', es: 'ESTADO', de: 'STATUS', it: 'STATO' },
+  'filter.state.active': { fr: 'Actifs', en: 'Active', es: 'Activos', de: 'Aktiv', it: 'Attivi' },
+  'filter.state.cleaned': { fr: 'Effacés', en: 'Cleaned', es: 'Borrados', de: 'Entfernt', it: 'Rimossi' },
+  'filter.state.all': { fr: 'Tous', en: 'All', es: 'Todos', de: 'Alle', it: 'Tutti' },
+  'detail.history': { fr: 'Historique du lieu', en: 'Location history', es: 'Historial del lugar', de: 'Ortsverlauf', it: 'Storia del luogo' },
+  'detail.current': { fr: 'Actuel', en: 'Current', es: 'Actual', de: 'Aktuell', it: 'Attuale' },
 
   /* ── Descriptions (data) ── */
   'desc.frenchOnly': {

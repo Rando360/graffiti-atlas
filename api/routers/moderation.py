@@ -85,7 +85,20 @@ def list_pending(user: dict = Depends(require_admin)):
     """Graffiti submissions awaiting review, newest first."""
     service = _service()
     rows = service.rpc("get_pending_graffiti", {}).execute()
-    return {"pending": rows.data or []}
+    pending = rows.data or []
+    # Comparison data: approved graffiti within 10 m of each pending upload.
+    for p in pending:
+        lat, lng = p.get("lat"), p.get("lng")
+        if lat is None or lng is None:
+            p["nearby"] = []
+            continue
+        try:
+            nb = service.rpc("get_nearby_graffiti",
+                             {"p_lat": lat, "p_lng": lng, "p_radius_m": 10}).execute()
+            p["nearby"] = nb.data or []
+        except Exception:
+            p["nearby"] = []
+    return {"pending": pending}
 
 
 @router.get("/removals")
@@ -133,6 +146,53 @@ def approve_graffiti(graffiti_id: str, body: ApproveBody = None, user: dict = De
             }).execute()
 
     return {"status": "approved", "id": graffiti_id, "style": body.style if body else None}
+
+
+class TargetBody(BaseModel):
+    target_id: str
+    style: str | None = None
+
+
+@router.post("/graffiti/{graffiti_id}/attach-photo")
+def attach_photo(graffiti_id: str, body: TargetBody, user: dict = Depends(require_admin)):
+    """Same graffiti, another photo: move this upload's image(s) onto the
+    existing graffiti, then remove the pending row. Both photos are kept."""
+    service = _service()
+    target = service.table("graffiti").select("id").eq("id", body.target_id).execute()
+    if not target.data:
+        raise HTTPException(status_code=404, detail="Cible introuvable")
+    service.table("images").update({"graffiti_id": body.target_id}) \
+        .eq("graffiti_id", graffiti_id).execute()
+    service.table("classifications").delete().eq("graffiti_id", graffiti_id).execute()
+    service.table("graffiti").delete().eq("id", graffiti_id).execute()
+    return {"status": "attached", "target": body.target_id}
+
+
+@router.post("/graffiti/{graffiti_id}/approve-at-location")
+def approve_at_location(graffiti_id: str, body: TargetBody, user: dict = Depends(require_admin)):
+    """New graffiti at a known spot: approve it and join the target's location,
+    growing that location's timeline. If the previous graffiti there was
+    cleaned, the location flips back to active (latest wins)."""
+    service = _service()
+    target = service.table("graffiti").select("location_id").eq("id", body.target_id).execute()
+    if not target.data:
+        raise HTTPException(status_code=404, detail="Cible introuvable")
+    loc = target.data[0]["location_id"] or body.target_id
+    service.table("graffiti").update({
+        "location_id": loc,
+        "status": "approved",
+        "updated_at": datetime.utcnow().isoformat(),
+    }).eq("id", graffiti_id).execute()
+    if body.style:
+        existing = service.table("classifications").select("id").eq("graffiti_id", graffiti_id).execute()
+        if existing.data:
+            service.table("classifications").update({"style": body.style}).eq("graffiti_id", graffiti_id).execute()
+        else:
+            service.table("classifications").insert({
+                "graffiti_id": graffiti_id, "style": body.style,
+                "model_version": "moderator",
+            }).execute()
+    return {"status": "approved", "location_id": loc}
 
 
 @router.post("/graffiti/{graffiti_id}/reject")

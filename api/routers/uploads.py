@@ -207,6 +207,7 @@ async def upload_graffiti(
 
     service.table("graffiti").insert({
         "id": graffiti_id,
+        "location_id": graffiti_id,
         "user_id": user["id"],
         "location": f"POINT({lng} {lat})",
         "city": city,

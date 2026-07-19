@@ -116,8 +116,8 @@ function ServerMarkers({ points, selectedId, onSelect, onClusterClick }) {
         zIndex={selectedId === g.id ? 100 : 1}
         title={(STYLE_LABELS[g.style] ? STYLE_LABELS[g.style]() : g.style) || g.style}
       >
-        <div className={'marker-can' + (selectedId === g.id ? ' selected' : '')}>
-          <SprayCan color={STYLE_COLORS[g.style] || '#888'} size={24} />
+        <div className={'marker-can' + (selectedId === g.id ? ' selected' : '') + (g.cleaned ? ' cleaned' : '')}>
+          <SprayCan color={g.cleaned ? '#D8D1C2' : (STYLE_COLORS[g.style] || '#888')} size={24} />
         </div>
       </AdvancedMarker>
     )
@@ -504,7 +504,7 @@ function FilterSection({ title, activeCount, children, defaultOpen = true }) {
    SIDEBAR
    ══════════════════════════════════════════════════════ */
 function Sidebar({
-  graffiti, allGraffiti, inViewTotal, hasClusters, selected, onSelect, loading, error,
+  graffiti, allGraffiti, inViewTotal, hasClusters, timeline, selected, onSelect, loading, error,
   filters, onFilterChange, onResetFilters, cities, sheetOpen, onToggleSheet,
 }) {
   const [imgExpanded, setImgExpanded] = useState(false)
@@ -614,6 +614,24 @@ function Sidebar({
                 <span className="filter-dot" style={{ background: STYLE_COLORS[style] }} />
                 <span className="filter-count">{typeCounts[style] || 0}</span>
                 <span className="filter-name">{(STYLE_LABELS[style] ? STYLE_LABELS[style]() : style)}</span>
+              </button>
+            )
+          })}
+        </FilterSection>
+
+        <FilterSection title={t('filter.state')} activeCount={filters.state !== 'all' ? 1 : 0}>
+          {['all', 'active', 'cleaned'].map(sk => {
+            const active = filters.state === sk
+            const dot = sk === 'cleaned' ? '#D8D1C2' : sk === 'active' ? '#1DB870' : '#8A8378'
+            return (
+              <button key={sk}
+                className={'filter-btn' + (active ? ' active' : '')}
+                style={{ borderColor: active ? dot : '#E9E5DA', background: active ? dot + '22' : '#fff' }}
+                onClick={() => onFilterChange(prev => ({ ...prev, state: sk }))}
+                aria-pressed={active}
+              >
+                <span className="filter-dot" style={{ background: dot }} />
+                <span className="filter-name">{t('filter.state.' + sk)}</span>
               </button>
             )
           })}
@@ -732,6 +750,26 @@ function Sidebar({
                 </div>
               ))}
 
+              {Array.isArray(timeline) && timeline.length > 1 && (
+                <div className="loc-history">
+                  <span className="loc-history-title">{t('detail.history')}</span>
+                  {timeline.map((e2, i2) => (
+                    <div key={e2.id} className={'loc-entry' + (e2.removed_at ? ' cleaned' : '')}>
+                      {e2.image_url
+                        ? <img src={e2.image_url} alt="" loading="lazy" />
+                        : <div className="loc-entry-noimg" />}
+                      <div className="loc-entry-meta">
+                        <span className="loc-entry-date">
+                          {e2.date_observed ? e2.date_observed.slice(0, 4) : '—'}
+                          {i2 === 0 && !e2.removed_at && <em> · {t('detail.current')}</em>}
+                        </span>
+                        {e2.removed_at && <span className="loc-entry-badge">{t('mod.cleanedBadge')} {e2.removed_at.slice(0, 4)}</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <div className="meta-box">
                 {address && (
                   <div className="meta-row">
@@ -822,8 +860,8 @@ function Sidebar({
             <p className="no-sel-title">{t('empty.noSelection')}</p>
             <p className="no-sel-sub">Cliquez sur un marqueur pour voir les images et les détails ici.</p>
             <p className="no-sel-tagline">
-              GraffitiAtlas cartographie les graffitis des villes françaises grâce à la détection par IA
-              sur des images de rue à 360°.
+              GraffitiAtlas recense et documente le graffiti des villes françaises à partir
+              d'images de rue à 360° — un inventaire cartographique, pas une galerie.
             </p>
             <div className="pano-credit">
               <span>
@@ -853,7 +891,7 @@ export default function App() {
   const [selected, setSelected] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [filters, setFilters] = useState({ styles: new Set(), sizes: new Set(), years: new Set() })
+  const [filters, setFilters] = useState({ styles: new Set(), sizes: new Set(), years: new Set(), state: 'all' })
   const [panTo, setPanTo] = useState(null)
   const [user, setUser] = useState(null)
   const [showAuth, setShowAuth] = useState(false)
@@ -1020,6 +1058,8 @@ export default function App() {
   const filtered = useMemo(() => allGraffiti.filter(g => {
     // Clusters are aggregates with no style/size/year — never filter them out.
     if (g.cluster) return true
+    if (filters.state === 'active' && g.cleaned) return false
+    if (filters.state === 'cleaned' && !g.cleaned) return false
     if (filters.styles.size > 0 && !filters.styles.has(g.style)) return false
     if (filters.years.size > 0 && !filters.years.has(g.year)) return false
     if (filters.sizes.size > 0) {
@@ -1046,10 +1086,23 @@ export default function App() {
   const selectedId = selected?.id ?? null
 
   const resetFilters = useCallback(() => {
-    setFilters({ styles: new Set(), sizes: new Set(), years: new Set() })
+    setFilters({ styles: new Set(), sizes: new Set(), years: new Set(), state: 'all' })
   }, [])
 
   const deselect = useCallback(() => setSelected(null), [])
+
+  /* Location history (timeline) for the selected marker's spot. */
+  const [timeline, setTimeline] = useState([])
+  useEffect(() => {
+    const lid = selected?.location_id
+    if (!lid) { setTimeline([]); return }
+    let alive = true
+    fetch(`${API_URL}/map/location/${lid}`)
+      .then(r => r.ok ? r.json() : { timeline: [] })
+      .then(d => { if (alive) setTimeline(d.timeline || []) })
+      .catch(() => { if (alive) setTimeline([]) })
+    return () => { alive = false }
+  }, [selected?.location_id])
 
   return (
     <div className="app">
@@ -1092,6 +1145,7 @@ export default function App() {
           graffiti={individuals}
           inViewTotal={inViewTotal}
           hasClusters={hasClusters}
+          timeline={timeline}
           allGraffiti={allGraffiti}
           selected={selected}
           onSelect={handleSelect}

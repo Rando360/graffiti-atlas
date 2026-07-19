@@ -59,6 +59,8 @@ def get_map_graffiti(
             feature = {
                 "cluster": False,
                 "id": r["id"],
+                "location_id": r.get("location_id"),
+                "cleaned": bool(r.get("cleaned")),
                 "lat": r["lat"],
                 "lng": r["lng"],
                 "city": r.get("city"),
@@ -79,6 +81,25 @@ def get_map_graffiti(
             features.append(feature)
 
     return {"count": len(features), "features": features}
+
+
+@router.get("/location/{location_id}")
+def get_location_timeline(location_id: str):
+    """History of graffiti at one location (newest first)."""
+    supabase = get_supabase()
+    rows = supabase.rpc("get_location_timeline", {"p_location_id": location_id}).execute()
+    out = []
+    for r in rows.data or []:
+        key = r.get("s3_key_medium")
+        out.append({
+            "id": r["id"],
+            "style": r.get("style"),
+            "date_observed": str(r["date_observed"]) if r.get("date_observed") else None,
+            "removed_at": str(r["removed_at"]) if r.get("removed_at") else None,
+            "source": "GraffitiAtlas" if r.get("source") == "rando360" else "Community",
+            "image_url": f"{CLOUDFRONT}/{key}" if key else None,
+        })
+    return {"timeline": out}
 
 
 @router.get("/cities")

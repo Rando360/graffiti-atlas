@@ -1,9 +1,9 @@
-import { useState, useCallback, useEffect, useRef, useMemo, memo } from 'react'
+import { useState, useCallback, useEffect, useRef, useMemo, memo, lazy, Suspense } from 'react'
 import { APIProvider, Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
-import AuthModal from './AuthModal'
-import UploadModal from './UploadModal'
-import ModerationPanel from './ModerationPanel'
-import SettingsPanel from './SettingsPanel'
+const AuthModal = lazy(() => import('./AuthModal'))
+const UploadModal = lazy(() => import('./UploadModal'))
+const ModerationPanel = lazy(() => import('./ModerationPanel'))
+const SettingsPanel = lazy(() => import('./SettingsPanel'))
 import { t, syncLanguageFromProfile } from './i18n'
 import { supabase } from './supabase'
 import './App.css'
@@ -66,26 +66,11 @@ function Chevron({ open }) {
 }
 
 // Memoized marker — only re-renders when its own data or selection changes
-const GraffitiMarker = memo(function GraffitiMarker({ g, isSelected, onSelect }) {
-  return (
-    <AdvancedMarker
-      position={{ lat: g.lat, lng: g.lng }}
-      onClick={() => onSelect(g)}
-      zIndex={isSelected ? 100 : 1}
-      title={(STYLE_LABELS[g.style] ? STYLE_LABELS[g.style]() : g.style) || g.style}
-    >
-      <div className={'marker-can' + (isSelected ? ' selected' : '')}>
-        <SprayCan color={STYLE_COLORS[g.style] || '#888'} size={24} />
-      </div>
-    </AdvancedMarker>
-  )
-})
-
 /* Renders whatever the server sent: cluster bubbles (zoom out) or individual
    markers (zoom in). Clustering is done server-side in PostGIS, so the browser
    only ever draws what's in view — this scales to very large datasets.
    Clicking a cluster zooms the map in toward it, which re-fetches finer data. */
-function ServerMarkers({ points, selectedId, onSelect, onClusterClick }) {
+const ServerMarkers = memo(function ServerMarkers({ points, selectedId, onSelect, onClusterClick }) {
   return points
     .filter(g => typeof g.lat === 'number' && typeof g.lng === 'number')
     .map((g, idx) => {
@@ -122,7 +107,7 @@ function ServerMarkers({ points, selectedId, onSelect, onClusterClick }) {
       </AdvancedMarker>
     )
   })
-}
+})
 
 /* ══════════════════════════════════════════════════════
    SEARCH
@@ -1031,7 +1016,6 @@ export default function App() {
       setError(null)
     } catch (err) {
       if (err.name === 'AbortError') return
-      console.error(err)
       setError(t('error.load'))
     } finally {
       setLoading(false)
@@ -1117,6 +1101,7 @@ export default function App() {
         onSettingsClick={() => setShowSettings(true)}
       />
 
+      <Suspense fallback={null}>
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
       {showUpload && (
         <UploadModal
@@ -1132,6 +1117,7 @@ export default function App() {
           onLogout={() => { supabase.auth.signOut(); setShowSettings(false) }}
         />
       )}
+      </Suspense>
 
       {error && (
         <div className="error-banner" role="alert">

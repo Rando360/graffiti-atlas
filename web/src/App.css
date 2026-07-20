@@ -1373,3 +1373,7 @@ button { font-family: inherit; }
 }
 .mod-zoom-close:hover { background: rgba(255,255,255,0.26); }
 .mod-thumb img { cursor: zoom-in; }
+
+/* Upload button: icon + label alignment */
+.header-btn.upload { display: inline-flex; align-items: center; gap: 6px; }
+.header-btn.upload .btn-icon { flex-shrink: 0; margin-top: -1px; }

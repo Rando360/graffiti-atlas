@@ -92,7 +92,7 @@ const STRINGS = {
     fr: 'Déconnexion', en: 'Log out', es: 'Cerrar sesión', de: 'Abmelden', it: 'Esci',
   },
   'header.report': {
-    fr: '+ Signaler', en: '+ Report', es: '+ Señalar', de: '+ Melden', it: '+ Segnala',
+    fr: 'Ajouter', en: 'Add graffiti', es: 'Añadir', de: 'Hinzufügen', it: 'Aggiungi',
   },
   'header.moderation': {
     fr: 'Modération', en: 'Moderation', es: 'Moderación', de: 'Moderation', it: 'Moderazione',

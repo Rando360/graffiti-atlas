@@ -258,7 +258,11 @@ function Header({ onSearchResult, user, onLoginClick, onLogout, onUploadClick, i
       <div className="header-right">
         {user && (
           <button className="header-btn upload" onClick={onUploadClick}>
-            {t('header.report')}
+            <svg className="btn-icon" width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M8 10.5V2.5M8 2.5L4.5 6M8 2.5L11.5 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M2.5 10.5v2A1.5 1.5 0 004 14h8a1.5 1.5 0 001.5-1.5v-2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+            </svg>
+            <span className="btn-text">{t('header.report')}</span>
           </button>
         )}
         {isAdmin && (

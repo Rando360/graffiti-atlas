@@ -682,50 +682,62 @@ button { font-family: inherit; }
 
 /* ── MOBILE — bottom sheet ───────────────────────────── */
 @media (max-width: 768px) {
-  .app-body { flex-direction: column-reverse; position: relative; }
+  /* Map-first: the map fills the screen; graffiti details live in a bottom sheet.
+     Street View is hidden on mobile (heavy, and competes with the photos). */
+  .app-body { position: relative; display: block; height: 100%; }
 
-  .right-panel { flex: 1; min-height: 0; }
-  .sv-panel, .sv-empty { height: 180px; }
-  .sv-empty p { font-size: 12px; }
+  .right-panel { position: absolute; inset: 0; }
+  .sv-panel, .sv-empty { display: none; }   /* no Street View on mobile */
+  .map-wrap { position: absolute; inset: 0; height: 100%; }
 
   .sidebar {
     position: absolute;
     bottom: 0; left: 0; right: 0;
     width: 100%;
-    height: 78vh;
-    max-height: 78vh;
-    transform: translateY(calc(100% - 92px));
-    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    height: 80vh;
+    max-height: 80vh;
+    transform: translateY(calc(100% - 74px));
+    transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
     border-right: none;
     border-top: 1px solid #E9E5DA;
-    border-radius: 16px 16px 0 0;
-    box-shadow: 0 -4px 24px rgba(0,0,0,0.14);
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 -4px 28px rgba(0,0,0,0.16);
     z-index: 20;
+    display: flex; flex-direction: column;
   }
   .sidebar.sheet-open { transform: translateY(0); }
 
   .sheet-handle {
     display: flex; align-items: center; justify-content: center;
-    width: 100%; height: 22px;
+    width: 100%; height: 26px;
     background: #FAF8F2; border: none; cursor: pointer;
-    border-radius: 16px 16px 0 0; flex-shrink: 0;
-    padding-top: 8px;
+    border-radius: 18px 18px 0 0; flex-shrink: 0;
+    padding-top: 9px;
   }
-  .sheet-grip {
-    width: 38px; height: 4px; border-radius: 2px;
-    background: #D2CCBD; display: block;
-  }
+  .sheet-grip { width: 40px; height: 4px; border-radius: 2px; background: #D2CCBD; display: block; }
+
+  /* Sheet content scrolls; photos get priority up top */
+  .sidebar > *:not(.sheet-handle) { }
+  .detail-wrap { flex: 1; overflow-y: auto; }
 
   .stats-grid { border-radius: 0; }
   .header-center { max-width: none; }
   .header-title { display: none; }
   .btn-text { display: none; }
-  .header-btn.icon-btn { padding: 6px 8px; }
+  .header-btn.icon-btn { padding: 7px 9px; }
+  .header-btn.upload { padding: 7px 10px; }
+
+  /* Bigger touch targets for markers/clusters + filter chips */
+  .cluster-bubble { min-width: 40px; min-height: 40px; }
+  .filter-btn { min-height: 44px; }
 
   .img-overlay { width: 100%; }
   .img-overlay-inner { width: calc(100% - 24px); }
   .img-zoom-container { min-height: 260px; }
   .img-zoom-hint { display: none; }
+
+  /* Street View link inside the detail panel is still useful — keep it,
+     it opens Google Maps in a new tab rather than embedding. */
 }
 
 /* ── REDUCED MOTION ──────────────────────────────────── */
@@ -1377,3 +1389,21 @@ button { font-family: inherit; }
 /* Upload button: icon + label alignment */
 .header-btn.upload { display: inline-flex; align-items: center; gap: 6px; }
 .header-btn.upload .btn-icon { flex-shrink: 0; margin-top: -1px; }
+
+/* ── Filters behind a toggle button ── */
+.filters-toggle {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; padding: 11px 14px; margin: 0 0 2px;
+  background: var(--surface, #fff); border: 1px solid var(--border, #E9E5DA);
+  border-radius: 10px; cursor: pointer; font-family: inherit;
+  font-size: 13px; font-weight: 600; color: var(--text, #2A2520);
+}
+.filters-toggle:hover { border-color: var(--accent, #E85D26); }
+.filters-toggle > span:not(.filters-toggle-badge) { flex: 1; text-align: left; }
+.filters-toggle svg:first-child { color: var(--text-2, #6E675C); flex-shrink: 0; }
+.filters-toggle-badge {
+  background: var(--accent, #E85D26); color: #fff;
+  font-size: 11px; font-weight: 700; min-width: 18px; height: 18px;
+  border-radius: 9px; display: flex; align-items: center; justify-content: center; padding: 0 5px;
+}
+.filters-block { padding-top: 4px; }

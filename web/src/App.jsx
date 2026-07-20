@@ -70,6 +70,21 @@ function Chevron({ open }) {
    markers (zoom in). Clustering is done server-side in PostGIS, so the browser
    only ever draws what's in view — this scales to very large datasets.
    Clicking a cluster zooms the map in toward it, which re-fetches finer data. */
+
+/* True on narrow viewports; updates on resize. Used to skip Street View
+   (and its API call) on mobile, where the map goes full-screen. */
+function useIsMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' ? window.innerWidth <= breakpoint : false
+  )
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= breakpoint)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [breakpoint])
+  return isMobile
+}
+
 const ServerMarkers = memo(function ServerMarkers({ points, selectedId, onSelect, onClusterClick }) {
   return points
     .filter(g => typeof g.lat === 'number' && typeof g.lng === 'number')
@@ -536,19 +551,14 @@ function Sidebar({
 
   const activeImage = allImages[activeImageIdx] || null
 
-  const { typeCounts, sizeCounts, years } = useMemo(() => {
+  const { typeCounts, years } = useMemo(() => {
     const typeCounts = {}
-    const sizeCounts = { small: 0, medium: 0, large: 0 }
     const yearSet = new Set()
     allGraffiti.forEach(g => {
       typeCounts[g.style] = (typeCounts[g.style] || 0) + 1
-      const s = g.size_m2 || 0
-      if (s < 0.5) sizeCounts.small++
-      else if (s < 2.0) sizeCounts.medium++
-      else sizeCounts.large++
       if (g.year) yearSet.add(g.year)
     })
-    return { typeCounts, sizeCounts, years: Array.from(yearSet).sort() }
+    return { typeCounts, years: Array.from(yearSet).sort() }
   }, [allGraffiti])
 
   const toggle = (key, val) => onFilterChange(prev => {
@@ -557,7 +567,7 @@ function Sidebar({
     return { ...prev, [key]: set }
   })
 
-  const activeFilterCount = filters.styles.size + filters.sizes.size + filters.years.size
+  const activeFilterCount = filters.styles.size + filters.years.size
   const totalM2 = useMemo(() => graffiti.reduce((a, g) => a + (g.size_m2 || 0), 0), [graffiti])
 
   const formatDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : null
@@ -565,6 +575,8 @@ function Sidebar({
 
   const prevImage = useCallback(() => setActiveImageIdx(i => (i - 1 + allImages.length) % allImages.length), [allImages.length])
   const nextImage = useCallback(() => setActiveImageIdx(i => (i + 1) % allImages.length), [allImages.length])
+
+  const [filtersOpen, setFiltersOpen] = useState(false)
 
   // Which body state are we in?
   const noDataInArea = !loading && !error && allGraffiti.length === 0
@@ -589,7 +601,20 @@ function Sidebar({
         {loading && <div className="stat-loading"><span className="loading-dot" /></div>}
       </div>
 
-      <div className="filters-block">
+      <button
+        className={'filters-toggle' + (filtersOpen ? ' open' : '')}
+        onClick={() => setFiltersOpen(o => !o)}
+        aria-expanded={filtersOpen}
+      >
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+        </svg>
+        <span>{t('filter.button')}</span>
+        {activeFilterCount > 0 && <span className="filters-toggle-badge">{activeFilterCount}</span>}
+        <Chevron open={filtersOpen} />
+      </button>
+
+      {filtersOpen && <div className="filters-block">
         <FilterSection title={t('filter.type')} activeCount={filters.styles.size}>
           {['tag', 'throwup', 'piece'].map(style => {
             const active = filters.styles.has(style)
@@ -626,28 +651,6 @@ function Sidebar({
           })}
         </FilterSection>
 
-        <FilterSection title={t('filter.size')} activeCount={filters.sizes.size}>
-          {[
-            { key: 'small', label: t('filter.size.small'), sub: '< 0,5 m²' },
-            { key: 'medium', label: t('filter.size.medium'), sub: '0,5–2 m²' },
-            { key: 'large', label: t('filter.size.large'), sub: '≥ 2 m²' },
-          ].map(({ key, label, sub }) => {
-            const active = filters.sizes.has(key)
-            return (
-              <button key={key}
-                className={'filter-btn' + (active ? ' active' : '')}
-                style={{ borderColor: active ? '#E85D26' : '#E9E5DA', background: active ? '#E85D2618' : '#fff' }}
-                onClick={() => toggle('sizes', key)}
-                aria-pressed={active}
-              >
-                <span className="filter-count">{sizeCounts[key]}</span>
-                <span className="filter-name">{label}</span>
-                <span className="filter-sub">{sub}</span>
-              </button>
-            )
-          })}
-        </FilterSection>
-
         {years.length > 1 && (
           <FilterSection title={t('filter.year')} activeCount={filters.years.size}>
             {years.map(year => {
@@ -668,10 +671,10 @@ function Sidebar({
 
         {activeFilterCount > 0 && (
           <button className="reset-filters" onClick={onResetFilters}>
-            Réinitialiser les filtres ({activeFilterCount})
+            {t('filter.reset')} ({activeFilterCount})
           </button>
         )}
-      </div>
+      </div>}
 
       <div className="detail-wrap">
         {/* 1. A detection is selected */}
@@ -880,7 +883,7 @@ export default function App() {
   const [selected, setSelected] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [filters, setFilters] = useState({ styles: new Set(), sizes: new Set(), years: new Set(), state: 'all' })
+  const [filters, setFilters] = useState({ styles: new Set(), years: new Set(), state: 'all' })
   const [panTo, setPanTo] = useState(null)
   const [user, setUser] = useState(null)
   const [showAuth, setShowAuth] = useState(false)
@@ -891,6 +894,7 @@ export default function App() {
   const mapCenterRef = useRef({ lat: 45.7640, lng: 4.8357 })
   const [cities, setCities] = useState([])
   const [sheetOpen, setSheetOpen] = useState(false)
+  const isMobile = useIsMobile()
 
   const boundsDebounceRef = useRef(null)
   const lastZoomRef = useRef(12)
@@ -1050,13 +1054,6 @@ export default function App() {
     if (filters.state === 'cleaned' && !g.cleaned) return false
     if (filters.styles.size > 0 && !filters.styles.has(g.style)) return false
     if (filters.years.size > 0 && !filters.years.has(g.year)) return false
-    if (filters.sizes.size > 0) {
-      const s = g.size_m2 || 0
-      const ok = (filters.sizes.has('small') && s < 0.5)
-        || (filters.sizes.has('medium') && s >= 0.5 && s < 2.0)
-        || (filters.sizes.has('large') && s >= 2.0)
-      if (!ok) return false
-    }
     return true
   }), [allGraffiti, filters])
 
@@ -1074,7 +1071,7 @@ export default function App() {
   const selectedId = selected?.id ?? null
 
   const resetFilters = useCallback(() => {
-    setFilters({ styles: new Set(), sizes: new Set(), years: new Set(), state: 'all' })
+    setFilters({ styles: new Set(), years: new Set(), state: 'all' })
   }, [])
 
   const deselect = useCallback(() => setSelected(null), [])
@@ -1150,7 +1147,7 @@ export default function App() {
         />
 
         <div className="right-panel">
-          <StreetViewPanel selected={selected} apiKey={apiKey} />
+          {!isMobile && <StreetViewPanel selected={selected} apiKey={apiKey} />}
           <div className="map-wrap">
             <APIProvider apiKey={apiKey}>
               <Map

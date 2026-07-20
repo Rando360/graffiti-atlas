@@ -109,6 +109,7 @@ const STRINGS = {
   'filter.size.small': { fr: 'Petit', en: 'Small', es: 'Pequeño', de: 'Klein', it: 'Piccolo' },
   'filter.size.medium': { fr: 'Moyen', en: 'Medium', es: 'Mediano', de: 'Mittel', it: 'Medio' },
   'filter.size.large': { fr: 'Grand', en: 'Large', es: 'Grande', de: 'Groß', it: 'Grande' },
+  'filter.button': { fr: 'Filtres', en: 'Filters', es: 'Filtros', de: 'Filter', it: 'Filtri' },
   'filter.reset': {
     fr: 'Réinitialiser les filtres', en: 'Reset filters', es: 'Restablecer filtros',
     de: 'Filter zurücksetzen', it: 'Reimposta filtri',

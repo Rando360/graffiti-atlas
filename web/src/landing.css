@@ -155,10 +155,33 @@
 
 /* ── Responsive ── */
 @media (max-width: 760px) {
-  .lp-hero { min-height: auto; padding-top: 20px; padding-bottom: 56px; }
-  .lp-map-fade { background: linear-gradient(180deg, transparent 30%, var(--bg) 92%); }
-  .lp-cards { grid-template-columns: 1fr; }
+  .lp-nav { padding: 14px 18px; }
   .lp-brand-name { font-size: 15px; }
+  .lp-nav-right { gap: 8px; }
+  .lp-lang { padding: 6px 24px 6px 9px; font-size: 12px; }
+  .lp-nav-cta { padding: 8px 14px; font-size: 12px; }
+
+  .lp-hero { min-height: auto; padding: 20px 18px 48px; }
+  .lp-map-fade { background: linear-gradient(180deg, transparent 24%, var(--bg) 88%); }
+  .lp-hero-inner { max-width: 100%; }
+  .lp-eyebrow { font-size: 11px; margin-bottom: 14px; }
+  .lp-h1 { font-size: clamp(30px, 8vw, 40px); }
+  .lp-sub { font-size: 15px; margin-bottom: 24px; }
+  .lp-cta { width: 100%; justify-content: center; padding: 15px 20px; }
+
+  /* Stats: wrap to two rows cleanly, hide the thin dividers */
+  .lp-stats { gap: 14px 20px; margin-top: 30px; }
+  .lp-stats-div { display: none; }
+
+  .lp-how { padding: 24px 18px 50px; }
+  .lp-section-title { font-size: 22px; }
+  .lp-cards { grid-template-columns: 1fr; gap: 12px; }
+
+  .lp-muni-inner { padding: 40px 18px; }
+  .lp-muni-cta { width: 100%; text-align: center; }
+
+  .lp-footer { padding: 32px 18px 44px; }
+  .lp-footer-links { gap: 14px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

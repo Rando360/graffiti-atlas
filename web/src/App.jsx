@@ -672,7 +672,7 @@ function Sidebar({
           <div className="detail">
             <button className="back-btn" onClick={() => onSelect(null)}>← Retour</button>
 
-            {/* Mobile-only Street View — on top, above the graffiti photos */}
+            {/* Mobile-only Street View — on top */}
             {isMobile && apiKey && selected && (
               <div className="mobile-sv">
                 <iframe
@@ -683,6 +683,13 @@ function Sidebar({
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
                 />
+              </div>
+            )}
+
+            {/* Divider between Street View and photos — mobile only */}
+            {isMobile && selected && (
+              <div className="mobile-section-divider">
+                <span>Photos</span>
               </div>
             )}
 

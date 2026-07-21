@@ -672,6 +672,20 @@ function Sidebar({
           <div className="detail">
             <button className="back-btn" onClick={() => onSelect(null)}>← Retour</button>
 
+            {/* Mobile-only Street View — on top, above the graffiti photos */}
+            {isMobile && apiKey && selected && (
+              <div className="mobile-sv">
+                <iframe
+                  key={`msv-${selected.id}`}
+                  title="Street View"
+                  src={`https://www.google.com/maps/embed/v1/streetview?key=${apiKey}&location=${selected.lat},${selected.lng}&fov=90&pitch=0`}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+              </div>
+            )}
+
             {loadingImages ? (
               <div className="img-loading skeleton" aria-label={t('detail.imagesLoading')} />
             ) : activeImage ? (
@@ -719,20 +733,6 @@ function Sidebar({
                 )}
               </>
             ) : null}
-
-            {/* Mobile-only Street View — sits between the photo and the details */}
-            {isMobile && apiKey && selected && (
-              <div className="mobile-sv">
-                <iframe
-                  key={`msv-${selected.id}`}
-                  title="Street View"
-                  src={`https://www.google.com/maps/embed/v1/streetview?key=${apiKey}&location=${selected.lat},${selected.lng}&fov=90&pitch=0`}
-                  allowFullScreen
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                />
-              </div>
-            )}
 
             <div className="detail-body">
               {activeImage?.detections.map((det, idx) => (

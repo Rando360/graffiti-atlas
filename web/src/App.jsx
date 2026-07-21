@@ -65,14 +65,7 @@ function Chevron({ open }) {
   )
 }
 
-// Memoized marker — only re-renders when its own data or selection changes
-/* Renders whatever the server sent: cluster bubbles (zoom out) or individual
-   markers (zoom in). Clustering is done server-side in PostGIS, so the browser
-   only ever draws what's in view — this scales to very large datasets.
-   Clicking a cluster zooms the map in toward it, which re-fetches finer data. */
-
-/* True on narrow viewports; updates on resize. Used to skip Street View
-   (and its API call) on mobile, where the map goes full-screen. */
+/* True on narrow viewports; updates on resize. */
 function useIsMobile(breakpoint = 768) {
   const [isMobile, setIsMobile] = useState(
     typeof window !== 'undefined' ? window.innerWidth <= breakpoint : false
@@ -167,7 +160,6 @@ function SearchBar({ onResult }) {
     onResult({ lat: parseFloat(item.lat), lng: parseFloat(item.lon), zoom: 15 })
   }
 
-  // Keyboard navigation of the dropdown
   const handleKeyDown = (e) => {
     if (e.key === 'Escape') { setSuggestions([]); e.target.blur(); return }
     if (!suggestions.length) return
@@ -324,7 +316,6 @@ function MapController({ panTo, onBackgroundClick, zoomRef, onZoomReady }) {
     if (panTo.zoom) map.setZoom(panTo.zoom)
   }, [map, panTo])
 
-  // Keep the shared zoom ref current so fetches always send the real zoom.
   useEffect(() => {
     if (!map || !zoomRef) return
     const sync = () => { zoomRef.current = map.getZoom() }
@@ -333,7 +324,6 @@ function MapController({ panTo, onBackgroundClick, zoomRef, onZoomReady }) {
     return () => l.remove()
   }, [map, zoomRef])
 
-  // Clicking empty map deselects — standard expectation
   useEffect(() => {
     if (!map) return
     const listener = map.addListener('click', () => onBackgroundClick())
@@ -344,7 +334,7 @@ function MapController({ panTo, onBackgroundClick, zoomRef, onZoomReady }) {
 }
 
 /* ══════════════════════════════════════════════════════
-   STREET VIEW
+   STREET VIEW (desktop only)
    ══════════════════════════════════════════════════════ */
 function StreetViewPanel({ selected, apiKey }) {
   if (!selected) {
@@ -375,7 +365,6 @@ function ZoomableOverlay({ images, activeIdx, onClose, onPrev, onNext, dateStr }
 
   useEffect(() => { setScale(1); setPos({ x: 0, y: 0 }) }, [activeIdx])
 
-  // Keyboard: Esc closes, arrows navigate, +/- zoom
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === 'Escape') onClose()
@@ -414,7 +403,6 @@ function ZoomableOverlay({ images, activeIdx, onClose, onPrev, onNext, dateStr }
   }
   const handleMouseUp = () => setDragging(false)
 
-  // Touch: pinch to zoom, one-finger drag when zoomed
   const dist = (t) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY)
   const handleTouchStart = (e) => {
     if (e.touches.length === 2) {
@@ -514,7 +502,7 @@ function FilterSection({ title, activeCount, children, defaultOpen = true }) {
    ══════════════════════════════════════════════════════ */
 function Sidebar({
   graffiti, allGraffiti, inViewTotal, hasClusters, timeline, selected, onSelect, loading, error,
-  filters, onFilterChange, onResetFilters, cities, sheetOpen, onToggleSheet,
+  filters, onFilterChange, onResetFilters, cities, sheetOpen, onToggleSheet, apiKey, isMobile,
 }) {
   const [imgExpanded, setImgExpanded] = useState(false)
   const [allImages, setAllImages] = useState([])
@@ -523,7 +511,6 @@ function Sidebar({
   const [copied, setCopied] = useState(false)
   const [address, setAddress] = useState(null)
 
-  // Load all faces + reverse-geocode the street address on selection
   useEffect(() => {
     setImgExpanded(false); setAllImages([]); setActiveImageIdx(0); setAddress(null)
     if (!selected) return
@@ -542,7 +529,6 @@ function Sidebar({
       .catch(console.error)
       .finally(() => setLoadingImages(false))
 
-    // Street name is far more meaningful to a user than raw GPS
     fetch(`https://nominatim.openstreetmap.org/reverse?lat=${selected.lat}&lon=${selected.lng}&format=json&accept-language=fr&zoom=17`)
       .then(r => r.json())
       .then(d => {
@@ -583,7 +569,6 @@ function Sidebar({
 
   const [filtersOpen, setFiltersOpen] = useState(false)
 
-  // Which body state are we in?
   const noDataInArea = !loading && !error && allGraffiti.length === 0
   const noFilterResults = !loading && !hasClusters && allGraffiti.length > 0 && graffiti.length === 0
 
@@ -735,6 +720,20 @@ function Sidebar({
               </>
             ) : null}
 
+            {/* Mobile-only Street View — sits between the photo and the details */}
+            {isMobile && apiKey && selected && (
+              <div className="mobile-sv">
+                <iframe
+                  key={`msv-${selected.id}`}
+                  title="Street View"
+                  src={`https://www.google.com/maps/embed/v1/streetview?key=${apiKey}&location=${selected.lat},${selected.lng}&fov=90&pitch=0`}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+              </div>
+            )}
+
             <div className="detail-body">
               {activeImage?.detections.map((det, idx) => (
                 <div key={idx} className="detection-item">
@@ -817,7 +816,7 @@ function Sidebar({
             </div>
           </div>
 
-        /* 2. Filters returned nothing — dead end, give them a way out */
+        /* 2. Filters returned nothing */
         ) : noFilterResults ? (
           <div className="no-selection">
             <SprayCan color="#D0CEC8" size={34} />
@@ -829,7 +828,7 @@ function Sidebar({
             <button className="reset-filters block" onClick={onResetFilters}>{t('filter.reset')}</button>
           </div>
 
-        /* 3. This area simply isn't mapped yet — the biggest "looks broken" trap */
+        /* 3. Area not mapped yet */
         ) : noDataInArea ? (
           <div className="no-selection">
             <SprayCan color="#D0CEC8" size={34} />
@@ -906,21 +905,17 @@ export default function App() {
   const lastBoundsRef = useRef(null)
   const abortRef = useRef(null)
 
-  /* Lock the viewport to full-height only while the map is mounted,
-     so other routes (landing) can scroll normally. */
   useEffect(() => {
     document.documentElement.classList.add('map-locked')
     return () => document.documentElement.classList.remove('map-locked')
   }, [])
 
-  /* Auth */
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null))
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setUser(s?.user ?? null))
     return () => subscription.unsubscribe()
   }, [])
 
-  /* Moderator / admin role */
   useEffect(() => {
     if (!user) { setIsAdmin(false); return }
     supabase.from('profiles').select('role, language').eq('id', user.id).single()
@@ -931,7 +926,6 @@ export default function App() {
       .catch(() => setIsAdmin(false))
   }, [user])
 
-  /* Covered cities — powers the "zone non cartographiée" recovery state */
   useEffect(() => {
     fetch(`${API_URL}/map/cities`)
       .then(r => r.json())
@@ -939,7 +933,6 @@ export default function App() {
       .catch(() => {})
   }, [])
 
-  /* Deep link ?g=<id> */
   useEffect(() => {
     const gid = new URLSearchParams(window.location.search).get('g')
     if (!gid) return
@@ -951,7 +944,6 @@ export default function App() {
       .catch(() => {})
   }, [])
 
-  /* Keep URL shareable */
   useEffect(() => {
     const url = new URL(window.location)
     if (selected) url.searchParams.set('g', selected.id)
@@ -959,14 +951,12 @@ export default function App() {
     window.history.replaceState({}, '', url)
   }, [selected])
 
-  /* Global Esc — closes auth modal */
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape' && showAuth) setShowAuth(false) }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [showAuth])
 
-  /* Selecting a marker centres it and opens the mobile sheet */
   const handleSelect = useCallback((g, city) => {
     if (city) {
       const c = CITY_CENTERS[city.name]
@@ -976,22 +966,18 @@ export default function App() {
     }
     setSelected(g)
     if (g) {
-      setPanTo({ lat: g.lat, lng: g.lng })   // centre without changing zoom
+      setPanTo({ lat: g.lat, lng: g.lng })
       setSheetOpen(true)
     }
   }, [])
 
-  /* Clicking a server cluster zooms in toward it, revealing finer clusters or
-     individual markers (a new fetch runs at the higher zoom). */
   const handleClusterClick = useCallback((c) => {
     const current = Math.round(lastZoomRef.current ?? 12)
     const nextZoom = Math.min(current + 3, 18)
     setPanTo({ lat: c.lat, lng: c.lng, zoom: nextZoom })
   }, [])
 
-  /* Data fetching — server clusters by zoom. Skip only when the view is
-     already covered AND zoom hasn't changed; any zoom change refetches. */
-  const loadedRef = useRef(null)   // { bounds, zoom }
+  const loadedRef = useRef(null)
   const fetchGraffiti = useCallback(async (bounds, zoom) => {
     if (!bounds) return
 
@@ -1053,7 +1039,6 @@ export default function App() {
   }, [fetchGraffiti])
 
   const filtered = useMemo(() => allGraffiti.filter(g => {
-    // Clusters are aggregates with no style/size/year — never filter them out.
     if (g.cluster) return true
     if (filters.state === 'active' && g.cleaned) return false
     if (filters.state === 'cleaned' && !g.cleaned) return false
@@ -1062,10 +1047,7 @@ export default function App() {
     return true
   }), [allGraffiti, filters])
 
-  // Only individual markers count as selectable graffiti (for the sidebar list).
   const individuals = useMemo(() => filtered.filter(g => !g.cluster), [filtered])
-
-  // True number of graffiti in view = individual markers + everything inside clusters.
   const hasClusters = useMemo(() => allGraffiti.some(g => g.cluster), [allGraffiti])
 
   const inViewTotal = useMemo(
@@ -1081,7 +1063,6 @@ export default function App() {
 
   const deselect = useCallback(() => setSelected(null), [])
 
-  /* Location history (timeline) for the selected marker's spot. */
   const [timeline, setTimeline] = useState([])
   useEffect(() => {
     const lid = selected?.location_id
@@ -1149,6 +1130,8 @@ export default function App() {
           cities={cities}
           sheetOpen={sheetOpen}
           onToggleSheet={() => setSheetOpen(o => !o)}
+          apiKey={apiKey}
+          isMobile={isMobile}
         />
 
         <div className="right-panel">

@@ -3,19 +3,18 @@
    Change a value here to retint the whole app.
    ══════════════════════════════════════════════════════ */
 :root {
-  --bg:           #FAF8F2;  /* warm off-white app background */
-  --surface:      #FFFFFF;  /* cards, panels, header */
-  --surface-2:    #FDFCF8;  /* subtle hover surface */
-  --border:       #E9E5DA;  /* hairlines, dividers */
-  --text:         #2A2520;  /* primary text (warm near-black) */
-  --text-2:       #6E675C;  /* secondary text */
-  --muted:        #8A8378;  /* labels, captions */
-  --accent:       #E85D26;  /* brand orange */
+  --bg:           #FAF8F2;
+  --surface:      #FFFFFF;
+  --surface-2:    #FDFCF8;
+  --border:       #E9E5DA;
+  --text:         #2A2520;
+  --text-2:       #6E675C;
+  --muted:        #8A8378;
+  --accent:       #E85D26;
   --accent-hover: #C94D1C;
 
-  /* Dark header (Option A) */
-  --header-bg:      #2A2520;  /* warm charcoal bar */
-  --header-surface: #39332C;  /* controls inside the bar */
+  --header-bg:      #2A2520;
+  --header-surface: #39332C;
   --header-hover:   #46403A;
   --header-text:    #FFFFFF;
   --header-muted:   #A39C90;
@@ -33,8 +32,6 @@ body {
   background: #FAF8F2;
   -webkit-font-smoothing: antialiased;
 }
-/* The map route locks scrolling via .map-locked on <html> (see index.css).
-   body overflow must NOT be hidden globally, or the landing page can't scroll. */
 
 button { font-family: inherit; }
 
@@ -320,7 +317,6 @@ button { font-family: inherit; }
 .pano-credit a { color: #E85D26; text-decoration: none; }
 .pano-credit a:hover { text-decoration: underline; }
 
-/* Covered-city recovery list */
 .city-list {
   width: 100%; margin-top: 6px;
   display: flex; flex-direction: column; gap: 4px;
@@ -337,10 +333,7 @@ button { font-family: inherit; }
 }
 .city-link:hover { border-color: #E85D26; transform: translateX(2px); }
 .city-link-name { font-size: 12px; font-weight: 600; color: #2A2520; text-transform: capitalize; }
-.city-link-count {
-  font-size: 11px; color: #8A8378;
-  font-family: 'Space Mono', monospace;
-}
+.city-link-count { font-size: 11px; color: #8A8378; font-family: 'Space Mono', monospace; }
 
 .detail { display: flex; flex-direction: column; animation: slideInLeft 0.25s ease; }
 
@@ -682,12 +675,10 @@ button { font-family: inherit; }
 
 /* ── MOBILE — bottom sheet ───────────────────────────── */
 @media (max-width: 768px) {
-  /* Map-first: the map fills the screen; graffiti details live in a bottom sheet.
-     Street View is hidden on mobile (heavy, and competes with the photos). */
   .app-body { position: relative; display: block; height: 100%; }
 
   .right-panel { position: absolute; inset: 0; }
-  .sv-panel, .sv-empty { display: none; }   /* no Street View on mobile */
+  .sv-panel, .sv-empty { display: none; }   /* desktop Street View panels hidden on mobile */
   .map-wrap { position: absolute; inset: 0; height: 100%; }
 
   .sidebar {
@@ -716,30 +707,24 @@ button { font-family: inherit; }
   }
   .sheet-grip { width: 40px; height: 4px; border-radius: 2px; background: #D2CCBD; display: block; }
 
-  /* Sheet content scrolls; photos get priority up top */
-  .sidebar > *:not(.sheet-handle) { }
   .detail-wrap { flex: 1; overflow-y: auto; }
 
   .stats-grid { border-radius: 0; }
 
-  /* Header fits the phone: compact padding, tighter gaps, drop non-essentials.
-     Moderation is desktop-only; username hidden to save room. */
   .app-header { padding: 0 10px; gap: 8px; }
   .header-center { max-width: none; }
   .header-title { display: none; }
   .btn-text { display: none; }
-  .header-btn.mod { display: none; }        /* moderate on desktop */
+  .header-btn.mod { display: none; }
   .header-username { display: none; }
   .header-btn.icon-btn { padding: 7px 9px; }
   .header-btn.upload { padding: 7px 10px; }
   .header-right { gap: 6px; min-width: 0; }
   .app-header { overflow: hidden; }
   .app { overflow-x: hidden; }
-  /* SearchBar can shrink instead of pushing buttons off-screen */
   .header-center { min-width: 0; }
   .search-wrap input { min-width: 0; }
 
-  /* Bigger touch targets for markers/clusters + filter chips */
   .cluster-bubble { min-width: 40px; min-height: 40px; }
   .filter-btn { min-height: 44px; }
 
@@ -747,9 +732,6 @@ button { font-family: inherit; }
   .img-overlay-inner { width: calc(100% - 24px); }
   .img-zoom-container { min-height: 260px; }
   .img-zoom-hint { display: none; }
-
-  /* Street View link inside the detail panel is still useful — keep it,
-     it opens Google Maps in a new tab rather than embedding. */
 }
 
 /* ── REDUCED MOTION ──────────────────────────────────── */
@@ -799,7 +781,6 @@ button { font-family: inherit; }
 
 .ul-body { padding: 18px 24px 24px; display: flex; flex-direction: column; gap: 14px; }
 
-/* Dropzone */
 .ul-drop {
   border: 2px dashed var(--border);
   border-radius: 12px;
@@ -811,7 +792,6 @@ button { font-family: inherit; }
 .ul-drop-main { font-size: 13px; font-weight: 600; color: var(--text); }
 .ul-drop-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
 
-/* Preview */
 .ul-preview { position: relative; border-radius: 12px; overflow: hidden; }
 .ul-preview img { width: 100%; max-height: 220px; object-fit: cover; display: block; }
 .ul-change {
@@ -826,7 +806,6 @@ button { font-family: inherit; }
 .ul-map { height: 220px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
 .ul-map-hint { font-size: 11px; color: var(--muted); margin-top: -6px; }
 
-/* Details step */
 .ul-field-label { font-size: 12px; font-weight: 600; color: var(--text); }
 .ul-field-label span { color: var(--muted); font-weight: 400; }
 
@@ -869,7 +848,6 @@ button { font-family: inherit; }
 .ul-submit:hover { background: var(--accent-hover); }
 .ul-submit:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* Success */
 .ul-done { padding: 40px 30px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; }
 .ul-done-icon {
   width: 56px; height: 56px; border-radius: 50%;
@@ -880,10 +858,7 @@ button { font-family: inherit; }
 .ul-done p { font-size: 13px; color: var(--text-2); line-height: 1.6; }
 .ul-done .ul-submit { flex: none; width: 100%; margin-top: 8px; }
 
-/* Header upload button */
-.header-btn.upload {
-  background: var(--accent); color: #fff; border-color: var(--accent);
-}
+.header-btn.upload { background: var(--accent); color: #fff; border-color: var(--accent); }
 .header-btn.upload:hover { background: var(--accent-hover); }
 
 /* ══════════════════════════════════════════════════════
@@ -987,14 +962,9 @@ button { font-family: inherit; }
 .mod-approve:hover, .mod-reject:hover { opacity: 0.85; }
 .mod-approve:disabled, .mod-reject:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* Header moderation button */
 .header-btn.mod { background: var(--header-surface); color: #EDE9E0; }
 
-/* ── Upload: required type + help ─────────────────────── */
-.ul-field-label .req {
-  color: var(--accent); font-weight: 600; font-size: 11px;
-}
-/* Type selection as stacked cards with inline hints */
+.ul-field-label .req { color: var(--accent); font-weight: 600; font-size: 11px; }
 .ul-styles { flex-direction: column; gap: 8px; }
 .ul-style-card {
   display: flex; align-items: flex-start; gap: 11px;
@@ -1011,9 +981,7 @@ button { font-family: inherit; }
   border-radius: 50%; border: 2px solid var(--border);
   position: relative; transition: all 0.15s;
 }
-.ul-style-card.on .ul-style-check {
-  border-color: var(--accent); background: var(--accent);
-}
+.ul-style-card.on .ul-style-check { border-color: var(--accent); background: var(--accent); }
 .ul-style-card.on .ul-style-check::after {
   content: ''; position: absolute;
   left: 5px; top: 2px; width: 4px; height: 8px;
@@ -1024,7 +992,6 @@ button { font-family: inherit; }
 .ul-style-name { font-size: 13px; font-weight: 700; color: var(--text); }
 .ul-style-hint { font-size: 11px; color: var(--text-2); line-height: 1.45; }
 
-/* ── Moderation: type selector ────────────────────────── */
 .mod-type-row { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; margin-top: 2px; }
 .mod-type-lbl { font-size: 11px; color: var(--muted); }
 .mod-type {
@@ -1075,7 +1042,6 @@ button { font-family: inherit; }
   .cookie-refuse, .cookie-accept { flex: 1; }
 }
 
-/* ── Moderation: Flouter button ───────────────────────── */
 .mod-blur {
   padding: 7px 12px; border-radius: 7px;
   border: 1.5px solid var(--border); background: var(--surface);
@@ -1214,7 +1180,6 @@ button { font-family: inherit; }
   text-transform: uppercase; color: var(--muted); margin-bottom: 14px;
 }
 
-/* Account */
 .set-account { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
 .set-avatar {
   width: 44px; height: 44px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
@@ -1245,7 +1210,6 @@ button { font-family: inherit; }
 .set-name-row button:disabled { opacity: 0.5; cursor: not-allowed; }
 .set-hint { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
 
-/* Language */
 .set-lang { display: flex; align-items: center; justify-content: space-between; }
 .set-lbl { font-size: 13px; color: var(--text); font-weight: 500; }
 .set-langbtns { display: flex; gap: 6px; }
@@ -1257,7 +1221,6 @@ button { font-family: inherit; }
 .set-langbtns button.on { border-color: var(--accent); background: #E85D2618; color: var(--accent); }
 .set-langbtns button:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* Contributions */
 .set-stats { display: flex; gap: 10px; margin-bottom: 14px; }
 .set-stats div {
   flex: 1; background: var(--surface-2); border: 1px solid var(--border);
@@ -1282,7 +1245,6 @@ button { font-family: inherit; }
 .set-status.pending_review { color: #b45309; background: #fffbeb; }
 .set-status.rejected { color: #b91c1c; background: #fef2f2; }
 
-/* Privacy links */
 .set-links { display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px; }
 .set-links a, .set-link-btn {
   font-size: 12px; color: var(--accent); text-decoration: none;
@@ -1324,10 +1286,8 @@ button { font-family: inherit; }
 }
 .set-logout:hover { background: var(--bg); }
 
-/* Note under French-only descriptions (non-FR languages) */
 .detail-desc-note { font-size: 10px; color: var(--muted); font-style: italic; margin-top: 2px; }
 
-/* Header logo as home link */
 .header-logo { text-decoration: none; color: inherit; cursor: pointer; }
 
 /* ── Marker clusters ──────────────────────────────────── */
@@ -1346,7 +1306,6 @@ button { font-family: inherit; }
 }
 .cluster-bubble:hover { transform: scale(1.08); }
 
-/* ── Moderation: nearby comparison + location actions ── */
 .mod-nearby { margin: 10px 0 2px; padding: 10px 12px; background: var(--surface-2, #FDFCF8); border: 1px solid var(--border); border-radius: 10px; }
 .mod-nearby-title { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .mod-nearby-row { display: flex; gap: 8px; margin: 8px 0; flex-wrap: wrap; }
@@ -1361,7 +1320,6 @@ button { font-family: inherit; }
 .mod-loc-btn:not(:disabled):hover { border-color: var(--accent); color: var(--accent); }
 .mod-loc-btn:disabled { opacity: .45; cursor: default; }
 
-/* ── Location history (before/after timeline) ── */
 .loc-history { margin: 4px 0 10px; padding: 10px 12px; background: var(--surface-2, #FDFCF8); border: 1px solid var(--border); border-radius: 10px; display: flex; flex-direction: column; gap: 8px; }
 .loc-history-title { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .loc-entry { display: flex; gap: 10px; align-items: center; }
@@ -1373,11 +1331,9 @@ button { font-family: inherit; }
 .loc-entry-date em { font-style: normal; color: #1DB870; font-size: 11px; }
 .loc-entry-badge { align-self: flex-start; font-size: 10px; background: #EDE8DC; color: #6E675C; border-radius: 5px; padding: 1px 7px; }
 
-/* Cleaned (bone-white) markers */
 .marker-can.cleaned { opacity: .92; }
 .marker-can.cleaned svg { filter: drop-shadow(0 1px 2px rgba(42,37,32,.25)); }
 
-/* ── Moderation: click-to-enlarge comparison overlay ── */
 .mod-zoom {
   position: fixed; inset: 0; z-index: 3000;
   background: rgba(20,17,14,0.86);
@@ -1398,11 +1354,9 @@ button { font-family: inherit; }
 .mod-zoom-close:hover { background: rgba(255,255,255,0.26); }
 .mod-thumb img { cursor: zoom-in; }
 
-/* Upload button: icon + label alignment */
 .header-btn.upload { display: inline-flex; align-items: center; gap: 6px; }
 .header-btn.upload .btn-icon { flex-shrink: 0; margin-top: -1px; }
 
-/* ── Filters behind a toggle button ── */
 .filters-toggle {
   display: flex; align-items: center; gap: 8px;
   width: 100%; padding: 11px 14px; margin: 0 0 2px;
@@ -1420,5 +1374,23 @@ button { font-family: inherit; }
 }
 .filters-block { padding-top: 4px; }
 
-/* Stats link styled as header button */
 a.header-btn.mod { text-decoration: none; display: inline-flex; align-items: center; }
+
+/* ══════════════════════════════════════════════════════
+   MOBILE STREET VIEW — inside the bottom sheet
+   Sits between the graffiti photo and the detail body.
+   Only rendered by JSX when isMobile && selected.
+   ══════════════════════════════════════════════════════ */
+.mobile-sv {
+  width: 100%;
+  height: 220px;
+  flex-shrink: 0;
+  border-bottom: 1px solid #E9E5DA;
+  background: #2A2520;
+}
+.mobile-sv iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}

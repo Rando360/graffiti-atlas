@@ -11,6 +11,7 @@ const STYLE_OPTIONS = [
   { key: 'tag',     labelKey: 'style.tag',     hintKey: 'upload.hint.tag' },
   { key: 'throwup', labelKey: 'style.throwup', hintKey: 'upload.hint.throwup' },
   { key: 'piece',   labelKey: 'style.piece',   hintKey: 'upload.hint.piece' },
+  { key: 'mural',   labelKey: 'style.mural',   hintKey: 'upload.hint.mural' },
 ]
 
 export default function UploadModal({ onClose, initialCenter }) {

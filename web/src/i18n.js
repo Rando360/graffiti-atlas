@@ -281,6 +281,13 @@ const STRINGS = {
     de: 'Vollständiges, ausgearbeitetes Werk — mehrfarbig und detailliert.',
     it: "Opera completa ed elaborata, multicolore e dettagliata.",
   },
+  'upload.hint.mural': {
+    fr: 'Grande fresque murale, souvent commandée ou autorisée.',
+    en: 'Large-scale wall mural, often commissioned or permitted.',
+    es: 'Gran mural en pared, a menudo encargado o autorizado.',
+    de: 'Großformatiges Wandbild, oft beauftragt oder genehmigt.',
+    it: 'Grande murale su parete, spesso commissionato o autorizzato.',
+  },
   'upload.desc.label': { fr: 'Description', en: 'Description', es: 'Descripción', de: 'Beschreibung', it: 'Descrizione' },
   'upload.desc.optional': { fr: '(optionnel)', en: '(optional)', es: '(opcional)', de: '(optional)', it: '(facoltativo)' },
   'upload.desc.placeholder': {

@@ -94,6 +94,7 @@ const STRINGS = {
   'header.report': {
     fr: 'Ajouter', en: 'Add graffiti', es: 'Añadir', de: 'Hinzufügen', it: 'Aggiungi',
   },
+  'header.stats': { fr: 'Stats', en: 'Stats', es: 'Stats', de: 'Statistik', it: 'Statistiche' },
   'header.moderation': {
     fr: 'Modération', en: 'Moderation', es: 'Moderación', de: 'Moderation', it: 'Moderazione',
   },

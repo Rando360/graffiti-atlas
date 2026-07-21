@@ -285,6 +285,11 @@ function Header({ onSearchResult, user, onLoginClick, onLogout, onUploadClick, i
             {t('header.moderation')}
           </button>
         )}
+        {isAdmin && (
+          <a className="header-btn mod" href="/stats" aria-label="Stats">
+            {t('header.stats')}
+          </a>
+        )}
         <button className="header-btn icon-btn" onClick={onSettingsClick} aria-label={t('header.settings')}>
           <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
             <circle cx="8" cy="8" r="2.4" stroke="currentColor" strokeWidth="1.4"/>

@@ -309,3 +309,11 @@ def blur_graffiti(graffiti_id: str, body: BlurBody, user: dict = Depends(require
         )
 
     return {"status": "blurred", "count": len(body.rects)}
+
+
+@router.get("/stats")
+def get_stats(user: dict = Depends(require_admin)):
+    """Admin dashboard numbers, gathered server-side in one query."""
+    service = _service()
+    res = service.rpc("get_admin_stats", {}).execute()
+    return res.data or {}

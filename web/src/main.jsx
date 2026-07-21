@@ -9,6 +9,7 @@ import PrivacyPage from './PrivacyPage.jsx'
 import TermsPage from './TermsPage.jsx'
 import LegalNoticePage from './LegalNoticePage.jsx'
 import CookiesPage from './CookiesPage.jsx'
+import StatsPage from './StatsPage.jsx'
 import CookieBanner, { getConsent } from './CookieBanner.jsx'
 import { Analytics } from '@vercel/analytics/react'
 
@@ -30,6 +31,7 @@ createRoot(document.getElementById('root')).render(
         <Route path="/conditions-utilisation" element={<TermsPage />} />
         <Route path="/mentions-legales" element={<LegalNoticePage />} />
         <Route path="/politique-cookies" element={<CookiesPage />} />
+        <Route path="/stats" element={<StatsPage />} />
       </Routes>
       <CookieBanner />
       {getConsent() === 'accepted' && <Analytics />}

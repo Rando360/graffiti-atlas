@@ -721,11 +721,23 @@ button { font-family: inherit; }
   .detail-wrap { flex: 1; overflow-y: auto; }
 
   .stats-grid { border-radius: 0; }
+
+  /* Header fits the phone: compact padding, tighter gaps, drop non-essentials.
+     Moderation is desktop-only; username hidden to save room. */
+  .app-header { padding: 0 10px; gap: 8px; }
   .header-center { max-width: none; }
   .header-title { display: none; }
   .btn-text { display: none; }
+  .header-btn.mod { display: none; }        /* moderate on desktop */
+  .header-username { display: none; }
   .header-btn.icon-btn { padding: 7px 9px; }
   .header-btn.upload { padding: 7px 10px; }
+  .header-right { gap: 6px; min-width: 0; }
+  .app-header { overflow: hidden; }
+  .app { overflow-x: hidden; }
+  /* SearchBar can shrink instead of pushing buttons off-screen */
+  .header-center { min-width: 0; }
+  .search-wrap input { min-width: 0; }
 
   /* Bigger touch targets for markers/clusters + filter chips */
   .cluster-bubble { min-width: 40px; min-height: 40px; }
@@ -1407,3 +1419,6 @@ button { font-family: inherit; }
   border-radius: 9px; display: flex; align-items: center; justify-content: center; padding: 0 5px;
 }
 .filters-block { padding-top: 4px; }
+
+/* Stats link styled as header button */
+a.header-btn.mod { text-decoration: none; display: inline-flex; align-items: center; }

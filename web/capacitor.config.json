@@ -1,0 +1,11 @@
+{
+  "appId": "io.graffitiatlas.app",
+  "appName": "GraffitiAtlas",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "ios": {
+    "contentInset": "automatic"
+  }
+}

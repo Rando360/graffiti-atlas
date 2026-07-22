@@ -16,7 +16,9 @@ app.add_middleware(
         "http://localhost:3000",
         "https://graffiti-atlas.vercel.app",
         "https://graffitiatlas.io",
-        "https://www.graffitiatlas.io"
+        "https://www.graffitiatlas.io",
+        "https://localhost",
+        "capacitor://localhost"
     ],
     allow_credentials=True,
     allow_methods=["*"],

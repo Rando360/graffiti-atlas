@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import BlurEditor from './BlurEditor'
+import MeasureEditor from './MeasureEditor'
 import { t } from './i18n'
 import { supabase } from './supabase'
 
@@ -18,6 +19,7 @@ export default function ModerationPanel({ onClose }) {
   const [nearbySel, setNearbySel] = useState({})   // pending id -> selected nearby graffiti
   const [zoomImg, setZoomImg] = useState(null)     // { url } enlarged for comparison  // { graffitiId: style }
   const [blurTarget, setBlurTarget] = useState(null)    // { id, url }
+  const [measureTarget, setMeasureTarget] = useState(null)  // { id, url }
   const [bust, setBust] = useState({})                  // cache-buster per id
 
   const authHeader = useCallback(async () => {
@@ -172,6 +174,17 @@ export default function ModerationPanel({ onClose }) {
                           setSizeSel(prev => ({ ...prev, [g.id]: isNaN(v) ? undefined : v }))
                         }}
                       />
+                      <button
+                        className="mod-type"
+                        disabled={!g.s3_key_thumb}
+                        title={t('measure.title')}
+                        onClick={() => setMeasureTarget({
+                          id: g.id,
+                          url: `${CLOUDFRONT}/${g.s3_key_thumb.replace('thumb.jpg','medium.jpg')}`,
+                        })}
+                      >
+                        📏 {t('mod.measure')}
+                      </button>
                     </div>
 
                     {Array.isArray(g.nearby) && g.nearby.length > 0 && (
@@ -311,6 +324,16 @@ export default function ModerationPanel({ onClose }) {
           <button className="mod-zoom-close" onClick={() => setZoomImg(null)} aria-label={t('common.close')}>✕</button>
         </div>
       )}
+      {measureTarget && (
+          <MeasureEditor
+            imageUrl={measureTarget.url}
+            onCancel={() => setMeasureTarget(null)}
+            onDone={(area) => {
+              setSizeSel(prev => ({ ...prev, [measureTarget.id]: area }))
+              setMeasureTarget(null)
+            }}
+          />
+        )}
       {blurTarget && (
           <BlurEditor
             graffitiId={blurTarget.id}

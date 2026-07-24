@@ -317,6 +317,13 @@ button { font-family: inherit; }
 .pano-credit a { color: #E85D26; text-decoration: none; }
 .pano-credit a:hover { text-decoration: underline; }
 
+.img-attribution {
+  font-size: 10.5px; color: #8A8378; line-height: 1.4;
+  padding: 5px 2px 0; letter-spacing: 0.01em;
+}
+.img-attribution a { color: #8A8378; text-decoration: underline; }
+.img-attribution a:hover { color: #E85D26; }
+
 .city-list {
   width: 100%; margin-top: 6px;
   display: flex; flex-direction: column; gap: 4px;

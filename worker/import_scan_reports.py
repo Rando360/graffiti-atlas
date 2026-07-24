@@ -19,6 +19,8 @@ import json
 import os
 import re
 import sys
+import urllib.request
+import urllib.error
 from pathlib import Path
 from supabase import create_client, Client
 
@@ -27,6 +29,66 @@ from supabase import create_client, Client
 # ----------------------------------------------------------------------
 
 CLOUDFRONT_URL = "https://d36hw3x1088tvv.cloudfront.net"
+
+# Federated Panoramax API — resolves sequences across instances.
+PANORAMAX_API = "https://api.panoramax.xyz"
+
+# Map raw Panoramax license codes to a human-readable label.
+LICENSE_LABELS = {
+    "etalab-2.0": "Licence Ouverte / Etalab 2.0",
+    "CC-BY-SA 4.0": "CC-BY-SA 4.0",
+    "CC-BY-SA-4.0": "CC-BY-SA 4.0",
+    "CC-BY-4.0": "CC-BY 4.0",
+    "proprietary": "Propriétaire",
+}
+
+# Cache of sequence_id -> {"author": str, "license": str} so we hit the
+# Panoramax API only once per sequence during an import run.
+_ATTRIBUTION_CACHE = {}
+
+
+def fetch_panoramax_attribution(sequence_id: str) -> dict:
+    """
+    Look up a Panoramax sequence's author and license via the STAC API.
+
+    Returns {"author": str|None, "license": str|None, "license_label": str|None}.
+    Fails soft: on any network/parse error, returns Nones so the import
+    still proceeds (attribution can be backfilled later).
+    """
+    if not sequence_id:
+        return {"author": None, "license": None, "license_label": None}
+    if sequence_id in _ATTRIBUTION_CACHE:
+        return _ATTRIBUTION_CACHE[sequence_id]
+
+    url = f"{PANORAMAX_API}/api/collections/{sequence_id}"
+    result = {"author": None, "license": None, "license_label": None}
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "GraffitiAtlas-import"})
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        lic = data.get("license")
+        # Author: prefer a provider with role "producer", else "licensor", else first.
+        providers = data.get("providers", []) or []
+        author = None
+        for role in ("producer", "licensor"):
+            for p in providers:
+                if role in (p.get("roles") or []):
+                    author = p.get("name")
+                    break
+            if author:
+                break
+        if not author and providers:
+            author = providers[0].get("name")
+        result = {
+            "author": author,
+            "license": lic,
+            "license_label": LICENSE_LABELS.get(lic, lic),
+        }
+    except (urllib.error.URLError, ValueError, KeyError, TimeoutError) as e:
+        print(f"  ! attribution lookup failed for {sequence_id}: {e}")
+
+    _ATTRIBUTION_CACHE[sequence_id] = result
+    return result
 
 # Scan reports to import — add more cities here as you grow
 CITIES = [
@@ -174,6 +236,12 @@ def import_city(supabase: Client, config: dict):
 
                 sequence_id = config["track_to_sequence"].get(track)
 
+                # Attribution: for Panoramax sources, look up the sequence's
+                # author + license so we can credit them per image.
+                attribution = {"author": None, "license": None, "license_label": None}
+                if config["source"] == "panoramax" and sequence_id:
+                    attribution = fetch_panoramax_attribution(sequence_id)
+
                 # Image record
                 image_row = {
                     "graffiti_id": graffiti_id,
@@ -181,6 +249,9 @@ def import_city(supabase: Client, config: dict):
                     "source": config["source"],
                     "source_photo_id": base_name,
                     "source_sequence_id": sequence_id,
+                    "author": attribution["author"],
+                    "license": attribution["license"],
+                    "license_label": attribution["license_label"],
                     "is_360": False,
                     "mime_type": "image/jpeg",
                 }

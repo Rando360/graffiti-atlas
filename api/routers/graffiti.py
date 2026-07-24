@@ -50,7 +50,7 @@ def get_graffiti_images(graffiti_id: str):
     supabase = get_supabase()
 
     images = supabase.table("images") \
-        .select("id, s3_key_full, source, source_sequence_id") \
+        .select("id, s3_key_full, source, source_sequence_id, author, license, license_label") \
         .eq("graffiti_id", graffiti_id) \
         .execute()
 
@@ -71,6 +71,11 @@ def get_graffiti_images(graffiti_id: str):
             "size_m2": classification.get("size_m2"),
             "surface_type": classification.get("surface_type"),
             "description_fr": classification.get("description_fr"),
+            "source": img.get("source"),
+            "author": img.get("author"),
+            "license": img.get("license"),
+            "license_label": img.get("license_label"),
+            "source_sequence_id": img.get("source_sequence_id"),
         })
 
     return {"graffiti_id": graffiti_id, "images": result}

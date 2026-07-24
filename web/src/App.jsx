@@ -704,6 +704,19 @@ function Sidebar({
                   <div className="img-expand-hint">↗ agrandir</div>
                 </div>
 
+                {activeImage.source === 'panoramax' && (activeImage.author || activeImage.license_label) && (
+                  <div className="img-attribution">
+                    © {activeImage.author || t('attr.unknownAuthor')} ·{' '}
+                    <a
+                      href={activeImage.source_sequence_id
+                        ? `https://api.panoramax.xyz/api/collections/${activeImage.source_sequence_id}`
+                        : 'https://panoramax.fr'}
+                      target="_blank" rel="noreferrer"
+                    >Panoramax</a>
+                    {activeImage.license_label ? ` · ${activeImage.license_label}` : ''} · {t('attr.modified')}
+                  </div>
+                )}
+
                 {allImages.length > 1 && (
                   <div className="thumb-strip">
                     {allImages.map((img, idx) => {

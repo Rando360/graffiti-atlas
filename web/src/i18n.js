@@ -344,6 +344,8 @@ const STRINGS = {
     de: 'Zuletzt aktualisiert:', it: 'Ultimo aggiornamento:',
   },
   'legal.credits': { fr: 'Crédits', en: 'Credits', es: 'Créditos', de: 'Impressum', it: 'Crediti' },
+  'attr.modified': { fr: 'modifiée', en: 'modified', es: 'modificada', de: 'bearbeitet', it: 'modificata' },
+  'attr.unknownAuthor': { fr: 'Auteur inconnu', en: 'Unknown author', es: 'Autor desconocido', de: 'Unbekannter Urheber', it: 'Autore sconosciuto' },
   'legal.prevails': {
     fr: '',
     en: 'This is a translation provided for convenience. In the event of any discrepancy, the French version of this document prevails.',

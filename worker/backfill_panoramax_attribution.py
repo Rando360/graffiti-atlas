@@ -91,11 +91,14 @@ def main():
     supabase = get_supabase()
     print("Connected to Supabase.\n")
 
-    # Pull Panoramax images still missing an author, in pages.
+    # Page over ALL Panoramax images with a stable ordering (by id) so that
+    # updating rows never shifts the pagination window. We skip rows that
+    # already have an author in Python rather than in the query.
     page_size = 500
     offset = 0
     total_seen = 0
     updated = 0
+    already_had = 0
     skipped_no_seq = 0
     skipped_no_attr = 0
 
@@ -103,7 +106,7 @@ def main():
         rows = supabase.table("images") \
             .select("id, source_sequence_id, author") \
             .eq("source", "panoramax") \
-            .is_("author", "null") \
+            .order("id") \
             .range(offset, offset + page_size - 1) \
             .execute()
 
@@ -113,6 +116,11 @@ def main():
 
         for img in batch:
             total_seen += 1
+
+            if img.get("author"):
+                already_had += 1
+                continue
+
             seq = img.get("source_sequence_id")
             if not seq:
                 skipped_no_seq += 1
@@ -129,19 +137,19 @@ def main():
                 "license_label": attr["license_label"],
             }).eq("id", img["id"]).execute()
             updated += 1
+            time.sleep(0.03)  # gentle; sequence lookups are cached
 
-            # Gentle on the Panoramax API (cache means one call per sequence).
-            time.sleep(0.05)
-
+        print(f"  ...processed {total_seen} images so far ({updated} updated)")
         offset += page_size
 
     print("\n" + "=" * 50)
     print("BACKFILL COMPLETE")
     print("=" * 50)
-    print(f"  Images examined:           {total_seen}")
-    print(f"  Updated with attribution:  {updated}")
-    print(f"  Skipped (no sequence id):  {skipped_no_seq}")
-    print(f"  Skipped (no attr found):   {skipped_no_attr}")
+    print(f"  Panoramax images examined:    {total_seen}")
+    print(f"  Newly updated:                {updated}")
+    print(f"  Already had attribution:      {already_had}")
+    print(f"  Skipped (no sequence id):     {skipped_no_seq}")
+    print(f"  Skipped (no attr found):      {skipped_no_attr}")
     print(f"  Distinct sequences looked up: {len(_CACHE)}")
 
 

@@ -14,6 +14,7 @@ export default function ModerationPanel({ onClose }) {
   const [error, setError] = useState(null)
   const [busyId, setBusyId] = useState(null)
   const [typeOverride, setTypeOverride] = useState({})
+  const [sizeSel, setSizeSel] = useState({})       // pending id -> size in m²
   const [nearbySel, setNearbySel] = useState({})   // pending id -> selected nearby graffiti
   const [zoomImg, setZoomImg] = useState(null)     // { url } enlarged for comparison  // { graffitiId: style }
   const [blurTarget, setBlurTarget] = useState(null)    // { id, url }
@@ -70,6 +71,15 @@ export default function ModerationPanel({ onClose }) {
     { key: 'tag', label: t('style.tag') },
     { key: 'throwup', label: t('style.throwup') },
     { key: 'piece', label: t('style.piece') },
+    { key: 'mural', label: t('style.mural') },
+  ]
+
+  // Preset surface estimates (m²); custom input overrides.
+  const SIZE_PRESETS = [
+    { key: 'xs', label: '< 1 m²', value: 0.5 },
+    { key: 's',  label: '1–5 m²', value: 3 },
+    { key: 'm',  label: '5–20 m²', value: 12 },
+    { key: 'l',  label: '> 20 m²', value: 30 },
   ]
 
   const formatDate = (d) => d ? new Date(d).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : ''
@@ -136,6 +146,34 @@ export default function ModerationPanel({ onClose }) {
                       })}
                     </div>
 
+                    <div className="mod-type-row">
+                      <span className="mod-type-lbl">{t('mod.size')}</span>
+                      {SIZE_PRESETS.map(p => (
+                        <button
+                          key={p.key}
+                          className={'mod-type' + (sizeSel[g.id] === p.value ? ' on' : '')}
+                          onClick={() => setSizeSel(prev => ({
+                            ...prev, [g.id]: prev[g.id] === p.value ? undefined : p.value,
+                          }))}
+                        >
+                          {p.label}
+                        </button>
+                      ))}
+                      <input
+                        className="mod-size-input"
+                        type="number"
+                        min="0.1"
+                        max="10000"
+                        step="0.5"
+                        placeholder="m²"
+                        value={typeof sizeSel[g.id] === 'number' && !SIZE_PRESETS.some(p => p.value === sizeSel[g.id]) ? sizeSel[g.id] : ''}
+                        onChange={e => {
+                          const v = parseFloat(e.target.value)
+                          setSizeSel(prev => ({ ...prev, [g.id]: isNaN(v) ? undefined : v }))
+                        }}
+                      />
+                    </div>
+
                     {Array.isArray(g.nearby) && g.nearby.length > 0 && (
                       <div className="mod-nearby">
                         <span className="mod-nearby-title">{t('mod.nearby.title')}</span>
@@ -183,7 +221,7 @@ export default function ModerationPanel({ onClose }) {
                             disabled={!nearbySel[g.id] || busyId === g.id}
                             onClick={() => act(
                               `${API_URL}/moderation/graffiti/${g.id}/approve-at-location`,
-                              g.id, { target_id: nearbySel[g.id].id, style: typeOverride[g.id] ?? g.style }
+                              g.id, { target_id: nearbySel[g.id].id, style: typeOverride[g.id] ?? g.style, size_m2: sizeSel[g.id] ?? null }
                             )}
                           >
                             {t('mod.newAtLocation')}
@@ -199,7 +237,7 @@ export default function ModerationPanel({ onClose }) {
                         onClick={() => act(
                           `${API_URL}/moderation/graffiti/${g.id}/approve`,
                           g.id,
-                          { style: typeOverride[g.id] ?? g.style }
+                          { style: typeOverride[g.id] ?? g.style, size_m2: sizeSel[g.id] ?? null }
                         )}
                       >
                         {t('mod.approve')}
@@ -243,61 +281,6 @@ export default function ModerationPanel({ onClose }) {
                     </div>
                     {r.note && <p className="mod-desc">{r.note}</p>}
                     <p className="mod-meta">{formatDate(r.created_at)}</p>
-                    {Array.isArray(g.nearby) && g.nearby.length > 0 && (
-                      <div className="mod-nearby">
-                        <span className="mod-nearby-title">{t('mod.nearby.title')}</span>
-                        <div className="mod-nearby-row">
-                          {g.nearby.map(n => (
-                            <button
-                              key={n.id}
-                              className={'mod-nearby-item' + (nearbySel[g.id]?.id === n.id ? ' on' : '')}
-                              onClick={() => setNearbySel(prev => ({
-                                ...prev, [g.id]: prev[g.id]?.id === n.id ? null : n,
-                              }))}
-                              title={`${Math.round(n.distance_m)} m`}
-                            >
-                              {n.image_key
-                                ? <img
-                                    src={`${CLOUDFRONT}/${n.image_key}`}
-                                    alt=""
-                                    loading="lazy"
-                                    onClick={(ev) => {
-                                      ev.stopPropagation()
-                                      const big = n.image_key.replace('thumb.jpg','medium.jpg')
-                                      setZoomImg({ url: `${CLOUDFRONT}/${big}` })
-                                    }}
-                                    style={{ cursor: 'zoom-in' }}
-                                  />
-                                : <span className="mod-nearby-noimg">?</span>}
-                              <span className="mod-nearby-dist">{Math.round(n.distance_m)} {t('mod.distAway')}</span>
-                              {n.removed_at && <span className="mod-nearby-cleaned">{t('mod.cleanedBadge')}</span>}
-                            </button>
-                          ))}
-                        </div>
-                        <div className="mod-loc-actions">
-                          <button
-                            className="mod-loc-btn"
-                            disabled={!nearbySel[g.id] || busyId === g.id}
-                            onClick={() => act(
-                              `${API_URL}/moderation/graffiti/${g.id}/attach-photo`,
-                              g.id, { target_id: nearbySel[g.id].id }
-                            )}
-                          >
-                            {t('mod.samePhoto')}
-                          </button>
-                          <button
-                            className="mod-loc-btn"
-                            disabled={!nearbySel[g.id] || busyId === g.id}
-                            onClick={() => act(
-                              `${API_URL}/moderation/graffiti/${g.id}/approve-at-location`,
-                              g.id, { target_id: nearbySel[g.id].id, style: typeOverride[g.id] ?? g.style }
-                            )}
-                          >
-                            {t('mod.newAtLocation')}
-                          </button>
-                        </div>
-                      </div>
-                    )}
 
                     <div className="mod-actions">
                       <button

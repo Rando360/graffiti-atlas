@@ -38,6 +38,7 @@ def _s3():
 
 class ApproveBody(BaseModel):
     style: str | None = None
+    size_m2: float | None = None  # moderator's surface estimate in m²
 
 
 class BlurRect(BaseModel):
@@ -124,10 +125,13 @@ def list_removals(user: dict = Depends(require_admin)):
 @router.post("/graffiti/{graffiti_id}/approve")
 def approve_graffiti(graffiti_id: str, body: ApproveBody = None, user: dict = Depends(require_admin)):
     service = _service()
-    res = service.table("graffiti").update({
+    update = {
         "status": "approved",
         "updated_at": datetime.utcnow().isoformat(),
-    }).eq("id", graffiti_id).execute()
+    }
+    if body and body.size_m2 is not None and 0 < body.size_m2 <= 10000:
+        update["size_m2"] = body.size_m2
+    res = service.table("graffiti").update(update).eq("id", graffiti_id).execute()
 
     if not res.data:
         raise HTTPException(status_code=404, detail="Graffiti introuvable")
@@ -151,6 +155,7 @@ def approve_graffiti(graffiti_id: str, body: ApproveBody = None, user: dict = De
 class TargetBody(BaseModel):
     target_id: str
     style: str | None = None
+    size_m2: float | None = None
 
 
 @router.post("/graffiti/{graffiti_id}/attach-photo")
@@ -178,11 +183,14 @@ def approve_at_location(graffiti_id: str, body: TargetBody, user: dict = Depends
     if not target.data:
         raise HTTPException(status_code=404, detail="Cible introuvable")
     loc = target.data[0]["location_id"] or body.target_id
-    service.table("graffiti").update({
+    update = {
         "location_id": loc,
         "status": "approved",
         "updated_at": datetime.utcnow().isoformat(),
-    }).eq("id", graffiti_id).execute()
+    }
+    if body.size_m2 is not None and 0 < body.size_m2 <= 10000:
+        update["size_m2"] = body.size_m2
+    service.table("graffiti").update(update).eq("id", graffiti_id).execute()
     if body.style:
         existing = service.table("classifications").select("id").eq("graffiti_id", graffiti_id).execute()
         if existing.data:

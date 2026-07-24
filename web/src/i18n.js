@@ -338,6 +338,7 @@ const STRINGS = {
   'mod.noImage': { fr: "Pas d'image", en: 'No image', es: 'Sin imagen', de: 'Kein Bild', it: 'Nessuna immagine' },
   'mod.noPhoto': { fr: 'Sans photo', en: 'No photo', es: 'Sin foto', de: 'Ohne Foto', it: 'Senza foto' },
   'mod.type': { fr: 'Type :', en: 'Type:', es: 'Tipo:', de: 'Typ:', it: 'Tipo:' },
+  'mod.size': { fr: 'Taille :', en: 'Size:', es: 'Tamaño:', de: 'Größe:', it: 'Dimensione:' },
   'mod.approve': { fr: '✓ Approuver', en: '✓ Approve', es: '✓ Aprobar', de: '✓ Genehmigen', it: '✓ Approva' },
   'mod.reject': { fr: '✕ Rejeter', en: '✕ Reject', es: '✕ Rechazar', de: '✕ Ablehnen', it: '✕ Rifiuta' },
   'mod.blur': { fr: 'Flouter', en: 'Blur', es: 'Difuminar', de: 'Unkenntlich machen', it: 'Sfoca' },

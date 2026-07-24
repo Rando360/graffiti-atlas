@@ -135,6 +135,8 @@ export default function Landing() {
           <a href="/politique-confidentialite">{t('set.link.privacy')}</a>
           <a href="/conditions-utilisation">{t('set.link.terms')}</a>
           <a href="/mentions-legales">{t('set.link.legal')}</a>
+          <a href="/politique-cookies">{t('cookies.link')}</a>
+          <a href="/credits">{t('legal.credits')}</a>
           <button onClick={() => window.dispatchEvent(new Event('ga:manage-cookies'))}>
             {t('set.link.cookies')}
           </button>

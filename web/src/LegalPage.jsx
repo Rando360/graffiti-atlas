@@ -1,9 +1,10 @@
 import { useNavigate } from 'react-router-dom'
-import { t } from './i18n'
+import { t, getLanguage } from './i18n'
 
 /* Lightweight inline renderer for our legal content.
-   Content is authored here as structured blocks (headings, paragraphs,
-   lists, tables) so it renders cleanly without a Markdown dependency. */
+   Content is authored as structured blocks (headings, paragraphs, lists,
+   tables, quotes) per language, so it renders cleanly without a Markdown
+   dependency and follows the user's selected language. */
 
 function Logo({ size = 26 }) {
   return (
@@ -15,8 +16,51 @@ function Logo({ size = 26 }) {
   )
 }
 
-export default function LegalPage({ title, updated, children }) {
+/* Render a single structured block. Inline HTML (bold, links) is trusted
+   because this content is authored by us, not user-supplied. */
+function Block({ b, i }) {
+  switch (b.t) {
+    case 'h2':    return <h2 key={i} dangerouslySetInnerHTML={{ __html: b.html }} />
+    case 'h3':    return <h3 key={i} dangerouslySetInnerHTML={{ __html: b.html }} />
+    case 'quote': return <blockquote key={i} dangerouslySetInnerHTML={{ __html: b.html }} />
+    case 'ul':
+      return (
+        <ul key={i}>
+          {b.items.map((it, j) => <li key={j} dangerouslySetInnerHTML={{ __html: it }} />)}
+        </ul>
+      )
+    case 'table':
+      return (
+        <table key={i}>
+          <thead>
+            <tr>{b.head.map((h, j) => <th key={j} dangerouslySetInnerHTML={{ __html: h }} />)}</tr>
+          </thead>
+          <tbody>
+            {b.rows.map((r, j) => (
+              <tr key={j}>{r.map((c, k) => <td key={k} dangerouslySetInnerHTML={{ __html: c }} />)}</tr>
+            ))}
+          </tbody>
+        </table>
+      )
+    case 'p':
+    default:      return <p key={i} dangerouslySetInnerHTML={{ __html: b.html }} />
+  }
+}
+
+/**
+ * LegalPage
+ * @param {object} content - { [lang]: { title, updated (ISO date), blocks:[...] } }
+ *                           Falls back to French, then English.
+ */
+export default function LegalPage({ content }) {
   const navigate = useNavigate()
+  const lang = getLanguage()
+  const doc = content[lang] || content.fr || content.en
+  const updatedLabel = t('legal.updated')
+  const dateStr = doc.updated
+    ? new Date(doc.updated).toLocaleDateString(lang, { day: 'numeric', month: 'long', year: 'numeric' })
+    : null
+
   return (
     <div className="legal">
       <header className="legal-nav">
@@ -28,9 +72,12 @@ export default function LegalPage({ title, updated, children }) {
       </header>
 
       <article className="legal-doc">
-        <h1>{title}</h1>
-        {updated && <p className="legal-updated">{updated}</p>}
-        {children}
+        <h1>{doc.title}</h1>
+        {dateStr && <p className="legal-updated">{updatedLabel} {dateStr}</p>}
+        {doc.blocks.map((b, i) => <Block key={i} b={b} i={i} />)}
+        {lang !== 'fr' && t('legal.prevails') && (
+          <blockquote className="legal-prevails">{t('legal.prevails')}</blockquote>
+        )}
       </article>
 
       <footer className="legal-footer">
@@ -38,7 +85,7 @@ export default function LegalPage({ title, updated, children }) {
         <a href="/conditions-utilisation">{t('set.link.terms')}</a>
         <a href="/mentions-legales">{t('set.link.legal')}</a>
         <a href="/politique-cookies">{t('cookies.link')}</a>
-        <a href="/credits">Crédits</a>
+        <a href="/credits">{t('legal.credits')}</a>
         <button onClick={() => window.dispatchEvent(new Event('ga:manage-cookies'))}>
           {t('set.link.cookies')}
         </button>

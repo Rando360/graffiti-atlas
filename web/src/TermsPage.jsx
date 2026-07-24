@@ -1,39 +1,258 @@
 import LegalPage from './LegalPage'
 
+const CONTENT = {
+  fr: {
+    title: "Conditions Générales d'Utilisation (CGU)",
+    updated: '2026-07-18',
+    blocks: [
+      { t: 'p', html: "Les présentes conditions régissent l'utilisation du site GraffitiAtlas.io, édité par Graffiti Atlas, entreprise individuelle (auto-entrepreneur), 9 F Place Saint-Bruno, 38000 Grenoble. En créant un compte ou en utilisant le service, vous acceptez ces conditions." },
+      { t: 'h2', html: '1. Objet du service' },
+      { t: 'p', html: "GraffitiAtlas est une plateforme collaborative de cartographie des graffitis dans l'espace public, s'appuyant sur des images de rue et sur les contributions de la communauté. Le service est fourni « en l'état »." },
+      { t: 'h2', html: '2. Compte utilisateur' },
+      { t: 'ul', items: [
+        "Vous devez fournir une adresse e-mail valide et être âgé d'au moins 15 ans.",
+        'Vous êtes responsable de la confidentialité de vos identifiants et des activités effectuées depuis votre compte.',
+        'Nous pouvons suspendre ou supprimer un compte en cas de non-respect des présentes conditions.',
+      ] },
+      { t: 'h2', html: '3. Contributions des utilisateurs' },
+      { t: 'h3', html: '3.1 Vos engagements' },
+      { t: 'p', html: 'En déposant une photographie ou toute autre contribution, vous garantissez que :' },
+      { t: 'ul', items: [
+        "vous détenez les droits nécessaires sur l'image (vous en êtes l'auteur ou disposez d'une autorisation) ;",
+        "l'image représente un graffiti situé dans l'espace public ;",
+        'le contenu ne porte pas atteinte aux droits de tiers (vie privée, droit à l\'image, propriété intellectuelle) ;',
+        "le contenu n'est pas illégal, haineux, diffamatoire, violent, à caractère sexuel, ou contraire à l'ordre public.",
+      ] },
+      { t: 'h3', html: '3.2 Contenus interdits' },
+      { t: 'p', html: 'Sont notamment interdits : les images centrées sur des personnes identifiables, les contenus permettant d\'identifier ou de localiser une personne à son insu, les propos ou symboles haineux, et tout contenu sans rapport avec l\'objet du service.' },
+      { t: 'h3', html: '3.3 Licence que vous nous accordez' },
+      { t: 'p', html: 'En publiant une contribution, vous accordez à GraffitiAtlas une licence non exclusive, mondiale et gratuite pour héberger, afficher, reproduire et adapter (par exemple redimensionner ou flouter) votre contribution dans le cadre du service et de sa promotion. Vous conservez la propriété de vos photographies. Cette licence prend fin lorsque le contenu est retiré, sous réserve de la conservation documentaire prévue au 3.5.' },
+      { t: 'h3', html: '3.4 Modération' },
+      { t: 'p', html: 'Toutes les contributions sont soumises à modération avant publication. Les visages sont floutés automatiquement au dépôt. Nous pouvons refuser, retirer ou modifier (classification, floutage) une contribution, sans obligation de justification, notamment pour respecter la loi ou les présentes conditions.' },
+      { t: 'h3', html: '3.5 Historique et « graffiti effacé »' },
+      { t: 'p', html: "Les données cartographiques ont une valeur documentaire. Un graffiti disparu de l'espace public n'est pas supprimé de la base mais peut être marqué comme « effacé », avec sa date. Vous pouvez néanmoins demander le retrait de vos propres contributions (voir Politique de confidentialité)." },
+      { t: 'h2', html: '4. Utilisation acceptable' },
+      { t: 'p', html: 'Vous vous engagez à ne pas : perturber le fonctionnement du service, collecter massivement les données par des moyens automatisés sans autorisation, contourner la modération, ou utiliser le service à des fins illégales.' },
+      { t: 'h2', html: '5. Propriété intellectuelle du service' },
+      { t: 'p', html: "Le code, le design, le logo et les textes originaux de GraffitiAtlas sont protégés. Les données issues de Panoramax (IGN) et d'OpenStreetMap sont soumises à leurs licences respectives. Google Street View est soumis aux conditions de Google." },
+      { t: 'h2', html: '6. Responsabilité' },
+      { t: 'p', html: "Le service est fourni sans garantie d'exactitude ou de disponibilité continue. Dans les limites permises par la loi, GraffitiAtlas ne saurait être tenu responsable des dommages indirects résultant de l'utilisation du service ou des contributions des utilisateurs." },
+      { t: 'h2', html: '7. Suppression de compte' },
+      { t: 'p', html: 'Vous pouvez supprimer votre compte à tout moment depuis vos paramètres. À cette occasion :' },
+      { t: 'ul', items: [
+        'vos contributions <strong>non publiées</strong> (en attente ou refusées) sont entièrement supprimées, images comprises ;',
+        'vos contributions <strong>déjà publiées</strong> sont conservées pour leur valeur documentaire mais <strong>anonymisées</strong> — votre nom et tout identifiant vous rattachant à ces contributions sont retirés ;',
+        'votre profil (nom, e-mail, préférences) est supprimé.',
+      ] },
+      { t: 'p', html: 'La suppression complète d\'une contribution déjà publiée peut être demandée au cas par cas à contact@graffitiatlas.io, au titre de votre droit à l\'effacement.' },
+      { t: 'h2', html: '8. Droit applicable' },
+      { t: 'p', html: 'Les présentes conditions sont régies par le droit français. En cas de litige, et à défaut de résolution amiable, les tribunaux français seront compétents.' },
+      { t: 'h2', html: '9. Contact' },
+      { t: 'p', html: 'Pour toute question : contact@graffitiatlas.io' },
+    ],
+  },
+  en: {
+    title: 'Terms of Use',
+    updated: '2026-07-18',
+    blocks: [
+      { t: 'p', html: 'These terms govern the use of GraffitiAtlas.io, published by Graffiti Atlas, sole proprietorship (auto-entrepreneur), 9 F Place Saint-Bruno, 38000 Grenoble, France. By creating an account or using the service, you accept these terms.' },
+      { t: 'h2', html: '1. Purpose of the service' },
+      { t: 'p', html: 'GraffitiAtlas is a collaborative platform for mapping graffiti in public spaces, based on street imagery and community contributions. The service is provided “as is”.' },
+      { t: 'h2', html: '2. User account' },
+      { t: 'ul', items: [
+        'You must provide a valid email address and be at least 15 years old.',
+        'You are responsible for keeping your credentials confidential and for activity carried out from your account.',
+        'We may suspend or delete an account in the event of non-compliance with these terms.',
+      ] },
+      { t: 'h2', html: '3. User contributions' },
+      { t: 'h3', html: '3.1 Your commitments' },
+      { t: 'p', html: 'By uploading a photograph or any other contribution, you warrant that:' },
+      { t: 'ul', items: [
+        'you hold the necessary rights to the image (you are the author or have authorization);',
+        'the image depicts graffiti located in a public space;',
+        'the content does not infringe the rights of third parties (privacy, image rights, intellectual property);',
+        'the content is not illegal, hateful, defamatory, violent, sexual, or contrary to public order.',
+      ] },
+      { t: 'h3', html: '3.2 Prohibited content' },
+      { t: 'p', html: 'The following are prohibited in particular: images centered on identifiable people, content that makes it possible to identify or locate a person without their knowledge, hateful speech or symbols, and any content unrelated to the purpose of the service.' },
+      { t: 'h3', html: '3.3 License you grant us' },
+      { t: 'p', html: 'By publishing a contribution, you grant GraffitiAtlas a non-exclusive, worldwide, royalty-free license to host, display, reproduce and adapt (for example resize or blur) your contribution as part of the service and its promotion. You retain ownership of your photographs. This license ends when the content is removed, subject to the documentary retention set out in 3.5.' },
+      { t: 'h3', html: '3.4 Moderation' },
+      { t: 'p', html: 'All contributions are subject to moderation before publication. Faces are blurred automatically upon upload. We may refuse, remove or modify (classification, blurring) a contribution, without obligation to justify, in particular to comply with the law or these terms.' },
+      { t: 'h3', html: '3.5 History and “removed graffiti”' },
+      { t: 'p', html: 'Mapping data has documentary value. Graffiti that has disappeared from the public space is not deleted from the database but may be marked as “removed”, with its date. You may nonetheless request the removal of your own contributions (see Privacy Policy).' },
+      { t: 'h2', html: '4. Acceptable use' },
+      { t: 'p', html: 'You agree not to: disrupt the operation of the service, mass-collect data by automated means without authorization, circumvent moderation, or use the service for illegal purposes.' },
+      { t: 'h2', html: '5. Intellectual property of the service' },
+      { t: 'p', html: 'The code, design, logo and original texts of GraffitiAtlas are protected. Data from Panoramax (IGN) and OpenStreetMap is subject to their respective licenses. Google Street View is subject to Google’s terms.' },
+      { t: 'h2', html: '6. Liability' },
+      { t: 'p', html: 'The service is provided without guarantee of accuracy or continuous availability. To the extent permitted by law, GraffitiAtlas cannot be held liable for indirect damages resulting from the use of the service or from user contributions.' },
+      { t: 'h2', html: '7. Account deletion' },
+      { t: 'p', html: 'You may delete your account at any time from your settings. When you do:' },
+      { t: 'ul', items: [
+        'your <strong>unpublished</strong> contributions (pending or rejected) are entirely deleted, including images;',
+        'your <strong>already published</strong> contributions are kept for their documentary value but <strong>anonymized</strong> — your name and any identifier linking you to those contributions are removed;',
+        'your profile (name, email, preferences) is deleted.',
+      ] },
+      { t: 'p', html: 'Complete deletion of an already published contribution may be requested on a case-by-case basis at contact@graffitiatlas.io, under your right to erasure.' },
+      { t: 'h2', html: '8. Governing law' },
+      { t: 'p', html: 'These terms are governed by French law. In the event of a dispute, and failing amicable resolution, the French courts shall have jurisdiction.' },
+      { t: 'h2', html: '9. Contact' },
+      { t: 'p', html: 'For any questions: contact@graffitiatlas.io' },
+    ],
+  },
+  es: {
+    title: 'Condiciones de uso',
+    updated: '2026-07-18',
+    blocks: [
+      { t: 'p', html: 'Las presentes condiciones rigen el uso del sitio GraffitiAtlas.io, editado por Graffiti Atlas, empresa individual (autónomo), 9 F Place Saint-Bruno, 38000 Grenoble, Francia. Al crear una cuenta o utilizar el servicio, usted acepta estas condiciones.' },
+      { t: 'h2', html: '1. Objeto del servicio' },
+      { t: 'p', html: 'GraffitiAtlas es una plataforma colaborativa de cartografía de grafitis en el espacio público, basada en imágenes de calle y en las contribuciones de la comunidad. El servicio se presta «tal cual».' },
+      { t: 'h2', html: '2. Cuenta de usuario' },
+      { t: 'ul', items: [
+        'Debe proporcionar una dirección de correo electrónico válida y tener al menos 15 años.',
+        'Usted es responsable de la confidencialidad de sus credenciales y de las actividades realizadas desde su cuenta.',
+        'Podemos suspender o eliminar una cuenta en caso de incumplimiento de estas condiciones.',
+      ] },
+      { t: 'h2', html: '3. Contribuciones de los usuarios' },
+      { t: 'h3', html: '3.1 Sus compromisos' },
+      { t: 'p', html: 'Al subir una fotografía o cualquier otra contribución, usted garantiza que:' },
+      { t: 'ul', items: [
+        'posee los derechos necesarios sobre la imagen (es su autor o dispone de autorización);',
+        'la imagen representa un grafiti situado en el espacio público;',
+        'el contenido no vulnera los derechos de terceros (privacidad, derecho a la imagen, propiedad intelectual);',
+        'el contenido no es ilegal, odioso, difamatorio, violento, de carácter sexual ni contrario al orden público.',
+      ] },
+      { t: 'h3', html: '3.2 Contenidos prohibidos' },
+      { t: 'p', html: 'Están prohibidos en particular: las imágenes centradas en personas identificables, los contenidos que permitan identificar o localizar a una persona sin su conocimiento, las expresiones o símbolos de odio, y cualquier contenido ajeno al objeto del servicio.' },
+      { t: 'h3', html: '3.3 Licencia que nos concede' },
+      { t: 'p', html: 'Al publicar una contribución, concede a GraffitiAtlas una licencia no exclusiva, mundial y gratuita para alojar, mostrar, reproducir y adaptar (por ejemplo, redimensionar o difuminar) su contribución en el marco del servicio y de su promoción. Usted conserva la propiedad de sus fotografías. Esta licencia finaliza cuando el contenido se retira, sin perjuicio de la conservación documental prevista en el punto 3.5.' },
+      { t: 'h3', html: '3.4 Moderación' },
+      { t: 'p', html: 'Todas las contribuciones se someten a moderación antes de su publicación. Los rostros se difuminan automáticamente al subirlos. Podemos rechazar, retirar o modificar (clasificación, difuminado) una contribución, sin obligación de justificación, en particular para cumplir la ley o estas condiciones.' },
+      { t: 'h3', html: '3.5 Historial y «grafiti borrado»' },
+      { t: 'p', html: 'Los datos cartográficos tienen valor documental. Un grafiti desaparecido del espacio público no se elimina de la base de datos, pero puede marcarse como «borrado», con su fecha. No obstante, puede solicitar la retirada de sus propias contribuciones (véase la Política de privacidad).' },
+      { t: 'h2', html: '4. Uso aceptable' },
+      { t: 'p', html: 'Se compromete a no: perturbar el funcionamiento del servicio, recopilar masivamente datos por medios automatizados sin autorización, eludir la moderación ni utilizar el servicio con fines ilegales.' },
+      { t: 'h2', html: '5. Propiedad intelectual del servicio' },
+      { t: 'p', html: 'El código, el diseño, el logotipo y los textos originales de GraffitiAtlas están protegidos. Los datos procedentes de Panoramax (IGN) y de OpenStreetMap están sujetos a sus respectivas licencias. Google Street View está sujeto a las condiciones de Google.' },
+      { t: 'h2', html: '6. Responsabilidad' },
+      { t: 'p', html: 'El servicio se presta sin garantía de exactitud ni de disponibilidad continua. En los límites permitidos por la ley, GraffitiAtlas no será responsable de los daños indirectos derivados del uso del servicio o de las contribuciones de los usuarios.' },
+      { t: 'h2', html: '7. Eliminación de la cuenta' },
+      { t: 'p', html: 'Puede eliminar su cuenta en cualquier momento desde sus ajustes. En tal caso:' },
+      { t: 'ul', items: [
+        'sus contribuciones <strong>no publicadas</strong> (pendientes o rechazadas) se eliminan por completo, incluidas las imágenes;',
+        'sus contribuciones <strong>ya publicadas</strong> se conservan por su valor documental pero se <strong>anonimizan</strong>: se retiran su nombre y cualquier identificador que le vincule a esas contribuciones;',
+        'su perfil (nombre, correo electrónico, preferencias) se elimina.',
+      ] },
+      { t: 'p', html: 'La eliminación completa de una contribución ya publicada puede solicitarse caso por caso en contact@graffitiatlas.io, en virtud de su derecho de supresión.' },
+      { t: 'h2', html: '8. Legislación aplicable' },
+      { t: 'p', html: 'Las presentes condiciones se rigen por el derecho francés. En caso de litigio, y a falta de resolución amistosa, serán competentes los tribunales franceses.' },
+      { t: 'h2', html: '9. Contacto' },
+      { t: 'p', html: 'Para cualquier consulta: contact@graffitiatlas.io' },
+    ],
+  },
+  de: {
+    title: 'Nutzungsbedingungen',
+    updated: '2026-07-18',
+    blocks: [
+      { t: 'p', html: 'Diese Bedingungen regeln die Nutzung der Website GraffitiAtlas.io, herausgegeben von Graffiti Atlas, Einzelunternehmen (auto-entrepreneur), 9 F Place Saint-Bruno, 38000 Grenoble, Frankreich. Durch das Erstellen eines Kontos oder die Nutzung des Dienstes akzeptieren Sie diese Bedingungen.' },
+      { t: 'h2', html: '1. Zweck des Dienstes' },
+      { t: 'p', html: 'GraffitiAtlas ist eine kollaborative Plattform zur Kartierung von Graffiti im öffentlichen Raum, basierend auf Straßenbildern und Beiträgen der Community. Der Dienst wird „wie besehen“ bereitgestellt.' },
+      { t: 'h2', html: '2. Benutzerkonto' },
+      { t: 'ul', items: [
+        'Sie müssen eine gültige E-Mail-Adresse angeben und mindestens 15 Jahre alt sein.',
+        'Sie sind für die Vertraulichkeit Ihrer Zugangsdaten und für die von Ihrem Konto aus durchgeführten Aktivitäten verantwortlich.',
+        'Wir können ein Konto bei Nichteinhaltung dieser Bedingungen sperren oder löschen.',
+      ] },
+      { t: 'h2', html: '3. Nutzerbeiträge' },
+      { t: 'h3', html: '3.1 Ihre Zusicherungen' },
+      { t: 'p', html: 'Mit dem Hochladen einer Fotografie oder eines anderen Beitrags sichern Sie zu, dass:' },
+      { t: 'ul', items: [
+        'Sie die erforderlichen Rechte am Bild besitzen (Sie sind der Urheber oder haben eine Genehmigung);',
+        'das Bild ein Graffiti im öffentlichen Raum zeigt;',
+        'der Inhalt keine Rechte Dritter verletzt (Privatsphäre, Recht am eigenen Bild, geistiges Eigentum);',
+        'der Inhalt nicht rechtswidrig, hasserfüllt, verleumderisch, gewalttätig, sexuell oder gegen die öffentliche Ordnung gerichtet ist.',
+      ] },
+      { t: 'h3', html: '3.2 Verbotene Inhalte' },
+      { t: 'p', html: 'Insbesondere verboten sind: Bilder, die auf identifizierbare Personen fokussiert sind, Inhalte, die es ermöglichen, eine Person ohne ihr Wissen zu identifizieren oder zu lokalisieren, hasserfüllte Äußerungen oder Symbole sowie jeglicher Inhalt ohne Bezug zum Zweck des Dienstes.' },
+      { t: 'h3', html: '3.3 Lizenz, die Sie uns gewähren' },
+      { t: 'p', html: 'Mit der Veröffentlichung eines Beitrags gewähren Sie GraffitiAtlas eine nicht-exklusive, weltweite, gebührenfreie Lizenz zum Hosten, Anzeigen, Vervielfältigen und Anpassen (zum Beispiel Verkleinern oder Unkenntlichmachen) Ihres Beitrags im Rahmen des Dienstes und seiner Bewerbung. Sie behalten das Eigentum an Ihren Fotografien. Diese Lizenz endet, wenn der Inhalt entfernt wird, vorbehaltlich der in 3.5 vorgesehenen dokumentarischen Aufbewahrung.' },
+      { t: 'h3', html: '3.4 Moderation' },
+      { t: 'p', html: 'Alle Beiträge werden vor der Veröffentlichung moderiert. Gesichter werden beim Hochladen automatisch unkenntlich gemacht. Wir können einen Beitrag ohne Begründungspflicht ablehnen, entfernen oder ändern (Klassifizierung, Unkenntlichmachung), insbesondere um das Gesetz oder diese Bedingungen einzuhalten.' },
+      { t: 'h3', html: '3.5 Verlauf und „entferntes Graffiti“' },
+      { t: 'p', html: 'Kartendaten haben dokumentarischen Wert. Ein aus dem öffentlichen Raum verschwundenes Graffiti wird nicht aus der Datenbank gelöscht, kann jedoch mit Datum als „entfernt“ markiert werden. Sie können dennoch die Entfernung Ihrer eigenen Beiträge beantragen (siehe Datenschutzrichtlinie).' },
+      { t: 'h2', html: '4. Zulässige Nutzung' },
+      { t: 'p', html: 'Sie verpflichten sich, nicht: den Betrieb des Dienstes zu stören, Daten ohne Genehmigung massenhaft mit automatisierten Mitteln zu sammeln, die Moderation zu umgehen oder den Dienst für rechtswidrige Zwecke zu nutzen.' },
+      { t: 'h2', html: '5. Geistiges Eigentum des Dienstes' },
+      { t: 'p', html: 'Der Code, das Design, das Logo und die Originaltexte von GraffitiAtlas sind geschützt. Daten von Panoramax (IGN) und OpenStreetMap unterliegen ihren jeweiligen Lizenzen. Google Street View unterliegt den Bedingungen von Google.' },
+      { t: 'h2', html: '6. Haftung' },
+      { t: 'p', html: 'Der Dienst wird ohne Gewähr für Richtigkeit oder ständige Verfügbarkeit bereitgestellt. Soweit gesetzlich zulässig, haftet GraffitiAtlas nicht für indirekte Schäden, die aus der Nutzung des Dienstes oder aus Nutzerbeiträgen entstehen.' },
+      { t: 'h2', html: '7. Kontolöschung' },
+      { t: 'p', html: 'Sie können Ihr Konto jederzeit in Ihren Einstellungen löschen. Dabei gilt:' },
+      { t: 'ul', items: [
+        'Ihre <strong>nicht veröffentlichten</strong> Beiträge (ausstehend oder abgelehnt) werden vollständig gelöscht, einschließlich der Bilder;',
+        'Ihre <strong>bereits veröffentlichten</strong> Beiträge werden aufgrund ihres dokumentarischen Werts aufbewahrt, aber <strong>anonymisiert</strong> — Ihr Name und jede Kennung, die Sie mit diesen Beiträgen verbindet, werden entfernt;',
+        'Ihr Profil (Name, E-Mail, Präferenzen) wird gelöscht.',
+      ] },
+      { t: 'p', html: 'Die vollständige Löschung eines bereits veröffentlichten Beitrags kann im Einzelfall unter contact@graffitiatlas.io beantragt werden, im Rahmen Ihres Rechts auf Löschung.' },
+      { t: 'h2', html: '8. Anwendbares Recht' },
+      { t: 'p', html: 'Diese Bedingungen unterliegen französischem Recht. Im Streitfall und mangels gütlicher Einigung sind die französischen Gerichte zuständig.' },
+      { t: 'h2', html: '9. Kontakt' },
+      { t: 'p', html: 'Bei Fragen: contact@graffitiatlas.io' },
+    ],
+  },
+  it: {
+    title: 'Condizioni d’uso',
+    updated: '2026-07-18',
+    blocks: [
+      { t: 'p', html: 'Le presenti condizioni disciplinano l’uso del sito GraffitiAtlas.io, edito da Graffiti Atlas, impresa individuale (lavoratore autonomo), 9 F Place Saint-Bruno, 38000 Grenoble, Francia. Creando un account o utilizzando il servizio, accetti queste condizioni.' },
+      { t: 'h2', html: '1. Oggetto del servizio' },
+      { t: 'p', html: 'GraffitiAtlas è una piattaforma collaborativa di mappatura dei graffiti nello spazio pubblico, basata su immagini stradali e sui contributi della comunità. Il servizio è fornito «così com’è».' },
+      { t: 'h2', html: '2. Account utente' },
+      { t: 'ul', items: [
+        'Devi fornire un indirizzo e-mail valido e avere almeno 15 anni.',
+        'Sei responsabile della riservatezza delle tue credenziali e delle attività svolte dal tuo account.',
+        'Possiamo sospendere o eliminare un account in caso di mancato rispetto delle presenti condizioni.',
+      ] },
+      { t: 'h2', html: '3. Contributi degli utenti' },
+      { t: 'h3', html: '3.1 I tuoi impegni' },
+      { t: 'p', html: 'Caricando una fotografia o qualsiasi altro contributo, garantisci che:' },
+      { t: 'ul', items: [
+        'detieni i diritti necessari sull’immagine (ne sei l’autore o disponi di un’autorizzazione);',
+        'l’immagine rappresenta un graffito situato nello spazio pubblico;',
+        'il contenuto non viola i diritti di terzi (privacy, diritto all’immagine, proprietà intellettuale);',
+        'il contenuto non è illegale, offensivo, diffamatorio, violento, di natura sessuale o contrario all’ordine pubblico.',
+      ] },
+      { t: 'h3', html: '3.2 Contenuti vietati' },
+      { t: 'p', html: 'Sono in particolare vietati: le immagini incentrate su persone identificabili, i contenuti che consentono di identificare o localizzare una persona a sua insaputa, le espressioni o i simboli d’odio e qualsiasi contenuto estraneo all’oggetto del servizio.' },
+      { t: 'h3', html: '3.3 Licenza che ci concedi' },
+      { t: 'p', html: 'Pubblicando un contributo, concedi a GraffitiAtlas una licenza non esclusiva, mondiale e gratuita per ospitare, visualizzare, riprodurre e adattare (ad esempio ridimensionare o sfocare) il tuo contributo nell’ambito del servizio e della sua promozione. Conservi la proprietà delle tue fotografie. Questa licenza termina quando il contenuto viene rimosso, fatta salva la conservazione documentale prevista al punto 3.5.' },
+      { t: 'h3', html: '3.4 Moderazione' },
+      { t: 'p', html: 'Tutti i contributi sono soggetti a moderazione prima della pubblicazione. I volti vengono sfocati automaticamente al caricamento. Possiamo rifiutare, rimuovere o modificare (classificazione, sfocatura) un contributo, senza obbligo di giustificazione, in particolare per rispettare la legge o le presenti condizioni.' },
+      { t: 'h3', html: '3.5 Cronologia e «graffito rimosso»' },
+      { t: 'p', html: 'I dati cartografici hanno un valore documentale. Un graffito scomparso dallo spazio pubblico non viene eliminato dal database ma può essere contrassegnato come «rimosso», con la relativa data. Puoi tuttavia richiedere la rimozione dei tuoi contributi (vedi Informativa sulla privacy).' },
+      { t: 'h2', html: '4. Uso accettabile' },
+      { t: 'p', html: 'Ti impegni a non: perturbare il funzionamento del servizio, raccogliere massivamente dati con mezzi automatizzati senza autorizzazione, eludere la moderazione o utilizzare il servizio per scopi illeciti.' },
+      { t: 'h2', html: '5. Proprietà intellettuale del servizio' },
+      { t: 'p', html: 'Il codice, il design, il logo e i testi originali di GraffitiAtlas sono protetti. I dati provenienti da Panoramax (IGN) e da OpenStreetMap sono soggetti alle rispettive licenze. Google Street View è soggetto alle condizioni di Google.' },
+      { t: 'h2', html: '6. Responsabilità' },
+      { t: 'p', html: 'Il servizio è fornito senza garanzia di esattezza o di disponibilità continua. Nei limiti consentiti dalla legge, GraffitiAtlas non può essere ritenuto responsabile per danni indiretti derivanti dall’uso del servizio o dai contributi degli utenti.' },
+      { t: 'h2', html: '7. Eliminazione dell’account' },
+      { t: 'p', html: 'Puoi eliminare il tuo account in qualsiasi momento dalle impostazioni. In tal caso:' },
+      { t: 'ul', items: [
+        'i tuoi contributi <strong>non pubblicati</strong> (in attesa o rifiutati) vengono eliminati completamente, immagini comprese;',
+        'i tuoi contributi <strong>già pubblicati</strong> vengono conservati per il loro valore documentale ma <strong>anonimizzati</strong>: il tuo nome e ogni identificativo che ti collega a tali contributi vengono rimossi;',
+        'il tuo profilo (nome, e-mail, preferenze) viene eliminato.',
+      ] },
+      { t: 'p', html: 'L’eliminazione completa di un contributo già pubblicato può essere richiesta caso per caso a contact@graffitiatlas.io, ai sensi del tuo diritto alla cancellazione.' },
+      { t: 'h2', html: '8. Legge applicabile' },
+      { t: 'p', html: 'Le presenti condizioni sono regolate dal diritto francese. In caso di controversia, e in assenza di risoluzione amichevole, saranno competenti i tribunali francesi.' },
+      { t: 'h2', html: '9. Contatto' },
+      { t: 'p', html: 'Per qualsiasi domanda: contact@graffitiatlas.io' },
+    ],
+  },
+}
+
 export default function TermsPage() {
-  return (
-    <LegalPage title="Conditions Générales d'Utilisation (CGU)" updated="Dernière mise à jour : 18 juillet 2026">
-        <p>Les présentes conditions régissent l'utilisation du site GraffitiAtlas.io, édité par Graffiti Atlas, entreprise individuelle (auto-entrepreneur), 9 F Place Saint-Bruno, 38000 Grenoble. En créant un compte ou en utilisant le service, vous acceptez ces conditions.</p>
-        <h2>1. Objet du service</h2>
-        <p>GraffitiAtlas est une plateforme collaborative de cartographie des graffitis dans l'espace public, s'appuyant sur des images de rue et sur les contributions de la communauté. Le service est fourni « en l'état ».</p>
-        <h2>2. Compte utilisateur</h2>
-        <ul><li>Vous devez fournir une adresse e-mail valide et être âgé d'au moins 15 ans.</li><li>Vous êtes responsable de la confidentialité de vos identifiants et des activités effectuées depuis votre compte.</li><li>Nous pouvons suspendre ou supprimer un compte en cas de non-respect des présentes conditions.</li></ul>
-        <h2>3. Contributions des utilisateurs</h2>
-        <h3>3.1 Vos engagements</h3>
-        <p>En déposant une photographie ou toute autre contribution, vous garantissez que :</p>
-        <ul><li>vous détenez les droits nécessaires sur l'image (vous en êtes l'auteur ou disposez d'une autorisation) ;</li><li>l'image représente un graffiti situé dans l'espace public ;</li><li>le contenu ne porte pas atteinte aux droits de tiers (vie privée, droit à l'image, propriété intellectuelle) ;</li><li>le contenu n'est pas illégal, haineux, diffamatoire, violent, à caractère sexuel, ou contraire à l'ordre public.</li></ul>
-        <h3>3.2 Contenus interdits</h3>
-        <p>Sont notamment interdits : les images centrées sur des personnes identifiables, les contenus permettant d'identifier ou de localiser une personne à son insu, les propos ou symboles haineux, et tout contenu sans rapport avec l'objet du service.</p>
-        <h3>3.3 Licence que vous nous accordez</h3>
-        <p>En publiant une contribution, vous accordez à GraffitiAtlas une licence non exclusive, mondiale et gratuite pour héberger, afficher, reproduire et adapter (par exemple redimensionner ou flouter) votre contribution dans le cadre du service et de sa promotion. Vous conservez la propriété de vos photographies. Cette licence prend fin lorsque le contenu est retiré, sous réserve de la conservation documentaire prévue au 3.5.</p>
-        <h3>3.4 Modération</h3>
-        <p>Toutes les contributions sont soumises à modération avant publication. Les visages sont floutés automatiquement au dépôt. Nous pouvons refuser, retirer ou modifier (classification, floutage) une contribution, sans obligation de justification, notamment pour respecter la loi ou les présentes conditions.</p>
-        <h3>3.5 Historique et « graffiti effacé »</h3>
-        <p>Les données cartographiques ont une valeur documentaire. Un graffiti disparu de l'espace public n'est pas supprimé de la base mais peut être marqué comme « effacé », avec sa date. Vous pouvez néanmoins demander le retrait de vos propres contributions (voir Politique de confidentialité).</p>
-        <h2>4. Utilisation acceptable</h2>
-        <p>Vous vous engagez à ne pas : perturber le fonctionnement du service, collecter massivement les données par des moyens automatisés sans autorisation, contourner la modération, ou utiliser le service à des fins illégales.</p>
-        <h2>5. Propriété intellectuelle du service</h2>
-        <p>Le code, le design, le logo et les textes originaux de GraffitiAtlas sont protégés. Les données issues de Panoramax (IGN) et d'OpenStreetMap sont soumises à leurs licences respectives. Google Street View est soumis aux conditions de Google.</p>
-        <h2>6. Responsabilité</h2>
-        <p>Le service est fourni sans garantie d'exactitude ou de disponibilité continue. Dans les limites permises par la loi, GraffitiAtlas ne saurait être tenu responsable des dommages indirects résultant de l'utilisation du service ou des contributions des utilisateurs.</p>
-        <h2>7. Suppression de compte</h2>
-        <p>Vous pouvez supprimer votre compte à tout moment depuis vos paramètres. À cette occasion :</p>
-        <ul><li>vos contributions <strong>non publiées</strong> (en attente ou refusées) sont entièrement supprimées, images comprises ;</li><li>vos contributions <strong>déjà publiées</strong> sont conservées pour leur valeur documentaire mais <strong>anonymisées</strong> — votre nom et tout identifiant vous rattachant à ces contributions sont retirés ;</li><li>votre profil (nom, e-mail, préférences) est supprimé.</li></ul>
-        <p>La suppression complète d'une contribution déjà publiée peut être demandée au cas par cas à contact@graffitiatlas.io, au titre de votre droit à l'effacement.</p>
-        <h2>8. Droit applicable</h2>
-        <p>Les présentes conditions sont régies par le droit français. En cas de litige, et à défaut de résolution amiable, les tribunaux français seront compétents.</p>
-        <h2>9. Contact</h2>
-        <p>Pour toute question : contact@graffitiatlas.io</p>
-    </LegalPage>
-  )
+  return <LegalPage content={CONTENT} />
 }

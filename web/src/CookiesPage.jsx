@@ -1,27 +1,168 @@
 import LegalPage from './LegalPage'
 
+const CONTENT = {
+  fr: {
+    title: 'Politique des cookies',
+    updated: '2026-07-18',
+    blocks: [
+      { t: 'p', html: "Cette page explique les cookies et technologies similaires utilisés sur GraffitiAtlas.io, édité par Graffiti Atlas (auto-entrepreneur), 9 F Place Saint-Bruno, 38000 Grenoble." },
+      { t: 'h2', html: "1. Qu'est-ce qu'un cookie ?" },
+      { t: 'p', html: "Un cookie est un petit fichier déposé sur votre appareil lors de la visite d'un site. Certains sont nécessaires au fonctionnement du site ; d'autres servent à mesurer l'audience." },
+      { t: 'h2', html: '2. Cookies que nous utilisons' },
+      { t: 'h3', html: '2.1 Cookies strictement nécessaires (toujours actifs)' },
+      { t: 'p', html: "Indispensables au fonctionnement du service ; ils ne nécessitent pas votre consentement." },
+      { t: 'table', head: ['Cookie / stockage', 'Finalité', 'Origine'], rows: [
+        ["Session d'authentification", 'Vous garder connecté(e)', 'Supabase'],
+        ['Préférence de consentement', 'Mémoriser votre choix sur les cookies', 'GraffitiAtlas'],
+        ['Préférence de langue', 'Mémoriser la langue choisie', 'GraffitiAtlas'],
+      ] },
+      { t: 'h3', html: "2.2 Cookies de mesure d'audience (soumis à consentement)" },
+      { t: 'p', html: 'Déposés uniquement si vous les acceptez.' },
+      { t: 'table', head: ['Service', 'Finalité'], rows: [
+        ['Vercel Analytics', 'Statistiques de fréquentation agrégées (pages vues, pays), sans publicité ni profilage individuel'],
+        ['Sentry', 'Diagnostic des erreurs techniques'],
+      ] },
+      { t: 'h3', html: '2.3 Services tiers de cartographie' },
+      { t: 'p', html: "L'affichage de la carte et de Street View fait appel à <strong>Google Maps</strong>, qui peut déposer ses propres cookies et recevoir votre adresse IP lorsque la carte se charge. Ces traitements relèvent de la politique de confidentialité de Google." },
+      { t: 'h2', html: '3. Votre choix' },
+      { t: 'p', html: "Lors de votre première visite, une bannière vous permet d'<strong>accepter</strong> ou de <strong>refuser</strong> les cookies non essentiels. Vous pouvez modifier votre choix à tout moment via le lien « Gérer les cookies » en bas de page." },
+      { t: 'p', html: "Refuser les cookies non essentiels n'empêche pas l'utilisation du service." },
+      { t: 'h2', html: '4. Gestion via votre navigateur' },
+      { t: 'p', html: "Vous pouvez également configurer votre navigateur pour bloquer ou supprimer les cookies. Le blocage des cookies strictement nécessaires peut toutefois dégrader le fonctionnement du site." },
+      { t: 'h2', html: '5. Contact' },
+      { t: 'p', html: 'Pour toute question : contact@graffitiatlas.io' },
+    ],
+  },
+  en: {
+    title: 'Cookie Policy',
+    updated: '2026-07-18',
+    blocks: [
+      { t: 'p', html: 'This page explains the cookies and similar technologies used on GraffitiAtlas.io, published by Graffiti Atlas (sole trader), 9 F Place Saint-Bruno, 38000 Grenoble, France.' },
+      { t: 'h2', html: '1. What is a cookie?' },
+      { t: 'p', html: 'A cookie is a small file stored on your device when you visit a website. Some are necessary for the site to function; others are used to measure audience.' },
+      { t: 'h2', html: '2. Cookies we use' },
+      { t: 'h3', html: '2.1 Strictly necessary cookies (always active)' },
+      { t: 'p', html: 'Essential to the operation of the service; they do not require your consent.' },
+      { t: 'table', head: ['Cookie / storage', 'Purpose', 'Source'], rows: [
+        ['Authentication session', 'Keep you signed in', 'Supabase'],
+        ['Consent preference', 'Remember your cookie choice', 'GraffitiAtlas'],
+        ['Language preference', 'Remember your chosen language', 'GraffitiAtlas'],
+      ] },
+      { t: 'h3', html: '2.2 Audience measurement cookies (consent required)' },
+      { t: 'p', html: 'Stored only if you accept them.' },
+      { t: 'table', head: ['Service', 'Purpose'], rows: [
+        ['Vercel Analytics', 'Aggregated traffic statistics (page views, countries), with no advertising or individual profiling'],
+        ['Sentry', 'Technical error diagnostics'],
+      ] },
+      { t: 'h3', html: '2.3 Third-party mapping services' },
+      { t: 'p', html: 'The map and Street View rely on <strong>Google Maps</strong>, which may set its own cookies and receive your IP address when the map loads. This processing is governed by Google’s privacy policy.' },
+      { t: 'h2', html: '3. Your choice' },
+      { t: 'p', html: 'On your first visit, a banner lets you <strong>accept</strong> or <strong>decline</strong> non-essential cookies. You can change your choice at any time via the “Manage cookies” link at the bottom of the page.' },
+      { t: 'p', html: 'Declining non-essential cookies does not prevent you from using the service.' },
+      { t: 'h2', html: '4. Managing cookies via your browser' },
+      { t: 'p', html: 'You can also configure your browser to block or delete cookies. Blocking strictly necessary cookies may however degrade how the site works.' },
+      { t: 'h2', html: '5. Contact' },
+      { t: 'p', html: 'For any questions: contact@graffitiatlas.io' },
+    ],
+  },
+  es: {
+    title: 'Política de cookies',
+    updated: '2026-07-18',
+    blocks: [
+      { t: 'p', html: 'Esta página explica las cookies y tecnologías similares utilizadas en GraffitiAtlas.io, editado por Graffiti Atlas (autónomo), 9 F Place Saint-Bruno, 38000 Grenoble, Francia.' },
+      { t: 'h2', html: '1. ¿Qué es una cookie?' },
+      { t: 'p', html: 'Una cookie es un pequeño archivo que se guarda en su dispositivo al visitar un sitio web. Algunas son necesarias para el funcionamiento del sitio; otras sirven para medir la audiencia.' },
+      { t: 'h2', html: '2. Cookies que utilizamos' },
+      { t: 'h3', html: '2.1 Cookies estrictamente necesarias (siempre activas)' },
+      { t: 'p', html: 'Imprescindibles para el funcionamiento del servicio; no requieren su consentimiento.' },
+      { t: 'table', head: ['Cookie / almacenamiento', 'Finalidad', 'Origen'], rows: [
+        ['Sesión de autenticación', 'Mantenerle conectado', 'Supabase'],
+        ['Preferencia de consentimiento', 'Recordar su elección sobre las cookies', 'GraffitiAtlas'],
+        ['Preferencia de idioma', 'Recordar el idioma elegido', 'GraffitiAtlas'],
+      ] },
+      { t: 'h3', html: '2.2 Cookies de medición de audiencia (sujetas a consentimiento)' },
+      { t: 'p', html: 'Se guardan únicamente si las acepta.' },
+      { t: 'table', head: ['Servicio', 'Finalidad'], rows: [
+        ['Vercel Analytics', 'Estadísticas de tráfico agregadas (páginas vistas, países), sin publicidad ni perfilado individual'],
+        ['Sentry', 'Diagnóstico de errores técnicos'],
+      ] },
+      { t: 'h3', html: '2.3 Servicios de cartografía de terceros' },
+      { t: 'p', html: 'La visualización del mapa y de Street View utiliza <strong>Google Maps</strong>, que puede depositar sus propias cookies y recibir su dirección IP cuando se carga el mapa. Este tratamiento se rige por la política de privacidad de Google.' },
+      { t: 'h2', html: '3. Su elección' },
+      { t: 'p', html: 'En su primera visita, un banner le permite <strong>aceptar</strong> o <strong>rechazar</strong> las cookies no esenciales. Puede modificar su elección en cualquier momento mediante el enlace «Gestionar cookies» al pie de página.' },
+      { t: 'p', html: 'Rechazar las cookies no esenciales no impide el uso del servicio.' },
+      { t: 'h2', html: '4. Gestión desde su navegador' },
+      { t: 'p', html: 'También puede configurar su navegador para bloquear o eliminar las cookies. No obstante, bloquear las cookies estrictamente necesarias puede degradar el funcionamiento del sitio.' },
+      { t: 'h2', html: '5. Contacto' },
+      { t: 'p', html: 'Para cualquier consulta: contact@graffitiatlas.io' },
+    ],
+  },
+  de: {
+    title: 'Cookie-Richtlinie',
+    updated: '2026-07-18',
+    blocks: [
+      { t: 'p', html: 'Diese Seite erläutert die auf GraffitiAtlas.io verwendeten Cookies und ähnlichen Technologien. Herausgeber: Graffiti Atlas (Einzelunternehmer), 9 F Place Saint-Bruno, 38000 Grenoble, Frankreich.' },
+      { t: 'h2', html: '1. Was ist ein Cookie?' },
+      { t: 'p', html: 'Ein Cookie ist eine kleine Datei, die beim Besuch einer Website auf Ihrem Gerät gespeichert wird. Einige sind für den Betrieb der Website erforderlich; andere dienen der Reichweitenmessung.' },
+      { t: 'h2', html: '2. Von uns verwendete Cookies' },
+      { t: 'h3', html: '2.1 Unbedingt erforderliche Cookies (immer aktiv)' },
+      { t: 'p', html: 'Für den Betrieb des Dienstes unverzichtbar; sie erfordern keine Einwilligung.' },
+      { t: 'table', head: ['Cookie / Speicher', 'Zweck', 'Herkunft'], rows: [
+        ['Authentifizierungssitzung', 'Sie angemeldet halten', 'Supabase'],
+        ['Einwilligungspräferenz', 'Ihre Cookie-Auswahl speichern', 'GraffitiAtlas'],
+        ['Sprachpräferenz', 'Die gewählte Sprache speichern', 'GraffitiAtlas'],
+      ] },
+      { t: 'h3', html: '2.2 Cookies zur Reichweitenmessung (einwilligungspflichtig)' },
+      { t: 'p', html: 'Werden nur gesetzt, wenn Sie sie akzeptieren.' },
+      { t: 'table', head: ['Dienst', 'Zweck'], rows: [
+        ['Vercel Analytics', 'Aggregierte Zugriffsstatistiken (Seitenaufrufe, Länder), ohne Werbung oder individuelles Profiling'],
+        ['Sentry', 'Diagnose technischer Fehler'],
+      ] },
+      { t: 'h3', html: '2.3 Kartendienste von Drittanbietern' },
+      { t: 'p', html: 'Die Anzeige der Karte und von Street View nutzt <strong>Google Maps</strong>, das eigene Cookies setzen und beim Laden der Karte Ihre IP-Adresse empfangen kann. Diese Verarbeitung unterliegt der Datenschutzrichtlinie von Google.' },
+      { t: 'h2', html: '3. Ihre Wahl' },
+      { t: 'p', html: 'Bei Ihrem ersten Besuch können Sie über ein Banner nicht erforderliche Cookies <strong>akzeptieren</strong> oder <strong>ablehnen</strong>. Sie können Ihre Wahl jederzeit über den Link „Cookies verwalten“ am Seitenende ändern.' },
+      { t: 'p', html: 'Das Ablehnen nicht erforderlicher Cookies verhindert nicht die Nutzung des Dienstes.' },
+      { t: 'h2', html: '4. Verwaltung über Ihren Browser' },
+      { t: 'p', html: 'Sie können Ihren Browser auch so einstellen, dass Cookies blockiert oder gelöscht werden. Das Blockieren unbedingt erforderlicher Cookies kann jedoch die Funktion der Website beeinträchtigen.' },
+      { t: 'h2', html: '5. Kontakt' },
+      { t: 'p', html: 'Bei Fragen: contact@graffitiatlas.io' },
+    ],
+  },
+  it: {
+    title: 'Politica sui cookie',
+    updated: '2026-07-18',
+    blocks: [
+      { t: 'p', html: 'Questa pagina illustra i cookie e le tecnologie simili utilizzati su GraffitiAtlas.io, edito da Graffiti Atlas (lavoratore autonomo), 9 F Place Saint-Bruno, 38000 Grenoble, Francia.' },
+      { t: 'h2', html: '1. Che cos’è un cookie?' },
+      { t: 'p', html: 'Un cookie è un piccolo file salvato sul dispositivo durante la visita di un sito. Alcuni sono necessari al funzionamento del sito; altri servono a misurare l’audience.' },
+      { t: 'h2', html: '2. Cookie che utilizziamo' },
+      { t: 'h3', html: '2.1 Cookie strettamente necessari (sempre attivi)' },
+      { t: 'p', html: 'Indispensabili al funzionamento del servizio; non richiedono il consenso.' },
+      { t: 'table', head: ['Cookie / archiviazione', 'Finalità', 'Origine'], rows: [
+        ['Sessione di autenticazione', 'Mantenerti connesso', 'Supabase'],
+        ['Preferenza di consenso', 'Ricordare la tua scelta sui cookie', 'GraffitiAtlas'],
+        ['Preferenza di lingua', 'Ricordare la lingua scelta', 'GraffitiAtlas'],
+      ] },
+      { t: 'h3', html: '2.2 Cookie di misurazione dell’audience (soggetti a consenso)' },
+      { t: 'p', html: 'Salvati solo se li accetti.' },
+      { t: 'table', head: ['Servizio', 'Finalità'], rows: [
+        ['Vercel Analytics', 'Statistiche di traffico aggregate (pagine viste, paesi), senza pubblicità né profilazione individuale'],
+        ['Sentry', 'Diagnostica degli errori tecnici'],
+      ] },
+      { t: 'h3', html: '2.3 Servizi cartografici di terze parti' },
+      { t: 'p', html: 'La visualizzazione della mappa e di Street View utilizza <strong>Google Maps</strong>, che può depositare i propri cookie e ricevere il tuo indirizzo IP al caricamento della mappa. Questo trattamento è regolato dall’informativa sulla privacy di Google.' },
+      { t: 'h2', html: '3. La tua scelta' },
+      { t: 'p', html: 'Alla prima visita, un banner ti consente di <strong>accettare</strong> o <strong>rifiutare</strong> i cookie non essenziali. Puoi modificare la tua scelta in qualsiasi momento tramite il link «Gestisci i cookie» in fondo alla pagina.' },
+      { t: 'p', html: 'Rifiutare i cookie non essenziali non impedisce l’uso del servizio.' },
+      { t: 'h2', html: '4. Gestione tramite il browser' },
+      { t: 'p', html: 'Puoi anche configurare il browser per bloccare o eliminare i cookie. Il blocco dei cookie strettamente necessari può tuttavia compromettere il funzionamento del sito.' },
+      { t: 'h2', html: '5. Contatto' },
+      { t: 'p', html: 'Per qualsiasi domanda: contact@graffitiatlas.io' },
+    ],
+  },
+}
+
 export default function CookiesPage() {
-  return (
-    <LegalPage title="Politique des cookies" updated="Dernière mise à jour : 18 juillet 2026">
-        <p>Cette page explique les cookies et technologies similaires utilisés sur GraffitiAtlas.io, édité par Graffiti Atlas (auto-entrepreneur), 9 F Place Saint-Bruno, 38000 Grenoble.</p>
-        <h2>1. Qu'est-ce qu'un cookie ?</h2>
-        <p>Un cookie est un petit fichier déposé sur votre appareil lors de la visite d'un site. Certains sont nécessaires au fonctionnement du site ; d'autres servent à mesurer l'audience.</p>
-        <h2>2. Cookies que nous utilisons</h2>
-        <h3>2.1 Cookies strictement nécessaires (toujours actifs)</h3>
-        <p>Indispensables au fonctionnement du service ; ils ne nécessitent pas votre consentement.</p>
-        <table><thead><tr><th>Cookie / stockage</th><th>Finalité</th><th>Origine</th></tr></thead><tbody><tr><td>Session d'authentification</td><td>Vous garder connecté(e)</td><td>Supabase</td></tr><tr><td>Préférence de consentement</td><td>Mémoriser votre choix sur les cookies</td><td>GraffitiAtlas</td></tr><tr><td>Préférence de langue</td><td>Mémoriser la langue choisie</td><td>GraffitiAtlas</td></tr></tbody></table>
-        <h3>2.2 Cookies de mesure d'audience (soumis à consentement)</h3>
-        <p>Déposés uniquement si vous les acceptez.</p>
-        <table><thead><tr><th>Service</th><th>Finalité</th></tr></thead><tbody><tr><td>Vercel Analytics</td><td>Statistiques de fréquentation agrégées (pages vues, pays), sans publicité ni profilage individuel</td></tr><tr><td>Sentry</td><td>Diagnostic des erreurs techniques</td></tr></tbody></table>
-        <h3>2.3 Services tiers de cartographie</h3>
-        <p>L'affichage de la carte et de Street View fait appel à <strong>Google Maps</strong>, qui peut déposer ses propres cookies et recevoir votre adresse IP lorsque la carte se charge. Ces traitements relèvent de la politique de confidentialité de Google.</p>
-        <h2>3. Votre choix</h2>
-        <p>Lors de votre première visite, une bannière vous permet d'<strong>accepter</strong> ou de <strong>refuser</strong> les cookies non essentiels. Vous pouvez modifier votre choix à tout moment via le lien « Gérer les cookies » en bas de page.</p>
-        <p>Refuser les cookies non essentiels n'empêche pas l'utilisation du service.</p>
-        <h2>4. Gestion via votre navigateur</h2>
-        <p>Vous pouvez également configurer votre navigateur pour bloquer ou supprimer les cookies. Le blocage des cookies strictement nécessaires peut toutefois dégrader le fonctionnement du site.</p>
-        <h2>5. Contact</h2>
-        <p>Pour toute question : contact@graffitiatlas.io</p>
-    </LegalPage>
-  )
+  return <LegalPage content={CONTENT} />
 }

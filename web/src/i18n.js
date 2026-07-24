@@ -339,6 +339,18 @@ const STRINGS = {
   'mod.noPhoto': { fr: 'Sans photo', en: 'No photo', es: 'Sin foto', de: 'Ohne Foto', it: 'Senza foto' },
   'mod.type': { fr: 'Type :', en: 'Type:', es: 'Tipo:', de: 'Typ:', it: 'Tipo:' },
   'mod.size': { fr: 'Taille :', en: 'Size:', es: 'Tamaño:', de: 'Größe:', it: 'Dimensione:' },
+  'legal.updated': {
+    fr: 'Dernière mise à jour :', en: 'Last updated:', es: 'Última actualización:',
+    de: 'Zuletzt aktualisiert:', it: 'Ultimo aggiornamento:',
+  },
+  'legal.credits': { fr: 'Crédits', en: 'Credits', es: 'Créditos', de: 'Impressum', it: 'Crediti' },
+  'legal.prevails': {
+    fr: '',
+    en: 'This is a translation provided for convenience. In the event of any discrepancy, the French version of this document prevails.',
+    es: 'Esta es una traducción proporcionada por comodidad. En caso de discrepancia, prevalece la versión francesa de este documento.',
+    de: 'Dies ist eine Übersetzung, die der Einfachheit halber bereitgestellt wird. Im Falle von Abweichungen ist die französische Fassung dieses Dokuments maßgeblich.',
+    it: 'Questa è una traduzione fornita per comodità. In caso di discrepanza, prevale la versione francese di questo documento.',
+  },
   'mod.measure': { fr: 'Mesurer', en: 'Measure', es: 'Medir', de: 'Messen', it: 'Misura' },
   'measure.title': {
     fr: 'Mesurer le graffiti', en: 'Measure the graffiti', es: 'Medir el grafiti',

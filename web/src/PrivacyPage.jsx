@@ -1,52 +1,488 @@
 import LegalPage from './LegalPage'
 
+const CONTENT = {
+  fr: {
+    title: 'Politique de confidentialité',
+    updated: '2026-07-18',
+    blocks: [
+      { t: 'p', html: 'La présente politique explique quelles données personnelles GraffitiAtlas.io (« nous ») collecte, pourquoi, comment nous les utilisons et quels sont vos droits, conformément au Règlement Général sur la Protection des Données (RGPD) et à la loi Informatique et Libertés.' },
+      { t: 'h2', html: '1. Responsable du traitement' },
+      { t: 'p', html: "Le responsable du traitement est l'éditeur du site, identifié dans les Mentions légales : Graffiti Atlas, entreprise individuelle (auto-entrepreneur), 9 F Place Saint-Bruno, 38000 Grenoble." },
+      { t: 'p', html: '<strong>Contact pour les questions de données personnelles :</strong> contact@graffitiatlas.io' },
+      { t: 'h2', html: '2. Quelles données nous collectons' },
+      { t: 'h3', html: '2.1 Données de compte' },
+      { t: 'p', html: 'Lorsque vous créez un compte (par e-mail ou via Google) :' },
+      { t: 'ul', items: [
+        'adresse e-mail ;',
+        "nom d'affichage et, le cas échéant, photo de profil (fournis par vous ou par Google lors de la connexion) ;",
+        'identifiant technique de compte.',
+      ] },
+      { t: 'p', html: "L'authentification est gérée par <strong>Supabase</strong> (hébergé en Europe, région Paris)." },
+      { t: 'h3', html: '2.2 Photos que vous déposez' },
+      { t: 'p', html: 'Lorsque vous signalez un graffiti, vous téléversez une ou plusieurs photographies. À ce sujet, il est important de comprendre notre traitement :' },
+      { t: 'ul', items: [
+        '<strong>Localisation :</strong> au moment du dépôt, votre navigateur peut lire les coordonnées GPS éventuellement enregistrées dans la photo, uniquement pour <strong>pré-positionner un repère sur la carte</strong>. Vous confirmez ou ajustez ensuite ce repère. Seules les coordonnées que vous validez sont enregistrées.',
+        '<strong>Suppression des métadonnées :</strong> avant stockage, nous <strong>retirons les métadonnées techniques (EXIF)</strong> de l\'image (y compris toute position GPS, modèle d\'appareil, date technique). L\'image conservée ne contient donc pas ces métadonnées.',
+        '<strong>Floutage automatique :</strong> les photos déposées par la communauté sont analysées automatiquement afin de <strong>flouter les visages</strong> avant stockage, et de refuser les contenus manifestement inappropriés. Cette analyse est réalisée par AWS Rekognition (région Europe – Irlande) de manière transitoire ; les images ne sont pas conservées par ce service.',
+        '<strong>Contenu de l\'image :</strong> une photographie de l\'espace public peut contenir des personnes, des plaques d\'immatriculation, des façades ou d\'autres éléments identifiables. Voir la section 8.',
+      ] },
+      { t: 'h3', html: '2.3 Contributions et signalements' },
+      { t: 'ul', items: [
+        'le type de graffiti et la description que vous saisissez ;',
+        'les signalements (par exemple « graffiti effacé »), avec photo optionnelle ;',
+        "la date et l'emplacement associés.",
+      ] },
+      { t: 'h3', html: "2.4 Données techniques et de mesure d'audience" },
+      { t: 'ul', items: [
+        '<strong>Vercel Analytics</strong> : mesure d\'audience agrégée (pages vues, pays), sans profilage publicitaire.',
+        '<strong>Sentry</strong> : détection des erreurs techniques pour améliorer la fiabilité du service.',
+        'Données de connexion inhérentes à tout service web (adresse IP, type de navigateur), traitées par nos hébergeurs.',
+      ] },
+      { t: 'h3', html: '2.5 Cartographie' },
+      { t: 'p', html: "L'affichage de la carte et de Street View fait appel à <strong>Google Maps</strong>. Le géocodage (recherche d'adresse) utilise <strong>Nominatim / OpenStreetMap</strong>. Ces services peuvent recevoir votre adresse IP et les requêtes que vous effectuez. Voir la Politique des cookies." },
+      { t: 'h2', html: '3. Pourquoi nous utilisons ces données (bases légales)' },
+      { t: 'table', head: ['Finalité', 'Base légale (RGPD)'], rows: [
+        ['Créer et gérer votre compte, fournir le service', 'Exécution du contrat'],
+        ['Publier vos contributions sur la carte (après modération)', 'Votre consentement + intérêt légitime'],
+        ['Modérer les contenus, prévenir les abus', 'Intérêt légitime'],
+        ['Mesurer l\'audience (cookies non essentiels)', 'Votre consentement'],
+        ['Détecter et corriger les erreurs techniques', 'Intérêt légitime'],
+        ['Respecter nos obligations légales', 'Obligation légale'],
+      ] },
+      { t: 'h2', html: '4. Durée de conservation' },
+      { t: 'ul', items: [
+        '<strong>Compte :</strong> conservé tant que le compte est actif ; supprimé sur demande.',
+        '<strong>Contributions publiées :</strong> les données relatives aux graffitis (localisation, images, historique) ont une valeur documentaire et peuvent être conservées durablement. Un graffiti retiré de l\'espace public n\'est pas supprimé mais marqué comme « effacé » (voir CGU).',
+        '<strong>Contributions non publiées (en attente ou refusées) :</strong> supprimées, y compris les fichiers image correspondants dans notre stockage.',
+        '<strong>Données de mesure d\'audience :</strong> conservées pour une durée limitée conformément aux réglages de nos prestataires.',
+      ] },
+      { t: 'h3', html: '4.1 Que se passe-t-il si vous supprimez votre compte' },
+      { t: 'p', html: 'Lorsque vous supprimez votre compte :' },
+      { t: 'ul', items: [
+        '<strong>Vos contributions non publiées</strong> (en attente ou refusées) sont <strong>entièrement supprimées</strong>, images comprises, de notre base et de notre stockage.',
+        '<strong>Vos contributions déjà publiées</strong> restent visibles sur la carte pour leur valeur documentaire, mais sont <strong>anonymisées</strong> : votre nom et le lien vers votre compte sont retirés, de sorte qu\'elles ne vous sont plus rattachées.',
+        '<strong>Votre profil et votre compte</strong> (nom, e-mail, préférences) sont supprimés.',
+      ] },
+      { t: 'p', html: "Si vous souhaitez la suppression complète d'une contribution déjà publiée (image comprise), vous pouvez en faire la demande à contact@graffitiatlas.io ; nous examinons ces demandes au cas par cas au titre de votre droit à l'effacement." },
+      { t: 'h2', html: '5. Qui a accès à vos données (sous-traitants)' },
+      { t: 'p', html: 'Nous faisons appel à des prestataires qui agissent pour notre compte :' },
+      { t: 'ul', items: [
+        '<strong>Supabase</strong> — base de données et authentification (UE, Paris) ;',
+        '<strong>Amazon Web Services (S3/CloudFront)</strong> — stockage et diffusion des images (UE, Paris) ;',
+        '<strong>AWS Rekognition</strong> — floutage automatique des visages et modération des contenus (UE, Irlande ; analyse transitoire, sans conservation des images) ;',
+        '<strong>Vercel</strong> — hébergement de l\'interface et mesure d\'audience ;',
+        '<strong>Railway</strong> — hébergement du serveur applicatif ;',
+        '<strong>Sentry</strong> — suivi des erreurs ;',
+        '<strong>Google (Maps / Street View / connexion Google)</strong> — cartographie et authentification ;',
+        '<strong>OpenStreetMap Foundation (Nominatim)</strong> — géocodage.',
+      ] },
+      { t: 'p', html: "Certains de ces prestataires peuvent traiter des données hors de l'Union européenne ; dans ce cas, des garanties appropriées (clauses contractuelles types) s'appliquent." },
+      { t: 'p', html: 'Nous ne vendons pas vos données personnelles.' },
+      { t: 'h2', html: '6. Vos droits' },
+      { t: 'p', html: "Conformément au RGPD, vous disposez des droits d'<strong>accès</strong>, de <strong>rectification</strong>, d'<strong>effacement</strong>, de <strong>limitation</strong>, d'<strong>opposition</strong> et de <strong>portabilité</strong>. Vous pouvez exercer ces droits à tout moment en écrivant à contact@graffitiatlas.io." },
+      { t: 'p', html: 'Vous pouvez également introduire une réclamation auprès de la <strong>CNIL</strong> (www.cnil.fr).' },
+      { t: 'h2', html: '7. Sécurité' },
+      { t: 'p', html: 'Nous mettons en œuvre des mesures techniques raisonnables (chiffrement des échanges, suppression des métadonnées EXIF, floutage automatique des visages, accès restreint aux données) pour protéger vos informations. Aucun système n\'étant infaillible, nous ne pouvons garantir une sécurité absolue.' },
+      { t: 'h2', html: '8. Images et vie privée' },
+      { t: 'p', html: "GraffitiAtlas publie des photographies de l'espace public. Ces images peuvent involontairement contenir des personnes ou des éléments identifiables." },
+      { t: 'ul', items: [
+        'Vous ne devez déposer que des images dont vous détenez les droits et qui ne portent pas atteinte à la vie privée d\'autrui (voir CGU).',
+        'Nous modérons les contributions <strong>avant</strong> publication. Les visages sont <strong>floutés automatiquement</strong> au dépôt ; lors de la modération, les visages ou plaques d\'immatriculation résiduels peuvent être floutés manuellement, ou l\'image refusée.',
+        'Toute personne figurant sur une image peut demander son retrait en écrivant à contact@graffitiatlas.io. Nous traitons ces demandes dans les meilleurs délais.',
+      ] },
+      { t: 'quote', html: "Note : le floutage automatique des visages est en place ; le floutage des plaques d'immatriculation repose à ce jour sur la modération manuelle. Ce dispositif doit être validé par un conseil juridique avant l'ouverture au grand public." },
+      { t: 'h2', html: '9. Mineurs' },
+      { t: 'p', html: 'Le service n\'est pas destiné aux personnes de moins de 15 ans. Nous ne collectons pas sciemment leurs données.' },
+      { t: 'h2', html: '10. Modifications' },
+      { t: 'p', html: 'Nous pouvons mettre à jour cette politique. La date en tête de page indique la dernière révision. En cas de changement important, nous en informerons les utilisateurs.' },
+    ],
+  },
+  en: {
+    title: 'Privacy Policy',
+    updated: '2026-07-18',
+    blocks: [
+      { t: 'p', html: 'This policy explains what personal data GraffitiAtlas.io (“we”) collects, why, how we use it and what your rights are, in accordance with the General Data Protection Regulation (GDPR) and French data protection law.' },
+      { t: 'h2', html: '1. Data controller' },
+      { t: 'p', html: 'The data controller is the site publisher, identified in the Legal Notice: Graffiti Atlas, sole proprietorship (auto-entrepreneur), 9 F Place Saint-Bruno, 38000 Grenoble, France.' },
+      { t: 'p', html: '<strong>Contact for personal data questions:</strong> contact@graffitiatlas.io' },
+      { t: 'h2', html: '2. What data we collect' },
+      { t: 'h3', html: '2.1 Account data' },
+      { t: 'p', html: 'When you create an account (by email or via Google):' },
+      { t: 'ul', items: [
+        'email address;',
+        'display name and, where applicable, profile photo (provided by you or by Google at sign-in);',
+        'technical account identifier.',
+      ] },
+      { t: 'p', html: 'Authentication is handled by <strong>Supabase</strong> (hosted in Europe, Paris region).' },
+      { t: 'h3', html: '2.2 Photos you upload' },
+      { t: 'p', html: 'When you report a graffiti, you upload one or more photographs. In this respect, it is important to understand how we process them:' },
+      { t: 'ul', items: [
+        '<strong>Location:</strong> at the time of upload, your browser may read the GPS coordinates possibly stored in the photo, solely to <strong>pre-position a marker on the map</strong>. You then confirm or adjust this marker. Only the coordinates you validate are saved.',
+        '<strong>Metadata removal:</strong> before storage, we <strong>strip the technical metadata (EXIF)</strong> from the image (including any GPS position, camera model, technical date). The stored image therefore does not contain this metadata.',
+        '<strong>Automatic blurring:</strong> photos uploaded by the community are analyzed automatically to <strong>blur faces</strong> before storage, and to reject clearly inappropriate content. This analysis is carried out by AWS Rekognition (Europe region – Ireland) transiently; images are not retained by that service.',
+        '<strong>Image content:</strong> a photograph of a public space may contain people, license plates, façades or other identifiable elements. See section 8.',
+      ] },
+      { t: 'h3', html: '2.3 Contributions and reports' },
+      { t: 'ul', items: [
+        'the graffiti type and the description you enter;',
+        'reports (for example “graffiti removed”), with an optional photo;',
+        'the associated date and location.',
+      ] },
+      { t: 'h3', html: '2.4 Technical and audience measurement data' },
+      { t: 'ul', items: [
+        '<strong>Vercel Analytics</strong>: aggregated audience measurement (page views, countries), with no advertising profiling.',
+        '<strong>Sentry</strong>: detection of technical errors to improve the reliability of the service.',
+        'Connection data inherent to any web service (IP address, browser type), processed by our hosts.',
+      ] },
+      { t: 'h3', html: '2.5 Mapping' },
+      { t: 'p', html: 'The map and Street View rely on <strong>Google Maps</strong>. Geocoding (address search) uses <strong>Nominatim / OpenStreetMap</strong>. These services may receive your IP address and the queries you make. See the Cookie Policy.' },
+      { t: 'h2', html: '3. Why we use this data (legal bases)' },
+      { t: 'table', head: ['Purpose', 'Legal basis (GDPR)'], rows: [
+        ['Create and manage your account, provide the service', 'Performance of the contract'],
+        ['Publish your contributions on the map (after moderation)', 'Your consent + legitimate interest'],
+        ['Moderate content, prevent abuse', 'Legitimate interest'],
+        ['Measure audience (non-essential cookies)', 'Your consent'],
+        ['Detect and fix technical errors', 'Legitimate interest'],
+        ['Comply with our legal obligations', 'Legal obligation'],
+      ] },
+      { t: 'h2', html: '4. Retention period' },
+      { t: 'ul', items: [
+        '<strong>Account:</strong> kept as long as the account is active; deleted on request.',
+        '<strong>Published contributions:</strong> data relating to graffiti (location, images, history) has documentary value and may be kept long-term. Graffiti removed from the public space is not deleted but marked as “removed” (see Terms of Use).',
+        '<strong>Unpublished contributions (pending or rejected):</strong> deleted, including the corresponding image files in our storage.',
+        '<strong>Audience measurement data:</strong> kept for a limited period in accordance with our providers’ settings.',
+      ] },
+      { t: 'h3', html: '4.1 What happens if you delete your account' },
+      { t: 'p', html: 'When you delete your account:' },
+      { t: 'ul', items: [
+        '<strong>Your unpublished contributions</strong> (pending or rejected) are <strong>entirely deleted</strong>, including images, from our database and storage.',
+        '<strong>Your already published contributions</strong> remain visible on the map for their documentary value, but are <strong>anonymized</strong>: your name and the link to your account are removed, so they are no longer connected to you.',
+        '<strong>Your profile and account</strong> (name, email, preferences) are deleted.',
+      ] },
+      { t: 'p', html: 'If you want the complete deletion of an already published contribution (including the image), you can request it at contact@graffitiatlas.io; we review these requests on a case-by-case basis under your right to erasure.' },
+      { t: 'h2', html: '5. Who has access to your data (processors)' },
+      { t: 'p', html: 'We use providers acting on our behalf:' },
+      { t: 'ul', items: [
+        '<strong>Supabase</strong> — database and authentication (EU, Paris);',
+        '<strong>Amazon Web Services (S3/CloudFront)</strong> — image storage and delivery (EU, Paris);',
+        '<strong>AWS Rekognition</strong> — automatic face blurring and content moderation (EU, Ireland; transient analysis, no image retention);',
+        '<strong>Vercel</strong> — interface hosting and audience measurement;',
+        '<strong>Railway</strong> — application server hosting;',
+        '<strong>Sentry</strong> — error tracking;',
+        '<strong>Google (Maps / Street View / Google sign-in)</strong> — mapping and authentication;',
+        '<strong>OpenStreetMap Foundation (Nominatim)</strong> — geocoding.',
+      ] },
+      { t: 'p', html: 'Some of these providers may process data outside the European Union; in that case, appropriate safeguards (standard contractual clauses) apply.' },
+      { t: 'p', html: 'We do not sell your personal data.' },
+      { t: 'h2', html: '6. Your rights' },
+      { t: 'p', html: 'In accordance with the GDPR, you have the rights of <strong>access</strong>, <strong>rectification</strong>, <strong>erasure</strong>, <strong>restriction</strong>, <strong>objection</strong> and <strong>portability</strong>. You can exercise these rights at any time by writing to contact@graffitiatlas.io.' },
+      { t: 'p', html: 'You may also lodge a complaint with the French data protection authority, the <strong>CNIL</strong> (www.cnil.fr).' },
+      { t: 'h2', html: '7. Security' },
+      { t: 'p', html: 'We implement reasonable technical measures (encryption of communications, removal of EXIF metadata, automatic face blurring, restricted access to data) to protect your information. As no system is infallible, we cannot guarantee absolute security.' },
+      { t: 'h2', html: '8. Images and privacy' },
+      { t: 'p', html: 'GraffitiAtlas publishes photographs of public spaces. These images may unintentionally contain people or identifiable elements.' },
+      { t: 'ul', items: [
+        'You must only upload images to which you hold the rights and which do not infringe others’ privacy (see Terms of Use).',
+        'We moderate contributions <strong>before</strong> publication. Faces are <strong>blurred automatically</strong> upon upload; during moderation, any remaining faces or license plates may be blurred manually, or the image rejected.',
+        'Anyone appearing in an image can request its removal by writing to contact@graffitiatlas.io. We handle these requests as quickly as possible.',
+      ] },
+      { t: 'quote', html: 'Note: automatic face blurring is in place; license plate blurring currently relies on manual moderation. This mechanism should be validated by legal counsel before opening to the general public.' },
+      { t: 'h2', html: '9. Minors' },
+      { t: 'p', html: 'The service is not intended for people under 15 years of age. We do not knowingly collect their data.' },
+      { t: 'h2', html: '10. Changes' },
+      { t: 'p', html: 'We may update this policy. The date at the top of the page indicates the latest revision. In the event of a significant change, we will inform users.' },
+    ],
+  },
+  es: {
+    title: 'Política de privacidad',
+    updated: '2026-07-18',
+    blocks: [
+      { t: 'p', html: 'Esta política explica qué datos personales recopila GraffitiAtlas.io («nosotros»), por qué, cómo los utilizamos y cuáles son sus derechos, de conformidad con el Reglamento General de Protección de Datos (RGPD) y la legislación de protección de datos.' },
+      { t: 'h2', html: '1. Responsable del tratamiento' },
+      { t: 'p', html: 'El responsable del tratamiento es el editor del sitio, identificado en el Aviso legal: Graffiti Atlas, empresa individual (autónomo), 9 F Place Saint-Bruno, 38000 Grenoble, Francia.' },
+      { t: 'p', html: '<strong>Contacto para cuestiones de datos personales:</strong> contact@graffitiatlas.io' },
+      { t: 'h2', html: '2. Qué datos recopilamos' },
+      { t: 'h3', html: '2.1 Datos de la cuenta' },
+      { t: 'p', html: 'Cuando crea una cuenta (por correo electrónico o mediante Google):' },
+      { t: 'ul', items: [
+        'dirección de correo electrónico;',
+        'nombre visible y, en su caso, foto de perfil (proporcionados por usted o por Google al iniciar sesión);',
+        'identificador técnico de la cuenta.',
+      ] },
+      { t: 'p', html: 'La autenticación es gestionada por <strong>Supabase</strong> (alojado en Europa, región de París).' },
+      { t: 'h3', html: '2.2 Fotos que sube' },
+      { t: 'p', html: 'Cuando reporta un grafiti, sube una o varias fotografías. A este respecto, es importante entender nuestro tratamiento:' },
+      { t: 'ul', items: [
+        '<strong>Localización:</strong> en el momento de la subida, su navegador puede leer las coordenadas GPS eventualmente registradas en la foto, únicamente para <strong>preposicionar un marcador en el mapa</strong>. A continuación, usted confirma o ajusta ese marcador. Solo se guardan las coordenadas que valida.',
+        '<strong>Eliminación de metadatos:</strong> antes del almacenamiento, <strong>eliminamos los metadatos técnicos (EXIF)</strong> de la imagen (incluida cualquier posición GPS, modelo de dispositivo, fecha técnica). La imagen conservada no contiene, por tanto, estos metadatos.',
+        '<strong>Difuminado automático:</strong> las fotos subidas por la comunidad se analizan automáticamente para <strong>difuminar los rostros</strong> antes del almacenamiento y rechazar los contenidos manifiestamente inapropiados. Este análisis lo realiza AWS Rekognition (región Europa – Irlanda) de forma transitoria; las imágenes no se conservan en ese servicio.',
+        '<strong>Contenido de la imagen:</strong> una fotografía del espacio público puede contener personas, matrículas, fachadas u otros elementos identificables. Véase la sección 8.',
+      ] },
+      { t: 'h3', html: '2.3 Contribuciones y reportes' },
+      { t: 'ul', items: [
+        'el tipo de grafiti y la descripción que introduce;',
+        'los reportes (por ejemplo «grafiti borrado»), con foto opcional;',
+        'la fecha y la ubicación asociadas.',
+      ] },
+      { t: 'h3', html: '2.4 Datos técnicos y de medición de audiencia' },
+      { t: 'ul', items: [
+        '<strong>Vercel Analytics</strong>: medición de audiencia agregada (páginas vistas, países), sin perfilado publicitario.',
+        '<strong>Sentry</strong>: detección de errores técnicos para mejorar la fiabilidad del servicio.',
+        'Datos de conexión inherentes a cualquier servicio web (dirección IP, tipo de navegador), tratados por nuestros proveedores de alojamiento.',
+      ] },
+      { t: 'h3', html: '2.5 Cartografía' },
+      { t: 'p', html: 'La visualización del mapa y de Street View utiliza <strong>Google Maps</strong>. La geocodificación (búsqueda de direcciones) utiliza <strong>Nominatim / OpenStreetMap</strong>. Estos servicios pueden recibir su dirección IP y las consultas que realiza. Véase la Política de cookies.' },
+      { t: 'h2', html: '3. Por qué utilizamos estos datos (bases legales)' },
+      { t: 'table', head: ['Finalidad', 'Base legal (RGPD)'], rows: [
+        ['Crear y gestionar su cuenta, prestar el servicio', 'Ejecución del contrato'],
+        ['Publicar sus contribuciones en el mapa (tras moderación)', 'Su consentimiento + interés legítimo'],
+        ['Moderar los contenidos, prevenir abusos', 'Interés legítimo'],
+        ['Medir la audiencia (cookies no esenciales)', 'Su consentimiento'],
+        ['Detectar y corregir errores técnicos', 'Interés legítimo'],
+        ['Cumplir nuestras obligaciones legales', 'Obligación legal'],
+      ] },
+      { t: 'h2', html: '4. Plazo de conservación' },
+      { t: 'ul', items: [
+        '<strong>Cuenta:</strong> conservada mientras la cuenta esté activa; eliminada a petición.',
+        '<strong>Contribuciones publicadas:</strong> los datos relativos a los grafitis (localización, imágenes, historial) tienen valor documental y pueden conservarse de forma duradera. Un grafiti retirado del espacio público no se elimina, sino que se marca como «borrado» (véanse las Condiciones de uso).',
+        '<strong>Contribuciones no publicadas (pendientes o rechazadas):</strong> eliminadas, incluidos los archivos de imagen correspondientes en nuestro almacenamiento.',
+        '<strong>Datos de medición de audiencia:</strong> conservados durante un periodo limitado conforme a la configuración de nuestros proveedores.',
+      ] },
+      { t: 'h3', html: '4.1 Qué ocurre si elimina su cuenta' },
+      { t: 'p', html: 'Cuando elimina su cuenta:' },
+      { t: 'ul', items: [
+        '<strong>Sus contribuciones no publicadas</strong> (pendientes o rechazadas) se <strong>eliminan por completo</strong>, imágenes incluidas, de nuestra base de datos y de nuestro almacenamiento.',
+        '<strong>Sus contribuciones ya publicadas</strong> siguen visibles en el mapa por su valor documental, pero se <strong>anonimizan</strong>: se retiran su nombre y el enlace a su cuenta, de modo que ya no se le vinculan.',
+        '<strong>Su perfil y su cuenta</strong> (nombre, correo electrónico, preferencias) se eliminan.',
+      ] },
+      { t: 'p', html: 'Si desea la eliminación completa de una contribución ya publicada (imagen incluida), puede solicitarlo en contact@graffitiatlas.io; examinamos estas solicitudes caso por caso en virtud de su derecho de supresión.' },
+      { t: 'h2', html: '5. Quién tiene acceso a sus datos (encargados)' },
+      { t: 'p', html: 'Recurrimos a proveedores que actúan por cuenta nuestra:' },
+      { t: 'ul', items: [
+        '<strong>Supabase</strong> — base de datos y autenticación (UE, París);',
+        '<strong>Amazon Web Services (S3/CloudFront)</strong> — almacenamiento y difusión de las imágenes (UE, París);',
+        '<strong>AWS Rekognition</strong> — difuminado automático de rostros y moderación de contenidos (UE, Irlanda; análisis transitorio, sin conservación de imágenes);',
+        '<strong>Vercel</strong> — alojamiento de la interfaz y medición de audiencia;',
+        '<strong>Railway</strong> — alojamiento del servidor de aplicaciones;',
+        '<strong>Sentry</strong> — seguimiento de errores;',
+        '<strong>Google (Maps / Street View / inicio de sesión con Google)</strong> — cartografía y autenticación;',
+        '<strong>OpenStreetMap Foundation (Nominatim)</strong> — geocodificación.',
+      ] },
+      { t: 'p', html: 'Algunos de estos proveedores pueden tratar datos fuera de la Unión Europea; en tal caso, se aplican garantías apropiadas (cláusulas contractuales tipo).' },
+      { t: 'p', html: 'No vendemos sus datos personales.' },
+      { t: 'h2', html: '6. Sus derechos' },
+      { t: 'p', html: 'De conformidad con el RGPD, dispone de los derechos de <strong>acceso</strong>, <strong>rectificación</strong>, <strong>supresión</strong>, <strong>limitación</strong>, <strong>oposición</strong> y <strong>portabilidad</strong>. Puede ejercer estos derechos en cualquier momento escribiendo a contact@graffitiatlas.io.' },
+      { t: 'p', html: 'También puede presentar una reclamación ante la autoridad francesa de protección de datos, la <strong>CNIL</strong> (www.cnil.fr).' },
+      { t: 'h2', html: '7. Seguridad' },
+      { t: 'p', html: 'Aplicamos medidas técnicas razonables (cifrado de las comunicaciones, eliminación de metadatos EXIF, difuminado automático de rostros, acceso restringido a los datos) para proteger su información. Como ningún sistema es infalible, no podemos garantizar una seguridad absoluta.' },
+      { t: 'h2', html: '8. Imágenes y vida privada' },
+      { t: 'p', html: 'GraffitiAtlas publica fotografías del espacio público. Estas imágenes pueden contener involuntariamente personas o elementos identificables.' },
+      { t: 'ul', items: [
+        'Solo debe subir imágenes sobre las que posea los derechos y que no atenten contra la privacidad de terceros (véanse las Condiciones de uso).',
+        'Moderamos las contribuciones <strong>antes</strong> de su publicación. Los rostros se <strong>difuminan automáticamente</strong> al subirlos; durante la moderación, los rostros o matrículas residuales pueden difuminarse manualmente, o rechazarse la imagen.',
+        'Cualquier persona que aparezca en una imagen puede solicitar su retirada escribiendo a contact@graffitiatlas.io. Tratamos estas solicitudes lo antes posible.',
+      ] },
+      { t: 'quote', html: 'Nota: el difuminado automático de rostros está implementado; el difuminado de matrículas se basa actualmente en la moderación manual. Este dispositivo debe ser validado por asesoría jurídica antes de la apertura al público general.' },
+      { t: 'h2', html: '9. Menores' },
+      { t: 'p', html: 'El servicio no está destinado a personas menores de 15 años. No recopilamos deliberadamente sus datos.' },
+      { t: 'h2', html: '10. Modificaciones' },
+      { t: 'p', html: 'Podemos actualizar esta política. La fecha al inicio de la página indica la última revisión. En caso de cambio importante, informaremos a los usuarios.' },
+    ],
+  },
+  de: {
+    title: 'Datenschutzrichtlinie',
+    updated: '2026-07-18',
+    blocks: [
+      { t: 'p', html: 'Diese Richtlinie erläutert, welche personenbezogenen Daten GraffitiAtlas.io („wir“) erhebt, warum, wie wir sie verwenden und welche Rechte Sie haben, gemäß der Datenschutz-Grundverordnung (DSGVO) und dem Datenschutzrecht.' },
+      { t: 'h2', html: '1. Verantwortlicher' },
+      { t: 'p', html: 'Verantwortlicher ist der im Impressum genannte Herausgeber der Website: Graffiti Atlas, Einzelunternehmen (auto-entrepreneur), 9 F Place Saint-Bruno, 38000 Grenoble, Frankreich.' },
+      { t: 'p', html: '<strong>Kontakt für Fragen zum Datenschutz:</strong> contact@graffitiatlas.io' },
+      { t: 'h2', html: '2. Welche Daten wir erheben' },
+      { t: 'h3', html: '2.1 Kontodaten' },
+      { t: 'p', html: 'Wenn Sie ein Konto erstellen (per E-Mail oder über Google):' },
+      { t: 'ul', items: [
+        'E-Mail-Adresse;',
+        'Anzeigename und ggf. Profilbild (von Ihnen oder von Google bei der Anmeldung bereitgestellt);',
+        'technische Konto-Kennung.',
+      ] },
+      { t: 'p', html: 'Die Authentifizierung erfolgt über <strong>Supabase</strong> (gehostet in Europa, Region Paris).' },
+      { t: 'h3', html: '2.2 Fotos, die Sie hochladen' },
+      { t: 'p', html: 'Wenn Sie ein Graffiti melden, laden Sie eine oder mehrere Fotografien hoch. Dabei ist es wichtig, unsere Verarbeitung zu verstehen:' },
+      { t: 'ul', items: [
+        '<strong>Standort:</strong> beim Hochladen kann Ihr Browser die möglicherweise im Foto gespeicherten GPS-Koordinaten auslesen, ausschließlich um <strong>eine Markierung auf der Karte vorzupositionieren</strong>. Sie bestätigen oder passen diese Markierung anschließend an. Nur die von Ihnen bestätigten Koordinaten werden gespeichert.',
+        '<strong>Entfernung von Metadaten:</strong> vor der Speicherung <strong>entfernen wir die technischen Metadaten (EXIF)</strong> aus dem Bild (einschließlich jeder GPS-Position, des Gerätemodells, des technischen Datums). Das gespeicherte Bild enthält diese Metadaten daher nicht.',
+        '<strong>Automatisches Unkenntlichmachen:</strong> von der Community hochgeladene Fotos werden automatisch analysiert, um <strong>Gesichter unkenntlich zu machen</strong>, bevor sie gespeichert werden, und um offensichtlich unangemessene Inhalte abzulehnen. Diese Analyse erfolgt vorübergehend durch AWS Rekognition (Region Europa – Irland); die Bilder werden von diesem Dienst nicht gespeichert.',
+        '<strong>Bildinhalt:</strong> eine Fotografie des öffentlichen Raums kann Personen, Nummernschilder, Fassaden oder andere identifizierbare Elemente enthalten. Siehe Abschnitt 8.',
+      ] },
+      { t: 'h3', html: '2.3 Beiträge und Meldungen' },
+      { t: 'ul', items: [
+        'die Art des Graffitis und die von Ihnen eingegebene Beschreibung;',
+        'Meldungen (zum Beispiel „Graffiti entfernt“), mit optionalem Foto;',
+        'das zugehörige Datum und der Standort.',
+      ] },
+      { t: 'h3', html: '2.4 Technische Daten und Reichweitenmessung' },
+      { t: 'ul', items: [
+        '<strong>Vercel Analytics</strong>: aggregierte Reichweitenmessung (Seitenaufrufe, Länder), ohne Werbe-Profiling.',
+        '<strong>Sentry</strong>: Erkennung technischer Fehler zur Verbesserung der Zuverlässigkeit des Dienstes.',
+        'Verbindungsdaten, die jedem Webdienst inhärent sind (IP-Adresse, Browsertyp), verarbeitet von unseren Hostern.',
+      ] },
+      { t: 'h3', html: '2.5 Kartografie' },
+      { t: 'p', html: 'Die Anzeige der Karte und von Street View nutzt <strong>Google Maps</strong>. Die Geokodierung (Adresssuche) nutzt <strong>Nominatim / OpenStreetMap</strong>. Diese Dienste können Ihre IP-Adresse und Ihre Anfragen empfangen. Siehe die Cookie-Richtlinie.' },
+      { t: 'h2', html: '3. Warum wir diese Daten verwenden (Rechtsgrundlagen)' },
+      { t: 'table', head: ['Zweck', 'Rechtsgrundlage (DSGVO)'], rows: [
+        ['Ihr Konto erstellen und verwalten, den Dienst bereitstellen', 'Vertragserfüllung'],
+        ['Ihre Beiträge auf der Karte veröffentlichen (nach Moderation)', 'Ihre Einwilligung + berechtigtes Interesse'],
+        ['Inhalte moderieren, Missbrauch verhindern', 'Berechtigtes Interesse'],
+        ['Reichweite messen (nicht erforderliche Cookies)', 'Ihre Einwilligung'],
+        ['Technische Fehler erkennen und beheben', 'Berechtigtes Interesse'],
+        ['Unseren gesetzlichen Pflichten nachkommen', 'Rechtliche Verpflichtung'],
+      ] },
+      { t: 'h2', html: '4. Speicherdauer' },
+      { t: 'ul', items: [
+        '<strong>Konto:</strong> gespeichert, solange das Konto aktiv ist; auf Anfrage gelöscht.',
+        '<strong>Veröffentlichte Beiträge:</strong> Daten zu Graffiti (Standort, Bilder, Verlauf) haben dokumentarischen Wert und können dauerhaft aufbewahrt werden. Ein aus dem öffentlichen Raum entferntes Graffiti wird nicht gelöscht, sondern als „entfernt“ markiert (siehe Nutzungsbedingungen).',
+        '<strong>Nicht veröffentlichte Beiträge (ausstehend oder abgelehnt):</strong> gelöscht, einschließlich der entsprechenden Bilddateien in unserem Speicher.',
+        '<strong>Reichweitenmessdaten:</strong> für einen begrenzten Zeitraum gemäß den Einstellungen unserer Anbieter aufbewahrt.',
+      ] },
+      { t: 'h3', html: '4.1 Was geschieht, wenn Sie Ihr Konto löschen' },
+      { t: 'p', html: 'Wenn Sie Ihr Konto löschen:' },
+      { t: 'ul', items: [
+        '<strong>Ihre nicht veröffentlichten Beiträge</strong> (ausstehend oder abgelehnt) werden <strong>vollständig gelöscht</strong>, einschließlich der Bilder, aus unserer Datenbank und unserem Speicher.',
+        '<strong>Ihre bereits veröffentlichten Beiträge</strong> bleiben aufgrund ihres dokumentarischen Werts auf der Karte sichtbar, werden jedoch <strong>anonymisiert</strong>: Ihr Name und die Verknüpfung mit Ihrem Konto werden entfernt, sodass sie Ihnen nicht mehr zugeordnet sind.',
+        '<strong>Ihr Profil und Ihr Konto</strong> (Name, E-Mail, Präferenzen) werden gelöscht.',
+      ] },
+      { t: 'p', html: 'Wenn Sie die vollständige Löschung eines bereits veröffentlichten Beitrags (einschließlich des Bildes) wünschen, können Sie diese unter contact@graffitiatlas.io beantragen; wir prüfen diese Anfragen im Einzelfall im Rahmen Ihres Rechts auf Löschung.' },
+      { t: 'h2', html: '5. Wer Zugang zu Ihren Daten hat (Auftragsverarbeiter)' },
+      { t: 'p', html: 'Wir setzen Anbieter ein, die in unserem Auftrag handeln:' },
+      { t: 'ul', items: [
+        '<strong>Supabase</strong> — Datenbank und Authentifizierung (EU, Paris);',
+        '<strong>Amazon Web Services (S3/CloudFront)</strong> — Speicherung und Auslieferung der Bilder (EU, Paris);',
+        '<strong>AWS Rekognition</strong> — automatisches Unkenntlichmachen von Gesichtern und Inhaltsmoderation (EU, Irland; vorübergehende Analyse, ohne Speicherung der Bilder);',
+        '<strong>Vercel</strong> — Hosting der Oberfläche und Reichweitenmessung;',
+        '<strong>Railway</strong> — Hosting des Anwendungsservers;',
+        '<strong>Sentry</strong> — Fehlerverfolgung;',
+        '<strong>Google (Maps / Street View / Google-Anmeldung)</strong> — Kartografie und Authentifizierung;',
+        '<strong>OpenStreetMap Foundation (Nominatim)</strong> — Geokodierung.',
+      ] },
+      { t: 'p', html: 'Einige dieser Anbieter können Daten außerhalb der Europäischen Union verarbeiten; in diesem Fall gelten geeignete Garantien (Standardvertragsklauseln).' },
+      { t: 'p', html: 'Wir verkaufen Ihre personenbezogenen Daten nicht.' },
+      { t: 'h2', html: '6. Ihre Rechte' },
+      { t: 'p', html: 'Gemäß der DSGVO haben Sie die Rechte auf <strong>Auskunft</strong>, <strong>Berichtigung</strong>, <strong>Löschung</strong>, <strong>Einschränkung</strong>, <strong>Widerspruch</strong> und <strong>Datenübertragbarkeit</strong>. Sie können diese Rechte jederzeit ausüben, indem Sie an contact@graffitiatlas.io schreiben.' },
+      { t: 'p', html: 'Sie können auch eine Beschwerde bei der französischen Datenschutzbehörde, der <strong>CNIL</strong> (www.cnil.fr), einreichen.' },
+      { t: 'h2', html: '7. Sicherheit' },
+      { t: 'p', html: 'Wir setzen angemessene technische Maßnahmen um (Verschlüsselung der Kommunikation, Entfernung von EXIF-Metadaten, automatisches Unkenntlichmachen von Gesichtern, eingeschränkter Zugriff auf die Daten), um Ihre Informationen zu schützen. Da kein System unfehlbar ist, können wir keine absolute Sicherheit garantieren.' },
+      { t: 'h2', html: '8. Bilder und Privatsphäre' },
+      { t: 'p', html: 'GraffitiAtlas veröffentlicht Fotografien des öffentlichen Raums. Diese Bilder können unbeabsichtigt Personen oder identifizierbare Elemente enthalten.' },
+      { t: 'ul', items: [
+        'Sie dürfen nur Bilder hochladen, an denen Sie die Rechte besitzen und die die Privatsphäre anderer nicht verletzen (siehe Nutzungsbedingungen).',
+        'Wir moderieren Beiträge <strong>vor</strong> der Veröffentlichung. Gesichter werden beim Hochladen <strong>automatisch unkenntlich gemacht</strong>; bei der Moderation können verbleibende Gesichter oder Nummernschilder manuell unkenntlich gemacht oder das Bild abgelehnt werden.',
+        'Jede auf einem Bild abgebildete Person kann dessen Entfernung beantragen, indem sie an contact@graffitiatlas.io schreibt. Wir bearbeiten diese Anfragen so schnell wie möglich.',
+      ] },
+      { t: 'quote', html: 'Hinweis: das automatische Unkenntlichmachen von Gesichtern ist umgesetzt; das Unkenntlichmachen von Nummernschildern beruht derzeit auf manueller Moderation. Dieses Verfahren sollte vor der Öffnung für die breite Öffentlichkeit rechtlich geprüft werden.' },
+      { t: 'h2', html: '9. Minderjährige' },
+      { t: 'p', html: 'Der Dienst ist nicht für Personen unter 15 Jahren bestimmt. Wir erheben ihre Daten nicht wissentlich.' },
+      { t: 'h2', html: '10. Änderungen' },
+      { t: 'p', html: 'Wir können diese Richtlinie aktualisieren. Das Datum oben auf der Seite gibt die letzte Überarbeitung an. Bei wesentlichen Änderungen informieren wir die Nutzer.' },
+    ],
+  },
+  it: {
+    title: 'Informativa sulla privacy',
+    updated: '2026-07-18',
+    blocks: [
+      { t: 'p', html: 'La presente informativa spiega quali dati personali raccoglie GraffitiAtlas.io («noi»), perché, come li utilizziamo e quali sono i tuoi diritti, in conformità al Regolamento generale sulla protezione dei dati (GDPR) e alla normativa sulla protezione dei dati.' },
+      { t: 'h2', html: '1. Titolare del trattamento' },
+      { t: 'p', html: 'Il titolare del trattamento è l’editore del sito, indicato nelle Note legali: Graffiti Atlas, impresa individuale (lavoratore autonomo), 9 F Place Saint-Bruno, 38000 Grenoble, Francia.' },
+      { t: 'p', html: '<strong>Contatto per le questioni relative ai dati personali:</strong> contact@graffitiatlas.io' },
+      { t: 'h2', html: '2. Quali dati raccogliamo' },
+      { t: 'h3', html: '2.1 Dati dell’account' },
+      { t: 'p', html: 'Quando crei un account (tramite e-mail o Google):' },
+      { t: 'ul', items: [
+        'indirizzo e-mail;',
+        'nome visualizzato ed eventualmente foto del profilo (forniti da te o da Google al momento dell’accesso);',
+        'identificativo tecnico dell’account.',
+      ] },
+      { t: 'p', html: 'L’autenticazione è gestita da <strong>Supabase</strong> (ospitato in Europa, regione di Parigi).' },
+      { t: 'h3', html: '2.2 Foto che carichi' },
+      { t: 'p', html: 'Quando segnali un graffito, carichi una o più fotografie. A questo proposito, è importante comprendere il nostro trattamento:' },
+      { t: 'ul', items: [
+        '<strong>Localizzazione:</strong> al momento del caricamento, il tuo browser può leggere le coordinate GPS eventualmente registrate nella foto, unicamente per <strong>preposizionare un indicatore sulla mappa</strong>. Successivamente confermi o regoli tale indicatore. Vengono salvate solo le coordinate che convalidi.',
+        '<strong>Rimozione dei metadati:</strong> prima dell’archiviazione, <strong>rimuoviamo i metadati tecnici (EXIF)</strong> dall’immagine (compresa qualsiasi posizione GPS, modello del dispositivo, data tecnica). L’immagine conservata non contiene quindi questi metadati.',
+        '<strong>Sfocatura automatica:</strong> le foto caricate dalla comunità vengono analizzate automaticamente per <strong>sfocare i volti</strong> prima dell’archiviazione e per rifiutare i contenuti manifestamente inappropriati. Questa analisi è effettuata da AWS Rekognition (regione Europa – Irlanda) in modo transitorio; le immagini non vengono conservate da tale servizio.',
+        '<strong>Contenuto dell’immagine:</strong> una fotografia dello spazio pubblico può contenere persone, targhe, facciate o altri elementi identificabili. Vedi la sezione 8.',
+      ] },
+      { t: 'h3', html: '2.3 Contributi e segnalazioni' },
+      { t: 'ul', items: [
+        'il tipo di graffito e la descrizione che inserisci;',
+        'le segnalazioni (ad esempio «graffito rimosso»), con foto facoltativa;',
+        'la data e la posizione associate.',
+      ] },
+      { t: 'h3', html: '2.4 Dati tecnici e di misurazione dell’audience' },
+      { t: 'ul', items: [
+        '<strong>Vercel Analytics</strong>: misurazione dell’audience aggregata (pagine viste, paesi), senza profilazione pubblicitaria.',
+        '<strong>Sentry</strong>: rilevamento degli errori tecnici per migliorare l’affidabilità del servizio.',
+        'Dati di connessione inerenti a qualsiasi servizio web (indirizzo IP, tipo di browser), trattati dai nostri provider di hosting.',
+      ] },
+      { t: 'h3', html: '2.5 Cartografia' },
+      { t: 'p', html: 'La visualizzazione della mappa e di Street View utilizza <strong>Google Maps</strong>. La geocodifica (ricerca di indirizzi) utilizza <strong>Nominatim / OpenStreetMap</strong>. Questi servizi possono ricevere il tuo indirizzo IP e le richieste che effettui. Vedi la Politica sui cookie.' },
+      { t: 'h2', html: '3. Perché utilizziamo questi dati (basi giuridiche)' },
+      { t: 'table', head: ['Finalità', 'Base giuridica (GDPR)'], rows: [
+        ['Creare e gestire il tuo account, fornire il servizio', 'Esecuzione del contratto'],
+        ['Pubblicare i tuoi contributi sulla mappa (dopo moderazione)', 'Il tuo consenso + legittimo interesse'],
+        ['Moderare i contenuti, prevenire gli abusi', 'Legittimo interesse'],
+        ['Misurare l’audience (cookie non essenziali)', 'Il tuo consenso'],
+        ['Rilevare e correggere gli errori tecnici', 'Legittimo interesse'],
+        ['Rispettare i nostri obblighi legali', 'Obbligo legale'],
+      ] },
+      { t: 'h2', html: '4. Periodo di conservazione' },
+      { t: 'ul', items: [
+        '<strong>Account:</strong> conservato finché l’account è attivo; eliminato su richiesta.',
+        '<strong>Contributi pubblicati:</strong> i dati relativi ai graffiti (localizzazione, immagini, cronologia) hanno valore documentale e possono essere conservati a lungo termine. Un graffito rimosso dallo spazio pubblico non viene eliminato ma contrassegnato come «rimosso» (vedi Condizioni d’uso).',
+        '<strong>Contributi non pubblicati (in attesa o rifiutati):</strong> eliminati, compresi i relativi file immagine nel nostro archivio.',
+        '<strong>Dati di misurazione dell’audience:</strong> conservati per un periodo limitato in base alle impostazioni dei nostri fornitori.',
+      ] },
+      { t: 'h3', html: '4.1 Cosa succede se elimini il tuo account' },
+      { t: 'p', html: 'Quando elimini il tuo account:' },
+      { t: 'ul', items: [
+        '<strong>I tuoi contributi non pubblicati</strong> (in attesa o rifiutati) vengono <strong>eliminati completamente</strong>, immagini comprese, dal nostro database e dal nostro archivio.',
+        '<strong>I tuoi contributi già pubblicati</strong> restano visibili sulla mappa per il loro valore documentale, ma vengono <strong>anonimizzati</strong>: il tuo nome e il collegamento al tuo account vengono rimossi, così da non essere più associati a te.',
+        '<strong>Il tuo profilo e il tuo account</strong> (nome, e-mail, preferenze) vengono eliminati.',
+      ] },
+      { t: 'p', html: 'Se desideri l’eliminazione completa di un contributo già pubblicato (immagine compresa), puoi richiederla a contact@graffitiatlas.io; esaminiamo queste richieste caso per caso in virtù del tuo diritto alla cancellazione.' },
+      { t: 'h2', html: '5. Chi ha accesso ai tuoi dati (responsabili del trattamento)' },
+      { t: 'p', html: 'Ci avvaliamo di fornitori che agiscono per nostro conto:' },
+      { t: 'ul', items: [
+        '<strong>Supabase</strong> — database e autenticazione (UE, Parigi);',
+        '<strong>Amazon Web Services (S3/CloudFront)</strong> — archiviazione e diffusione delle immagini (UE, Parigi);',
+        '<strong>AWS Rekognition</strong> — sfocatura automatica dei volti e moderazione dei contenuti (UE, Irlanda; analisi transitoria, senza conservazione delle immagini);',
+        '<strong>Vercel</strong> — hosting dell’interfaccia e misurazione dell’audience;',
+        '<strong>Railway</strong> — hosting del server applicativo;',
+        '<strong>Sentry</strong> — monitoraggio degli errori;',
+        '<strong>Google (Maps / Street View / accesso Google)</strong> — cartografia e autenticazione;',
+        '<strong>OpenStreetMap Foundation (Nominatim)</strong> — geocodifica.',
+      ] },
+      { t: 'p', html: 'Alcuni di questi fornitori possono trattare dati al di fuori dell’Unione europea; in tal caso si applicano garanzie appropriate (clausole contrattuali tipo).' },
+      { t: 'p', html: 'Non vendiamo i tuoi dati personali.' },
+      { t: 'h2', html: '6. I tuoi diritti' },
+      { t: 'p', html: 'In conformità al GDPR, disponi dei diritti di <strong>accesso</strong>, <strong>rettifica</strong>, <strong>cancellazione</strong>, <strong>limitazione</strong>, <strong>opposizione</strong> e <strong>portabilità</strong>. Puoi esercitare questi diritti in qualsiasi momento scrivendo a contact@graffitiatlas.io.' },
+      { t: 'p', html: 'Puoi inoltre presentare un reclamo all’autorità francese per la protezione dei dati, la <strong>CNIL</strong> (www.cnil.fr).' },
+      { t: 'h2', html: '7. Sicurezza' },
+      { t: 'p', html: 'Adottiamo misure tecniche ragionevoli (cifratura delle comunicazioni, rimozione dei metadati EXIF, sfocatura automatica dei volti, accesso limitato ai dati) per proteggere le tue informazioni. Poiché nessun sistema è infallibile, non possiamo garantire una sicurezza assoluta.' },
+      { t: 'h2', html: '8. Immagini e vita privata' },
+      { t: 'p', html: 'GraffitiAtlas pubblica fotografie dello spazio pubblico. Queste immagini possono contenere involontariamente persone o elementi identificabili.' },
+      { t: 'ul', items: [
+        'Devi caricare solo immagini di cui detieni i diritti e che non ledono la privacy altrui (vedi Condizioni d’uso).',
+        'Moderiamo i contributi <strong>prima</strong> della pubblicazione. I volti vengono <strong>sfocati automaticamente</strong> al caricamento; durante la moderazione, i volti o le targhe residui possono essere sfocati manualmente, oppure l’immagine può essere rifiutata.',
+        'Chiunque compaia in un’immagine può richiederne la rimozione scrivendo a contact@graffitiatlas.io. Trattiamo queste richieste il più rapidamente possibile.',
+      ] },
+      { t: 'quote', html: 'Nota: la sfocatura automatica dei volti è attiva; la sfocatura delle targhe si basa attualmente sulla moderazione manuale. Questo dispositivo deve essere convalidato da un consulente legale prima dell’apertura al grande pubblico.' },
+      { t: 'h2', html: '9. Minori' },
+      { t: 'p', html: 'Il servizio non è destinato alle persone di età inferiore ai 15 anni. Non raccogliamo consapevolmente i loro dati.' },
+      { t: 'h2', html: '10. Modifiche' },
+      { t: 'p', html: 'Possiamo aggiornare questa informativa. La data in cima alla pagina indica l’ultima revisione. In caso di modifica importante, informeremo gli utenti.' },
+    ],
+  },
+}
+
 export default function PrivacyPage() {
-  return (
-    <LegalPage title="Politique de confidentialité" updated="Dernière mise à jour : 18 juillet 2026">
-        <p>La présente politique explique quelles données personnelles GraffitiAtlas.io (« nous ») collecte, pourquoi, comment nous les utilisons et quels sont vos droits, conformément au Règlement Général sur la Protection des Données (RGPD) et à la loi Informatique et Libertés.</p>
-        <h2>1. Responsable du traitement</h2>
-        <p>Le responsable du traitement est l'éditeur du site, identifié dans les Mentions légales : Graffiti Atlas, entreprise individuelle (auto-entrepreneur), 9 F Place Saint-Bruno, 38000 Grenoble.</p>
-        <p><strong>Contact pour les questions de données personnelles :</strong> contact@graffitiatlas.io</p>
-        <h2>2. Quelles données nous collectons</h2>
-        <h3>2.1 Données de compte</h3>
-        <p>Lorsque vous créez un compte (par e-mail ou via Google) :</p>
-        <ul><li>adresse e-mail ;</li><li>nom d'affichage et, le cas échéant, photo de profil (fournis par vous ou par Google lors de la connexion) ;</li><li>identifiant technique de compte.</li></ul>
-        <p>L'authentification est gérée par <strong>Supabase</strong> (hébergé en Europe, région Paris).</p>
-        <h3>2.2 Photos que vous déposez</h3>
-        <p>Lorsque vous signalez un graffiti, vous téléversez une ou plusieurs photographies. À ce sujet, il est important de comprendre notre traitement :</p>
-        <ul><li><strong>Localisation :</strong> au moment du dépôt, votre navigateur peut lire les coordonnées GPS éventuellement enregistrées dans la photo, uniquement pour <strong>pré-positionner un repère sur la carte</strong>. Vous confirmez ou ajustez ensuite ce repère. Seules les coordonnées que vous validez sont enregistrées.</li><li><strong>Suppression des métadonnées :</strong> avant stockage, nous <strong>retirons les métadonnées techniques (EXIF)</strong> de l'image (y compris toute position GPS, modèle d'appareil, date technique). L'image conservée ne contient donc pas ces métadonnées.</li><li><strong>Floutage automatique :</strong> les photos déposées par la communauté sont analysées automatiquement afin de <strong>flouter les visages</strong> avant stockage, et de refuser les contenus manifestement inappropriés. Cette analyse est réalisée par AWS Rekognition (région Europe – Irlande) de manière transitoire ; les images ne sont pas conservées par ce service.</li><li><strong>Contenu de l'image :</strong> une photographie de l'espace public peut contenir des personnes, des plaques d'immatriculation, des façades ou d'autres éléments identifiables. Voir la section 8.</li></ul>
-        <h3>2.3 Contributions et signalements</h3>
-        <ul><li>le type de graffiti et la description que vous saisissez ;</li><li>les signalements (par exemple « graffiti effacé »), avec photo optionnelle ;</li><li>la date et l'emplacement associés.</li></ul>
-        <h3>2.4 Données techniques et de mesure d'audience</h3>
-        <ul><li><strong>Vercel Analytics</strong> : mesure d'audience agrégée (pages vues, pays), sans profilage publicitaire.</li><li><strong>Sentry</strong> : détection des erreurs techniques pour améliorer la fiabilité du service.</li><li>Données de connexion inhérentes à tout service web (adresse IP, type de navigateur), traitées par nos hébergeurs.</li></ul>
-        <h3>2.5 Cartographie</h3>
-        <p>L'affichage de la carte et de Street View fait appel à <strong>Google Maps</strong>. Le géocodage (recherche d'adresse) utilise <strong>Nominatim / OpenStreetMap</strong>. Ces services peuvent recevoir votre adresse IP et les requêtes que vous effectuez. Voir la Politique des cookies.</p>
-        <h2>3. Pourquoi nous utilisons ces données (bases légales)</h2>
-        <table><thead><tr><th>Finalité</th><th>Base légale (RGPD)</th></tr></thead><tbody><tr><td>Créer et gérer votre compte, fournir le service</td><td>Exécution du contrat</td></tr><tr><td>Publier vos contributions sur la carte (après modération)</td><td>Votre consentement + intérêt légitime</td></tr><tr><td>Modérer les contenus, prévenir les abus</td><td>Intérêt légitime</td></tr><tr><td>Mesurer l'audience (cookies non essentiels)</td><td>Votre consentement</td></tr><tr><td>Détecter et corriger les erreurs techniques</td><td>Intérêt légitime</td></tr><tr><td>Respecter nos obligations légales</td><td>Obligation légale</td></tr></tbody></table>
-        <h2>4. Durée de conservation</h2>
-        <ul><li><strong>Compte :</strong> conservé tant que le compte est actif ; supprimé sur demande.</li><li><strong>Contributions publiées :</strong> les données relatives aux graffitis (localisation, images, historique) ont une valeur documentaire et peuvent être conservées durablement. Un graffiti retiré de l'espace public n'est pas supprimé mais marqué comme « effacé » (voir CGU).</li><li><strong>Contributions non publiées (en attente ou refusées) :</strong> supprimées, y compris les fichiers image correspondants dans notre stockage.</li><li><strong>Données de mesure d'audience :</strong> conservées pour une durée limitée conformément aux réglages de nos prestataires.</li></ul>
-        <h3>4.1 Que se passe-t-il si vous supprimez votre compte</h3>
-        <p>Lorsque vous supprimez votre compte :</p>
-        <ul><li><strong>Vos contributions non publiées</strong> (en attente ou refusées) sont <strong>entièrement supprimées</strong>, images comprises, de notre base et de notre stockage.</li><li><strong>Vos contributions déjà publiées</strong> restent visibles sur la carte pour leur valeur documentaire, mais sont <strong>anonymisées</strong> : votre nom et le lien vers votre compte sont retirés, de sorte qu'elles ne vous sont plus rattachées.</li><li><strong>Votre profil et votre compte</strong> (nom, e-mail, préférences) sont supprimés.</li></ul>
-        <p>Si vous souhaitez la suppression complète d'une contribution déjà publiée (image comprise), vous pouvez en faire la demande à contact@graffitiatlas.io ; nous examinons ces demandes au cas par cas au titre de votre droit à l'effacement.</p>
-        <h2>5. Qui a accès à vos données (sous-traitants)</h2>
-        <p>Nous faisons appel à des prestataires qui agissent pour notre compte :</p>
-        <ul><li><strong>Supabase</strong> — base de données et authentification (UE, Paris) ;</li><li><strong>Amazon Web Services (S3/CloudFront)</strong> — stockage et diffusion des images (UE, Paris) ;</li><li><strong>AWS Rekognition</strong> — floutage automatique des visages et modération des contenus (UE, Irlande ; analyse transitoire, sans conservation des images) ;</li><li><strong>Vercel</strong> — hébergement de l'interface et mesure d'audience ;</li><li><strong>Railway</strong> — hébergement du serveur applicatif ;</li><li><strong>Sentry</strong> — suivi des erreurs ;</li><li><strong>Google (Maps / Street View / connexion Google)</strong> — cartographie et authentification ;</li><li><strong>OpenStreetMap Foundation (Nominatim)</strong> — géocodage.</li></ul>
-        <p>Certains de ces prestataires peuvent traiter des données hors de l'Union européenne ; dans ce cas, des garanties appropriées (clauses contractuelles types) s'appliquent.</p>
-        <p>Nous ne vendons pas vos données personnelles.</p>
-        <h2>6. Vos droits</h2>
-        <p>Conformément au RGPD, vous disposez des droits d'<strong>accès</strong>, de <strong>rectification</strong>, d'<strong>effacement</strong>, de <strong>limitation</strong>, d'<strong>opposition</strong> et de <strong>portabilité</strong>. Vous pouvez exercer ces droits à tout moment en écrivant à contact@graffitiatlas.io.</p>
-        <p>Vous pouvez également introduire une réclamation auprès de la <strong>CNIL</strong> (www.cnil.fr).</p>
-        <h2>7. Sécurité</h2>
-        <p>Nous mettons en œuvre des mesures techniques raisonnables (chiffrement des échanges, suppression des métadonnées EXIF, floutage automatique des visages, accès restreint aux données) pour protéger vos informations. Aucun système n'étant infaillible, nous ne pouvons garantir une sécurité absolue.</p>
-        <h2>8. Images et vie privée</h2>
-        <p>GraffitiAtlas publie des photographies de l'espace public. Ces images peuvent involontairement contenir des personnes ou des éléments identifiables.</p>
-        <ul><li>Vous ne devez déposer que des images dont vous détenez les droits et qui ne portent pas atteinte à la vie privée d'autrui (voir CGU).</li><li>Nous modérons les contributions <strong>avant</strong> publication. Les visages sont <strong>floutés automatiquement</strong> au dépôt ; lors de la modération, les visages ou plaques d'immatriculation résiduels peuvent être floutés manuellement, ou l'image refusée.</li><li>Toute personne figurant sur une image peut demander son retrait en écrivant à contact@graffitiatlas.io. Nous traitons ces demandes dans les meilleurs délais.</li></ul>
-        <blockquote>Note : le floutage automatique des visages est en place ; le floutage des plaques d'immatriculation repose à ce jour sur la modération manuelle. Ce dispositif doit être validé par un conseil juridique avant l'ouverture au grand public.</blockquote>
-        <h2>9. Mineurs</h2>
-        <p>Le service n'est pas destiné aux personnes de moins de 15 ans. Nous ne collectons pas sciemment leurs données.</p>
-        <h2>10. Modifications</h2>
-        <p>Nous pouvons mettre à jour cette politique. La date en tête de page indique la dernière révision. En cas de changement important, nous en informerons les utilisateurs.</p>
-    </LegalPage>
-  )
+  return <LegalPage content={CONTENT} />
 }

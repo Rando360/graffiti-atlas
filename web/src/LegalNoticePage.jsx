@@ -1,23 +1,173 @@
 import LegalPage from './LegalPage'
 
+const CONTENT = {
+  fr: {
+    title: 'Mentions légales',
+    updated: '2026-07-18',
+    blocks: [
+      { t: 'p', html: "Conformément à l'article 6 de la loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique (LCEN), les présentes mentions légales sont portées à la connaissance des utilisateurs du site <strong>GraffitiAtlas.io</strong>." },
+      { t: 'h2', html: '1. Éditeur du site' },
+      { t: 'p', html: 'Le site GraffitiAtlas.io est édité par :' },
+      { t: 'ul', items: [
+        '<strong>Éditeur :</strong> Graffiti Atlas — entreprise individuelle (auto-entrepreneur)',
+        '<strong>Représentant légal / Directeur de la publication :</strong> Zachary Root',
+        '<strong>Adresse :</strong> 9 F Place Saint-Bruno, 38000 Grenoble, France',
+        '<strong>SIRET :</strong> 893 404 830 00018',
+        '<strong>TVA :</strong> non applicable, article 293 B du CGI (franchise en base)',
+        '<strong>Adresse e-mail de contact :</strong> contact@graffitiatlas.io',
+      ] },
+      { t: 'h2', html: '2. Hébergement' },
+      { t: 'p', html: "Le site et ses données s'appuient sur plusieurs prestataires techniques :" },
+      { t: 'ul', items: [
+        '<strong>Interface web (frontend) :</strong> Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, États-Unis.',
+        '<strong>Serveur applicatif (backend) :</strong> Railway Corp.',
+        '<strong>Base de données &amp; authentification :</strong> Supabase (hébergement dans la région Europe — Paris, eu-west-3).',
+        '<strong>Stockage des images :</strong> Amazon Web Services (AWS S3 / CloudFront), région Europe (Paris, eu-west-3).',
+      ] },
+      { t: 'h2', html: '3. Propriété intellectuelle' },
+      { t: 'p', html: "La structure du site, son code, son identité visuelle (logo, charte graphique) et les textes originaux sont la propriété de l'éditeur, sauf mention contraire." },
+      { t: 'p', html: "Les images de rue à 360° proviennent notamment de <strong>Panoramax</strong> (plateforme ouverte de l'IGN, données ouvertes) et sont utilisées dans le respect de leurs licences. Les vues <strong>Google Street View</strong> sont fournies à titre de référence via les services de Google." },
+      { t: 'p', html: 'Les photographies déposées par les utilisateurs restent la propriété de leurs auteurs, qui concèdent à GraffitiAtlas une licence d\'utilisation dans les conditions prévues par les <a href="/conditions-utilisation">Conditions Générales d\'Utilisation</a>.' },
+      { t: 'h2', html: '4. Responsabilité' },
+      { t: 'p', html: "GraffitiAtlas s'efforce d'assurer l'exactitude des informations diffusées mais ne saurait garantir l'exhaustivité ou l'absence d'erreur des données cartographiques et des contributions. L'utilisation du site se fait sous la seule responsabilité de l'utilisateur." },
+      { t: 'h2', html: '5. Contact' },
+      { t: 'p', html: 'Pour toute question relative au site : contact@graffitiatlas.io' },
+    ],
+  },
+  en: {
+    title: 'Legal Notice',
+    updated: '2026-07-18',
+    blocks: [
+      { t: 'p', html: 'In accordance with Article 6 of French Law No. 2004-575 of 21 June 2004 on confidence in the digital economy (LCEN), this legal notice is provided to users of <strong>GraffitiAtlas.io</strong>.' },
+      { t: 'h2', html: '1. Site publisher' },
+      { t: 'p', html: 'GraffitiAtlas.io is published by:' },
+      { t: 'ul', items: [
+        '<strong>Publisher:</strong> Graffiti Atlas — sole proprietorship (auto-entrepreneur)',
+        '<strong>Legal representative / Publication director:</strong> Zachary Root',
+        '<strong>Address:</strong> 9 F Place Saint-Bruno, 38000 Grenoble, France',
+        '<strong>SIRET:</strong> 893 404 830 00018',
+        '<strong>VAT:</strong> not applicable, Article 293 B of the French Tax Code (VAT exemption)',
+        '<strong>Contact email:</strong> contact@graffitiatlas.io',
+      ] },
+      { t: 'h2', html: '2. Hosting' },
+      { t: 'p', html: 'The site and its data rely on several technical providers:' },
+      { t: 'ul', items: [
+        '<strong>Web interface (frontend):</strong> Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, USA.',
+        '<strong>Application server (backend):</strong> Railway Corp.',
+        '<strong>Database &amp; authentication:</strong> Supabase (hosted in the Europe region — Paris, eu-west-3).',
+        '<strong>Image storage:</strong> Amazon Web Services (AWS S3 / CloudFront), Europe region (Paris, eu-west-3).',
+      ] },
+      { t: 'h2', html: '3. Intellectual property' },
+      { t: 'p', html: 'The structure of the site, its code, its visual identity (logo, graphic design) and original texts are the property of the publisher, unless otherwise stated.' },
+      { t: 'p', html: 'The 360° street imagery comes in particular from <strong>Panoramax</strong> (the open platform of IGN, open data) and is used in compliance with its licenses. <strong>Google Street View</strong> views are provided for reference via Google’s services.' },
+      { t: 'p', html: 'Photographs uploaded by users remain the property of their authors, who grant GraffitiAtlas a license to use them under the conditions set out in the <a href="/conditions-utilisation">Terms of Use</a>.' },
+      { t: 'h2', html: '4. Liability' },
+      { t: 'p', html: 'GraffitiAtlas strives to ensure the accuracy of the information provided but cannot guarantee the completeness or absence of errors in the mapping data and contributions. Use of the site is at the user’s sole responsibility.' },
+      { t: 'h2', html: '5. Contact' },
+      { t: 'p', html: 'For any questions about the site: contact@graffitiatlas.io' },
+    ],
+  },
+  es: {
+    title: 'Aviso legal',
+    updated: '2026-07-18',
+    blocks: [
+      { t: 'p', html: 'De conformidad con el artículo 6 de la Ley n.º 2004-575 de 21 de junio de 2004 sobre la confianza en la economía digital (LCEN), el presente aviso legal se pone en conocimiento de los usuarios del sitio <strong>GraffitiAtlas.io</strong>.' },
+      { t: 'h2', html: '1. Editor del sitio' },
+      { t: 'p', html: 'El sitio GraffitiAtlas.io está editado por:' },
+      { t: 'ul', items: [
+        '<strong>Editor:</strong> Graffiti Atlas — empresa individual (autónomo)',
+        '<strong>Representante legal / Director de publicación:</strong> Zachary Root',
+        '<strong>Dirección:</strong> 9 F Place Saint-Bruno, 38000 Grenoble, Francia',
+        '<strong>SIRET:</strong> 893 404 830 00018',
+        '<strong>IVA:</strong> no aplicable, artículo 293 B del CGI (franquicia de base)',
+        '<strong>Correo electrónico de contacto:</strong> contact@graffitiatlas.io',
+      ] },
+      { t: 'h2', html: '2. Alojamiento' },
+      { t: 'p', html: 'El sitio y sus datos se apoyan en varios proveedores técnicos:' },
+      { t: 'ul', items: [
+        '<strong>Interfaz web (frontend):</strong> Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, EE. UU.',
+        '<strong>Servidor de aplicaciones (backend):</strong> Railway Corp.',
+        '<strong>Base de datos y autenticación:</strong> Supabase (alojado en la región Europa — París, eu-west-3).',
+        '<strong>Almacenamiento de imágenes:</strong> Amazon Web Services (AWS S3 / CloudFront), región Europa (París, eu-west-3).',
+      ] },
+      { t: 'h2', html: '3. Propiedad intelectual' },
+      { t: 'p', html: 'La estructura del sitio, su código, su identidad visual (logotipo, diseño gráfico) y los textos originales son propiedad del editor, salvo indicación en contrario.' },
+      { t: 'p', html: 'Las imágenes de calle en 360° provienen en particular de <strong>Panoramax</strong> (plataforma abierta del IGN, datos abiertos) y se utilizan respetando sus licencias. Las vistas de <strong>Google Street View</strong> se proporcionan como referencia a través de los servicios de Google.' },
+      { t: 'p', html: 'Las fotografías subidas por los usuarios siguen siendo propiedad de sus autores, quienes conceden a GraffitiAtlas una licencia de uso en las condiciones previstas por las <a href="/conditions-utilisation">Condiciones de uso</a>.' },
+      { t: 'h2', html: '4. Responsabilidad' },
+      { t: 'p', html: 'GraffitiAtlas se esfuerza por garantizar la exactitud de la información difundida, pero no puede garantizar la exhaustividad ni la ausencia de errores en los datos cartográficos y las contribuciones. El uso del sitio se realiza bajo la exclusiva responsabilidad del usuario.' },
+      { t: 'h2', html: '5. Contacto' },
+      { t: 'p', html: 'Para cualquier consulta sobre el sitio: contact@graffitiatlas.io' },
+    ],
+  },
+  de: {
+    title: 'Impressum',
+    updated: '2026-07-18',
+    blocks: [
+      { t: 'p', html: 'Gemäß Artikel 6 des französischen Gesetzes Nr. 2004-575 vom 21. Juni 2004 über das Vertrauen in die digitale Wirtschaft (LCEN) wird dieses Impressum den Nutzern der Website <strong>GraffitiAtlas.io</strong> zur Kenntnis gebracht.' },
+      { t: 'h2', html: '1. Herausgeber der Website' },
+      { t: 'p', html: 'Die Website GraffitiAtlas.io wird herausgegeben von:' },
+      { t: 'ul', items: [
+        '<strong>Herausgeber:</strong> Graffiti Atlas — Einzelunternehmen (auto-entrepreneur)',
+        '<strong>Gesetzlicher Vertreter / Verantwortlicher:</strong> Zachary Root',
+        '<strong>Anschrift:</strong> 9 F Place Saint-Bruno, 38000 Grenoble, Frankreich',
+        '<strong>SIRET:</strong> 893 404 830 00018',
+        '<strong>USt:</strong> nicht anwendbar, Artikel 293 B CGI (Kleinunternehmerregelung)',
+        '<strong>Kontakt-E-Mail:</strong> contact@graffitiatlas.io',
+      ] },
+      { t: 'h2', html: '2. Hosting' },
+      { t: 'p', html: 'Die Website und ihre Daten stützen sich auf mehrere technische Dienstleister:' },
+      { t: 'ul', items: [
+        '<strong>Weboberfläche (Frontend):</strong> Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, USA.',
+        '<strong>Anwendungsserver (Backend):</strong> Railway Corp.',
+        '<strong>Datenbank &amp; Authentifizierung:</strong> Supabase (gehostet in der Region Europa — Paris, eu-west-3).',
+        '<strong>Bildspeicherung:</strong> Amazon Web Services (AWS S3 / CloudFront), Region Europa (Paris, eu-west-3).',
+      ] },
+      { t: 'h2', html: '3. Geistiges Eigentum' },
+      { t: 'p', html: 'Die Struktur der Website, ihr Code, ihre visuelle Identität (Logo, Gestaltung) und die Originaltexte sind Eigentum des Herausgebers, sofern nicht anders angegeben.' },
+      { t: 'p', html: 'Die 360°-Straßenbilder stammen insbesondere von <strong>Panoramax</strong> (der offenen Plattform des IGN, offene Daten) und werden unter Einhaltung ihrer Lizenzen verwendet. <strong>Google Street View</strong>-Ansichten werden zu Referenzzwecken über die Dienste von Google bereitgestellt.' },
+      { t: 'p', html: 'Von Nutzern hochgeladene Fotos bleiben Eigentum ihrer Urheber, die GraffitiAtlas eine Nutzungslizenz unter den in den <a href="/conditions-utilisation">Nutzungsbedingungen</a> festgelegten Bedingungen einräumen.' },
+      { t: 'h2', html: '4. Haftung' },
+      { t: 'p', html: 'GraffitiAtlas bemüht sich um die Richtigkeit der bereitgestellten Informationen, kann jedoch die Vollständigkeit oder Fehlerfreiheit der Kartendaten und Beiträge nicht garantieren. Die Nutzung der Website erfolgt in alleiniger Verantwortung des Nutzers.' },
+      { t: 'h2', html: '5. Kontakt' },
+      { t: 'p', html: 'Bei Fragen zur Website: contact@graffitiatlas.io' },
+    ],
+  },
+  it: {
+    title: 'Note legali',
+    updated: '2026-07-18',
+    blocks: [
+      { t: 'p', html: 'Ai sensi dell’articolo 6 della legge francese n. 2004-575 del 21 giugno 2004 sulla fiducia nell’economia digitale (LCEN), le presenti note legali sono portate a conoscenza degli utenti del sito <strong>GraffitiAtlas.io</strong>.' },
+      { t: 'h2', html: '1. Editore del sito' },
+      { t: 'p', html: 'Il sito GraffitiAtlas.io è edito da:' },
+      { t: 'ul', items: [
+        '<strong>Editore:</strong> Graffiti Atlas — impresa individuale (lavoratore autonomo)',
+        '<strong>Rappresentante legale / Direttore della pubblicazione:</strong> Zachary Root',
+        '<strong>Indirizzo:</strong> 9 F Place Saint-Bruno, 38000 Grenoble, Francia',
+        '<strong>SIRET:</strong> 893 404 830 00018',
+        '<strong>IVA:</strong> non applicabile, articolo 293 B del CGI (regime di franchigia)',
+        '<strong>E-mail di contatto:</strong> contact@graffitiatlas.io',
+      ] },
+      { t: 'h2', html: '2. Hosting' },
+      { t: 'p', html: 'Il sito e i suoi dati si avvalgono di diversi fornitori tecnici:' },
+      { t: 'ul', items: [
+        '<strong>Interfaccia web (frontend):</strong> Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, USA.',
+        '<strong>Server applicativo (backend):</strong> Railway Corp.',
+        '<strong>Database e autenticazione:</strong> Supabase (ospitato nella regione Europa — Parigi, eu-west-3).',
+        '<strong>Archiviazione delle immagini:</strong> Amazon Web Services (AWS S3 / CloudFront), regione Europa (Parigi, eu-west-3).',
+      ] },
+      { t: 'h2', html: '3. Proprietà intellettuale' },
+      { t: 'p', html: 'La struttura del sito, il suo codice, la sua identità visiva (logo, grafica) e i testi originali sono di proprietà dell’editore, salvo diversa indicazione.' },
+      { t: 'p', html: 'Le immagini stradali a 360° provengono in particolare da <strong>Panoramax</strong> (piattaforma aperta dell’IGN, dati aperti) e sono utilizzate nel rispetto delle relative licenze. Le viste di <strong>Google Street View</strong> sono fornite a titolo di riferimento tramite i servizi di Google.' },
+      { t: 'p', html: 'Le fotografie caricate dagli utenti restano di proprietà dei rispettivi autori, che concedono a GraffitiAtlas una licenza d’uso alle condizioni previste dalle <a href="/conditions-utilisation">Condizioni d’uso</a>.' },
+      { t: 'h2', html: '4. Responsabilità' },
+      { t: 'p', html: 'GraffitiAtlas si impegna a garantire l’esattezza delle informazioni diffuse ma non può garantire la completezza o l’assenza di errori nei dati cartografici e nei contributi. L’uso del sito avviene sotto l’esclusiva responsabilità dell’utente.' },
+      { t: 'h2', html: '5. Contatto' },
+      { t: 'p', html: 'Per qualsiasi domanda relativa al sito: contact@graffitiatlas.io' },
+    ],
+  },
+}
+
 export default function LegalNoticePage() {
-  return (
-    <LegalPage title="Mentions légales" updated="Dernière mise à jour : 18 juillet 2026">
-        <p>Conformément à l'article 6 de la loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique (LCEN), les présentes mentions légales sont portées à la connaissance des utilisateurs du site <strong>GraffitiAtlas.io</strong>.</p>
-        <h2>1. Éditeur du site</h2>
-        <p>Le site GraffitiAtlas.io est édité par :</p>
-        <ul><li><strong>Éditeur :</strong> Graffiti Atlas — entreprise individuelle (auto-entrepreneur)</li><li><strong>Représentant légal / Directeur de la publication :</strong> Zachary Root</li><li><strong>Adresse :</strong> 9 F Place Saint-Bruno, 38000 Grenoble, France</li><li><strong>SIRET :</strong> 893 404 830 00018</li><li><strong>TVA :</strong> non applicable, article 293 B du CGI (franchise en base)</li><li><strong>Adresse e-mail de contact :</strong> contact@graffitiatlas.io</li></ul>
-        <h2>2. Hébergement</h2>
-        <p>Le site et ses données s'appuient sur plusieurs prestataires techniques :</p>
-        <ul><li><strong>Interface web (frontend) :</strong> Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, États-Unis.</li><li><strong>Serveur applicatif (backend) :</strong> Railway Corp.</li><li><strong>Base de données & authentification :</strong> Supabase (hébergement dans la région Europe — Paris, `eu-west-3`).</li><li><strong>Stockage des images :</strong> Amazon Web Services (AWS S3 / CloudFront), région Europe (Paris, `eu-west-3`).</li></ul>
-        <h2>3. Propriété intellectuelle</h2>
-        <p>La structure du site, son code, son identité visuelle (logo, charte graphique) et les textes originaux sont la propriété de l'éditeur, sauf mention contraire.</p>
-        <p>Les images de rue à 360° proviennent notamment de <strong>Panoramax</strong> (plateforme ouverte de l'IGN, données ouvertes) et sont utilisées dans le respect de leurs licences. Les vues <strong>Google Street View</strong> sont fournies à titre de référence via les services de Google.</p>
-        <p>Les photographies déposées par les utilisateurs restent la propriété de leurs auteurs, qui concèdent à GraffitiAtlas une licence d'utilisation dans les conditions prévues par les [Conditions Générales d'Utilisation](conditions-utilisation.md).</p>
-        <h2>4. Responsabilité</h2>
-        <p>GraffitiAtlas s'efforce d'assurer l'exactitude des informations diffusées mais ne saurait garantir l'exhaustivité ou l'absence d'erreur des données cartographiques et des contributions. L'utilisation du site se fait sous la seule responsabilité de l'utilisateur.</p>
-        <h2>5. Contact</h2>
-        <p>Pour toute question relative au site : contact@graffitiatlas.io</p>
-    </LegalPage>
-  )
+  return <LegalPage content={CONTENT} />
 }

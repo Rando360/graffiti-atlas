@@ -53,6 +53,7 @@ export default function Landing() {
   const [showSettings, setShowSettings] = useState(false)
   const [showUpload, setShowUpload] = useState(false)
   const [showMod, setShowMod] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null))
@@ -76,40 +77,44 @@ export default function Landing() {
           <span className="lp-brand-name">GraffitiAtlas</span>
         </div>
         <div className="lp-nav-right">
-          <select
-            className="lp-lang"
-            value={getLanguage()}
-            onChange={e => setLanguage(e.target.value)}
-            aria-label="Language"
+          <div className={'lp-nav-menu' + (menuOpen ? ' open' : '')}>
+            <select
+              className="lp-lang"
+              value={getLanguage()}
+              onChange={e => setLanguage(e.target.value)}
+              aria-label="Language"
+            >
+              {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
+            </select>
+            {user && (
+              <button className="lp-nav-login" onClick={() => { setShowUpload(true); setMenuOpen(false) }}>{t('header.report')}</button>
+            )}
+            {isAdmin && (
+              <button className="lp-nav-login" onClick={() => { setShowMod(true); setMenuOpen(false) }}>{t('header.moderation')}</button>
+            )}
+            {isAdmin && (
+              <a className="lp-nav-login" href="/stats">{t('header.stats')}</a>
+            )}
+            <button className="lp-nav-login" onClick={() => { setShowSettings(true); setMenuOpen(false) }}>{t('header.settings')}</button>
+            {user ? (
+              <button className="lp-nav-login" onClick={() => { supabase.auth.signOut(); setMenuOpen(false) }}>
+                {t('header.logout')}
+              </button>
+            ) : (
+              <button className="lp-nav-login" onClick={() => { setShowAuth(true); setMenuOpen(false) }}>{t('header.login')}</button>
+            )}
+          </div>
+          <button className="lp-nav-cta" onClick={goMap}>{t('nav.explore')}</button>
+          <button
+            className="lp-nav-burger"
+            onClick={() => setMenuOpen(o => !o)}
+            aria-label="Menu"
+            aria-expanded={menuOpen}
           >
-            {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
-          </select>
-          {user && (
-            <button className="lp-nav-login" onClick={() => setShowUpload(true)}>{t('header.report')}</button>
-          )}
-          {isAdmin && (
-            <button className="lp-nav-login" onClick={() => setShowMod(true)}>{t('header.moderation')}</button>
-          )}
-          {isAdmin && (
-            <a className="lp-nav-login" href="/stats">{t('header.stats')}</a>
-          )}
-          <button className="lp-nav-icon" onClick={() => setShowSettings(true)} aria-label={t('header.settings')}>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <circle cx="8" cy="8" r="2.4" stroke="currentColor" strokeWidth="1.4"/>
-              <path d="M8 1.6v1.8M8 12.6v1.8M14.4 8h-1.8M3.4 8H1.6M12.5 3.5l-1.3 1.3M4.8 11.2l-1.3 1.3M12.5 12.5l-1.3-1.3M4.8 4.8L3.5 3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path d="M3 6h14M3 10h14M3 14h14" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/>
             </svg>
           </button>
-          {user ? (
-            <div className="lp-nav-user">
-              <button className="lp-nav-login" onClick={() => setShowSettings(true)}>
-                {user.user_metadata?.full_name || user.email?.split('@')[0]}
-              </button>
-              <button className="lp-nav-login" onClick={() => supabase.auth.signOut()}>{t('header.logout')}</button>
-            </div>
-          ) : (
-            <button className="lp-nav-login" onClick={() => setShowAuth(true)}>{t('header.login')}</button>
-          )}
-          <button className="lp-nav-cta" onClick={goMap}>{t('nav.explore')}</button>
         </div>
       </nav>
 

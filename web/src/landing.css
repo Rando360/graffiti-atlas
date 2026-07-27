@@ -51,7 +51,16 @@
   max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .lp-nav-login:hover { background: var(--surface); border-color: var(--muted); }
-.lp-nav-user { display: flex; align-items: center; gap: 8px; }
+/* Menu group: inline on desktop, collapses into a dropdown on mobile. */
+.lp-nav-menu { display: flex; align-items: center; gap: 12px; }
+.lp-nav-burger {
+  display: none;
+  align-items: center; justify-content: center;
+  width: 34px; height: 34px; padding: 0;
+  background: transparent; border: 1px solid var(--border); border-radius: 8px;
+  color: var(--ink); cursor: pointer; transition: background 0.15s, border-color 0.15s;
+}
+.lp-nav-burger:hover { background: var(--surface); border-color: var(--muted); }
 
 /* ── Hero ── */
 .lp-hero {
@@ -176,10 +185,25 @@
   .lp-nav { padding: 14px 18px; }
   .lp-brand-name { font-size: 15px; }
   .lp-nav-right { gap: 8px; }
-  .lp-lang { padding: 6px 24px 6px 9px; font-size: 12px; }
   .lp-nav-cta { padding: 8px 14px; font-size: 12px; }
-  .lp-nav-icon { width: 30px; height: 30px; }
-  .lp-nav-login { padding: 6px 11px; font-size: 12px; max-width: 92px; }
+
+  /* Collapse the options into a dropdown behind the burger. */
+  .lp-nav-burger { display: inline-flex; }
+  .lp-nav-menu { display: none; }
+  .lp-nav-menu.open {
+    display: flex; flex-direction: column; align-items: stretch; gap: 8px;
+    position: absolute; top: calc(100% + 4px);
+    right: max(18px, env(safe-area-inset-right, 0px));
+    background: var(--bg); border: 1px solid var(--border); border-radius: 12px;
+    padding: 10px; min-width: 180px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.18); z-index: 30;
+  }
+  .lp-nav-menu.open .lp-lang,
+  .lp-nav-menu.open .lp-nav-login {
+    width: 100%; max-width: none; text-align: left; font-size: 13px;
+  }
+  .lp-nav-menu.open .lp-lang { padding: 8px 24px 8px 11px; }
+  .lp-nav-menu.open .lp-nav-login { padding: 9px 11px; }
 
   .lp-hero { min-height: auto; padding: 20px 18px 48px; }
   /* Clear the map behind the hero text so the title stays readable on phones. */

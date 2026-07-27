@@ -35,6 +35,22 @@
 }
 .lp-nav-cta:hover { background: #46403A; }
 
+.lp-nav-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; padding: 0;
+  background: transparent; border: 1px solid var(--border); border-radius: 8px;
+  color: var(--ink); cursor: pointer; transition: background 0.15s, border-color 0.15s;
+}
+.lp-nav-icon:hover { background: var(--surface); border-color: var(--muted); }
+
+.lp-nav-login {
+  background: transparent; color: var(--ink); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 15px; font-size: 13px; font-weight: 600;
+  font-family: inherit; cursor: pointer; transition: background 0.15s, border-color 0.15s;
+  max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.lp-nav-login:hover { background: var(--surface); border-color: var(--muted); }
+
 /* ── Hero ── */
 .lp-hero {
   position: relative;
@@ -160,6 +176,8 @@
   .lp-nav-right { gap: 8px; }
   .lp-lang { padding: 6px 24px 6px 9px; font-size: 12px; }
   .lp-nav-cta { padding: 8px 14px; font-size: 12px; }
+  .lp-nav-icon { width: 30px; height: 30px; }
+  .lp-nav-login { padding: 6px 11px; font-size: 12px; max-width: 92px; }
 
   .lp-hero { min-height: auto; padding: 20px 18px 48px; }
   /* Clear the map behind the hero text so the title stays readable on phones. */

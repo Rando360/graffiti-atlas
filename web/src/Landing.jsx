@@ -1,5 +1,10 @@
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { t, getLanguage, setLanguage, LANGUAGES } from './i18n'
+import { supabase } from './supabase'
+
+const AuthModal = lazy(() => import('./AuthModal'))
+const SettingsPanel = lazy(() => import('./SettingsPanel'))
 
 /* Update these as coverage grows — shown in the hero stat strip. */
 const STATS = { works: '1 500+', cities: '2' }
@@ -40,6 +45,16 @@ export default function Landing() {
   const navigate = useNavigate()
   const goMap = () => navigate('/map')
 
+  const [user, setUser] = useState(null)
+  const [showAuth, setShowAuth] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null))
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setUser(s?.user ?? null))
+    return () => subscription.unsubscribe()
+  }, [])
+
   return (
     <div className="lp">
       {/* ── Nav ── */}
@@ -57,6 +72,19 @@ export default function Landing() {
           >
             {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
           </select>
+          <button className="lp-nav-icon" onClick={() => setShowSettings(true)} aria-label={t('header.settings')}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <circle cx="8" cy="8" r="2.4" stroke="currentColor" strokeWidth="1.4"/>
+              <path d="M8 1.6v1.8M8 12.6v1.8M14.4 8h-1.8M3.4 8H1.6M12.5 3.5l-1.3 1.3M4.8 11.2l-1.3 1.3M12.5 12.5l-1.3-1.3M4.8 4.8L3.5 3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+            </svg>
+          </button>
+          {user ? (
+            <button className="lp-nav-login" onClick={() => setShowSettings(true)}>
+              {user.user_metadata?.full_name || user.email?.split('@')[0]}
+            </button>
+          ) : (
+            <button className="lp-nav-login" onClick={() => setShowAuth(true)}>{t('header.login')}</button>
+          )}
           <button className="lp-nav-cta" onClick={goMap}>{t('nav.explore')}</button>
         </div>
       </nav>
@@ -142,6 +170,17 @@ export default function Landing() {
           </button>
         </div>
       </footer>
+
+      <Suspense fallback={null}>
+        {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+        {showSettings && (
+          <SettingsPanel
+            user={user}
+            onClose={() => setShowSettings(false)}
+            onLogout={() => { supabase.auth.signOut(); setShowSettings(false) }}
+          />
+        )}
+      </Suspense>
     </div>
   )
 }

@@ -701,7 +701,7 @@ function Sidebar({
                   onKeyDown={e => e.key === 'Enter' && setImgExpanded(true)}>
                   <img key={activeImage.image_url} src={activeImage.image_url} alt={t('detail.cubeFace')} className="fade-img" />
                   {selected.date_observed && <div className="img-date">{formatDate(selected.date_observed)}</div>}
-                  <div className="img-expand-hint">↗ agrandir</div>
+                  <div className="img-expand-hint">↗ {t('detail.enlarge')}</div>
                 </div>
 
                 {activeImage.source === 'panoramax' && (activeImage.author || activeImage.license_label) && (
@@ -874,15 +874,13 @@ function Sidebar({
           <div className="no-selection">
             <SprayCan color="#D0CEC8" size={34} />
             <p className="no-sel-title">{t('empty.noSelection')}</p>
-            <p className="no-sel-sub">Cliquez sur un marqueur pour voir les images et les détails ici.</p>
-            <p className="no-sel-tagline">
-              GraffitiAtlas recense et documente le graffiti des villes françaises à partir
-              d'images de rue à 360° — un inventaire cartographique, pas une galerie.
-            </p>
+            <p className="no-sel-sub">{t('empty.noSelectionSub')}</p>
+            <p className="no-sel-tagline">{t('empty.tagline')}</p>
             <div className="pano-credit">
               <span>
-                Images 360° fournies par <a href="https://panoramax.ign.fr" target="_blank" rel="noreferrer">Panoramax</a> (IGN,
-                données ouvertes), scannées par Rando360. Google Street View est fourni à titre de référence.
+                {t('empty.panoCredit').split('{pano}')[0]}
+                <a href="https://panoramax.ign.fr" target="_blank" rel="noreferrer">Panoramax</a>
+                {t('empty.panoCredit').split('{pano}')[1]}
               </span>
             </div>
           </div>

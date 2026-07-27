@@ -15,7 +15,8 @@
 .lp-nav {
   position: relative; z-index: 5;
   display: flex; align-items: center; justify-content: space-between;
-  padding: 18px 28px; max-width: 1180px; margin: 0 auto;
+  padding: calc(18px + env(safe-area-inset-top, 0px)) max(28px, env(safe-area-inset-right, 0px)) 18px max(28px, env(safe-area-inset-left, 0px));
+  max-width: 1180px; margin: 0 auto;
 }
 .lp-brand { display: flex; align-items: center; gap: 10px; }
 .lp-brand-name { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 17px; letter-spacing: -0.01em; }

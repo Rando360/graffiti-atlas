@@ -45,15 +45,18 @@ button { font-family: inherit; }
 
 /* ── HEADER ──────────────────────────────────────────── */
 .app-header {
-  height: 52px;
+  height: calc(52px + env(safe-area-inset-top, 0px));
+  padding-top: env(safe-area-inset-top, 0px);
   flex-shrink: 0;
   background: var(--header-bg);
   border-bottom: 1px solid var(--header-bg);
   display: flex;
   align-items: center;
-  padding: 0 16px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
   gap: 16px;
   z-index: 50;
+  box-sizing: border-box;
 }
 
 .header-logo { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
@@ -714,11 +717,17 @@ button { font-family: inherit; }
   }
   .sheet-grip { width: 40px; height: 4px; border-radius: 2px; background: #D2CCBD; display: block; }
 
-  .detail-wrap { flex: 1; overflow-y: auto; }
+  .detail-wrap { flex: 1; overflow-y: auto; padding-bottom: env(safe-area-inset-bottom, 0px); }
 
   .stats-grid { border-radius: 0; }
 
-  .app-header { padding: 0 10px; gap: 8px; }
+  .app-header {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: 0;
+    padding-left: max(10px, env(safe-area-inset-left, 0px));
+    padding-right: max(10px, env(safe-area-inset-right, 0px));
+    gap: 8px;
+  }
   .header-center { max-width: none; }
   .header-title { display: none; }
   .btn-text { display: none; }

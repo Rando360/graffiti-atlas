@@ -346,6 +346,28 @@ const STRINGS = {
   'legal.credits': { fr: 'Crédits', en: 'Credits', es: 'Créditos', de: 'Impressum', it: 'Crediti' },
   'attr.modified': { fr: 'modifiée', en: 'modified', es: 'modificada', de: 'bearbeitet', it: 'modificata' },
   'attr.unknownAuthor': { fr: 'Auteur inconnu', en: 'Unknown author', es: 'Autor desconocido', de: 'Unbekannter Urheber', it: 'Autore sconosciuto' },
+  'detail.enlarge': { fr: 'agrandir', en: 'enlarge', es: 'ampliar', de: 'vergrößern', it: 'ingrandisci' },
+  'empty.noSelectionSub': {
+    fr: 'Cliquez sur un marqueur pour voir les images et les détails ici.',
+    en: 'Click a marker to see the images and details here.',
+    es: 'Haga clic en un marcador para ver las imágenes y los detalles aquí.',
+    de: 'Klicken Sie auf eine Markierung, um hier die Bilder und Details zu sehen.',
+    it: 'Clicca su un indicatore per vedere qui le immagini e i dettagli.',
+  },
+  'empty.tagline': {
+    fr: 'GraffitiAtlas recense et documente le graffiti des villes françaises à partir d\'images de rue à 360° — un inventaire cartographique, pas une galerie.',
+    en: 'GraffitiAtlas catalogs and documents graffiti in cities from 360° street imagery — a mapping inventory, not a gallery.',
+    es: 'GraffitiAtlas registra y documenta el grafiti de las ciudades a partir de imágenes de calle en 360° — un inventario cartográfico, no una galería.',
+    de: 'GraffitiAtlas erfasst und dokumentiert Graffiti in Städten anhand von 360°-Straßenbildern — ein kartografisches Inventar, keine Galerie.',
+    it: 'GraffitiAtlas cataloga e documenta i graffiti delle città a partire da immagini stradali a 360° — un inventario cartografico, non una galleria.',
+  },
+  'empty.panoCredit': {
+    fr: 'Images 360° fournies par {pano} (IGN, données ouvertes), scannées par Rando360. Google Street View est fourni à titre de référence.',
+    en: '360° imagery provided by {pano} (IGN, open data), scanned by Rando360. Google Street View is provided for reference.',
+    es: 'Imágenes 360° proporcionadas por {pano} (IGN, datos abiertos), escaneadas por Rando360. Google Street View se ofrece como referencia.',
+    de: '360°-Bilder bereitgestellt von {pano} (IGN, offene Daten), gescannt von Rando360. Google Street View dient als Referenz.',
+    it: 'Immagini 360° fornite da {pano} (IGN, dati aperti), scansionate da Rando360. Google Street View è fornito a titolo di riferimento.',
+  },
   'legal.prevails': {
     fr: '',
     en: 'This is a translation provided for convenience. In the event of any discrepancy, the French version of this document prevails.',

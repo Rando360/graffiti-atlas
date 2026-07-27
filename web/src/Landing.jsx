@@ -5,6 +5,8 @@ import { supabase } from './supabase'
 
 const AuthModal = lazy(() => import('./AuthModal'))
 const SettingsPanel = lazy(() => import('./SettingsPanel'))
+const UploadModal = lazy(() => import('./UploadModal'))
+const ModerationPanel = lazy(() => import('./ModerationPanel'))
 
 /* Update these as coverage grows — shown in the hero stat strip. */
 const STATS = { works: '1 500+', cities: '2' }
@@ -46,14 +48,24 @@ export default function Landing() {
   const goMap = () => navigate('/map')
 
   const [user, setUser] = useState(null)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  const [showUpload, setShowUpload] = useState(false)
+  const [showMod, setShowMod] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null))
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setUser(s?.user ?? null))
     return () => subscription.unsubscribe()
   }, [])
+
+  useEffect(() => {
+    if (!user) { setIsAdmin(false); return }
+    supabase.from('profiles').select('role').eq('id', user.id).single()
+      .then(({ data }) => setIsAdmin(data?.role === 'admin' || data?.role === 'moderator'))
+      .catch(() => setIsAdmin(false))
+  }, [user])
 
   return (
     <div className="lp">
@@ -72,6 +84,15 @@ export default function Landing() {
           >
             {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
           </select>
+          {user && (
+            <button className="lp-nav-login" onClick={() => setShowUpload(true)}>{t('header.report')}</button>
+          )}
+          {isAdmin && (
+            <button className="lp-nav-login" onClick={() => setShowMod(true)}>{t('header.moderation')}</button>
+          )}
+          {isAdmin && (
+            <a className="lp-nav-login" href="/stats">{t('header.stats')}</a>
+          )}
           <button className="lp-nav-icon" onClick={() => setShowSettings(true)} aria-label={t('header.settings')}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <circle cx="8" cy="8" r="2.4" stroke="currentColor" strokeWidth="1.4"/>
@@ -79,9 +100,12 @@ export default function Landing() {
             </svg>
           </button>
           {user ? (
-            <button className="lp-nav-login" onClick={() => setShowSettings(true)}>
-              {user.user_metadata?.full_name || user.email?.split('@')[0]}
-            </button>
+            <div className="lp-nav-user">
+              <button className="lp-nav-login" onClick={() => setShowSettings(true)}>
+                {user.user_metadata?.full_name || user.email?.split('@')[0]}
+              </button>
+              <button className="lp-nav-login" onClick={() => supabase.auth.signOut()}>{t('header.logout')}</button>
+            </div>
           ) : (
             <button className="lp-nav-login" onClick={() => setShowAuth(true)}>{t('header.login')}</button>
           )}
@@ -173,6 +197,8 @@ export default function Landing() {
 
       <Suspense fallback={null}>
         {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+        {showUpload && <UploadModal onClose={() => setShowUpload(false)} />}
+        {showMod && <ModerationPanel onClose={() => setShowMod(false)} />}
         {showSettings && (
           <SettingsPanel
             user={user}

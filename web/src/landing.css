@@ -50,6 +50,7 @@
   max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .lp-nav-login:hover { background: var(--surface); border-color: var(--muted); }
+.lp-nav-user { display: flex; align-items: center; gap: 8px; }
 
 /* ── Hero ── */
 .lp-hero {

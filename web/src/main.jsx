@@ -14,6 +14,32 @@ import StatsPage from './StatsPage.jsx'
 import CookieBanner, { getConsent } from './CookieBanner.jsx'
 import { Analytics } from '@vercel/analytics/react'
 
+// ── Deploy-staleness guard ──────────────────────────────────────────────
+// After a new deploy, chunk filenames change. A tab that was open before the
+// deploy will fail to fetch an old lazy chunk (e.g. clicking Login). Catch
+// that specific error and reload once so the user lands on the fresh build.
+// A short-lived sessionStorage flag prevents an infinite reload loop.
+function isChunkLoadError(msg) {
+  return typeof msg === 'string' && (
+    msg.includes('Failed to fetch dynamically imported module') ||
+    msg.includes('error loading dynamically imported module') ||
+    msg.includes('Importing a module script failed')
+  )
+}
+function reloadOncePerDeploy() {
+  try {
+    if (sessionStorage.getItem('ga_chunk_reloaded')) return
+    sessionStorage.setItem('ga_chunk_reloaded', '1')
+  } catch { /* private mode — reload anyway */ }
+  window.location.reload()
+}
+window.addEventListener('error', (e) => {
+  if (isChunkLoadError(e?.message)) reloadOncePerDeploy()
+})
+window.addEventListener('unhandledrejection', (e) => {
+  if (isChunkLoadError(e?.reason?.message)) reloadOncePerDeploy()
+})
+
 // ── Analytics load ONLY after the user accepts non-essential cookies ──
 if (getConsent() === 'accepted') {
   import('@sentry/react').then((Sentry) => {

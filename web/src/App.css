@@ -55,6 +55,7 @@ button { font-family: inherit; }
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
   gap: 16px;
+  position: relative;
   z-index: 50;
   box-sizing: border-box;
 }
@@ -736,7 +737,7 @@ button { font-family: inherit; }
   .header-btn.icon-btn { padding: 7px 9px; }
   .header-btn.upload { padding: 7px 10px; }
   .header-right { gap: 6px; min-width: 0; }
-  .app-header { overflow: hidden; }
+  .app-header { overflow: visible; }
   .app { overflow-x: hidden; }
   .header-center { min-width: 0; }
   .search-wrap input { min-width: 0; }

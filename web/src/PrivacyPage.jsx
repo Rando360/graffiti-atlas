@@ -64,6 +64,7 @@ const CONTENT = {
         '<strong>Votre profil et votre compte</strong> (nom, e-mail, préférences) sont supprimés.',
       ] },
       { t: 'p', html: "Si vous souhaitez la suppression complète d'une contribution déjà publiée (image comprise), vous pouvez en faire la demande à contact@graffitiatlas.io ; nous examinons ces demandes au cas par cas au titre de votre droit à l'effacement." },
+      { t: 'p', html: 'Voir aussi : <a href="/suppression-compte">Supprimer votre compte</a>.' },
       { t: 'h2', html: '5. Qui a accès à vos données (sous-traitants)' },
       { t: 'p', html: 'Nous faisons appel à des prestataires qui agissent pour notre compte :' },
       { t: 'ul', items: [
@@ -160,6 +161,7 @@ const CONTENT = {
         '<strong>Your profile and account</strong> (name, email, preferences) are deleted.',
       ] },
       { t: 'p', html: 'If you want the complete deletion of an already published contribution (including the image), you can request it at contact@graffitiatlas.io; we review these requests on a case-by-case basis under your right to erasure.' },
+      { t: 'p', html: 'See also: <a href="/suppression-compte">Delete your account</a>.' },
       { t: 'h2', html: '5. Who has access to your data (processors)' },
       { t: 'p', html: 'We use providers acting on our behalf:' },
       { t: 'ul', items: [
@@ -256,6 +258,7 @@ const CONTENT = {
         '<strong>Su perfil y su cuenta</strong> (nombre, correo electrónico, preferencias) se eliminan.',
       ] },
       { t: 'p', html: 'Si desea la eliminación completa de una contribución ya publicada (imagen incluida), puede solicitarlo en contact@graffitiatlas.io; examinamos estas solicitudes caso por caso en virtud de su derecho de supresión.' },
+      { t: 'p', html: 'Véase también: <a href="/suppression-compte">Eliminar su cuenta</a>.' },
       { t: 'h2', html: '5. Quién tiene acceso a sus datos (encargados)' },
       { t: 'p', html: 'Recurrimos a proveedores que actúan por cuenta nuestra:' },
       { t: 'ul', items: [
@@ -352,6 +355,7 @@ const CONTENT = {
         '<strong>Ihr Profil und Ihr Konto</strong> (Name, E-Mail, Präferenzen) werden gelöscht.',
       ] },
       { t: 'p', html: 'Wenn Sie die vollständige Löschung eines bereits veröffentlichten Beitrags (einschließlich des Bildes) wünschen, können Sie diese unter contact@graffitiatlas.io beantragen; wir prüfen diese Anfragen im Einzelfall im Rahmen Ihres Rechts auf Löschung.' },
+      { t: 'p', html: 'Siehe auch: <a href="/suppression-compte">Ihr Konto löschen</a>.' },
       { t: 'h2', html: '5. Wer Zugang zu Ihren Daten hat (Auftragsverarbeiter)' },
       { t: 'p', html: 'Wir setzen Anbieter ein, die in unserem Auftrag handeln:' },
       { t: 'ul', items: [
@@ -448,6 +452,7 @@ const CONTENT = {
         '<strong>Il tuo profilo e il tuo account</strong> (nome, e-mail, preferenze) vengono eliminati.',
       ] },
       { t: 'p', html: 'Se desideri l’eliminazione completa di un contributo già pubblicato (immagine compresa), puoi richiederla a contact@graffitiatlas.io; esaminiamo queste richieste caso per caso in virtù del tuo diritto alla cancellazione.' },
+      { t: 'p', html: 'Vedi anche: <a href="/suppression-compte">Eliminare il tuo account</a>.' },
       { t: 'h2', html: '5. Chi ha accesso ai tuoi dati (responsabili del trattamento)' },
       { t: 'p', html: 'Ci avvaliamo di fornitori che agiscono per nostro conto:' },
       { t: 'ul', items: [

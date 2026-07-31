@@ -14,6 +14,39 @@ import DeleteAccountPage from './DeleteAccountPage.jsx'
 import StatsPage from './StatsPage.jsx'
 import CookieBanner, { getConsent } from './CookieBanner.jsx'
 import { Analytics } from '@vercel/analytics/react'
+import { Capacitor } from '@capacitor/core'
+import { supabase } from './supabase.js'
+
+// ── Native status bar (Android/iOS) ──────────────────────────────────────
+// Draw the OS status bar as its own bar above the webview so the app header
+// never overlaps the clock/signal icons. env(safe-area-inset) is unreliable
+// in the Android webview, so we handle it natively instead.
+if (Capacitor.isNativePlatform()) {
+  import('@capacitor/status-bar').then(({ StatusBar, Style }) => {
+    StatusBar.setOverlaysWebView({ overlay: false }).catch(() => {})
+    StatusBar.setBackgroundColor({ color: '#2A2520' }).catch(() => {})
+    StatusBar.setStyle({ style: Style.Dark }).catch(() => {}) // light icons on dark bar
+  }).catch(() => {})
+
+  // ── OAuth deep-link return ──────────────────────────────────────────────
+  // After Google sign-in, Supabase redirects to our custom scheme
+  // (io.graffitiatlas.app://login-callback?code=...). Catch that, exchange
+  // the code for a session, and close the in-app browser so we land back in
+  // the app already logged in.
+  import('@capacitor/app').then(({ App: CapApp }) => {
+    CapApp.addListener('appUrlOpen', async ({ url }) => {
+      if (!url || !url.includes('login-callback')) return
+      try {
+        const code = new URL(url).searchParams.get('code')
+        if (code) await supabase.auth.exchangeCodeForSession(code)
+      } catch { /* ignore malformed callback */ }
+      try {
+        const { Browser } = await import('@capacitor/browser')
+        await Browser.close()
+      } catch { /* browser may already be closed */ }
+    })
+  }).catch(() => {})
+}
 
 // ── Deploy-staleness guard ──────────────────────────────────────────────
 // After a new deploy, chunk filenames change. A tab that was open before the

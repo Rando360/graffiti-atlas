@@ -344,6 +344,18 @@ const STRINGS = {
     de: 'Zuletzt aktualisiert:', it: 'Ultimo aggiornamento:',
   },
   'legal.credits': { fr: 'Crédits', en: 'Credits', es: 'Créditos', de: 'Impressum', it: 'Crediti' },
+  'upload.source.title': {
+    fr: 'Ajouter une photo', en: 'Add a photo', es: 'Añadir una foto',
+    de: 'Foto hinzufügen', it: 'Aggiungi una foto',
+  },
+  'upload.source.camera': {
+    fr: 'Prendre une photo', en: 'Take a photo', es: 'Hacer una foto',
+    de: 'Foto aufnehmen', it: 'Scatta una foto',
+  },
+  'upload.source.gallery': {
+    fr: 'Choisir dans la galerie', en: 'Choose from gallery', es: 'Elegir de la galería',
+    de: 'Aus Galerie wählen', it: 'Scegli dalla galleria',
+  },
   'attr.modified': { fr: 'modifiée', en: 'modified', es: 'modificada', de: 'bearbeitet', it: 'modificata' },
   'attr.unknownAuthor': { fr: 'Auteur inconnu', en: 'Unknown author', es: 'Autor desconocido', de: 'Unbekannter Urheber', it: 'Autore sconosciuto' },
   'detail.enlarge': { fr: 'agrandir', en: 'enlarge', es: 'ampliar', de: 'vergrößern', it: 'ingrandisci' },

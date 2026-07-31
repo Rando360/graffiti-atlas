@@ -1,6 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { Capacitor } from '@capacitor/core'
 import { supabase } from './supabase'
 import { t } from './i18n'
+
+// Deep link the native app registers so Google/Supabase can return to it.
+const NATIVE_REDIRECT = 'io.graffitiatlas.app://login-callback'
 
 export default function AuthModal({ onClose }) {
   const [mode, setMode] = useState('signin') // 'signin' | 'signup'
@@ -9,6 +13,15 @@ export default function AuthModal({ onClose }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
+
+  // Close the modal automatically once a session is established — this is
+  // what fires after the Google OAuth deep-link returns to the app.
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) onClose()
+    })
+    return () => subscription.unsubscribe()
+  }, [onClose])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -35,11 +48,21 @@ export default function AuthModal({ onClose }) {
 
   const handleGoogle = async () => {
     setError(null)
-    const { error } = await supabase.auth.signInWithOAuth({
+    const isNative = Capacitor.isNativePlatform()
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin }
+      options: {
+        redirectTo: isNative ? NATIVE_REDIRECT : window.location.origin,
+        // On native we open the URL ourselves in an in-app browser so we can
+        // catch the deep-link redirect back into the app.
+        skipBrowserRedirect: isNative,
+      },
     })
-    if (error) setError(error.message)
+    if (error) { setError(error.message); return }
+    if (isNative && data?.url) {
+      const { Browser } = await import('@capacitor/browser')
+      await Browser.open({ url: data.url })
+    }
   }
 
   return (

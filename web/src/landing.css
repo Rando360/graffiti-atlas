@@ -182,7 +182,9 @@
 
 /* ── Responsive ── */
 @media (max-width: 760px) {
-  .lp-nav { padding: 14px 18px; }
+  .lp-nav {
+    padding: calc(14px + env(safe-area-inset-top, 0px)) max(18px, env(safe-area-inset-right, 0px)) 14px max(18px, env(safe-area-inset-left, 0px));
+  }
   .lp-brand-name { font-size: 15px; }
   .lp-nav-right { gap: 8px; }
   .lp-nav-cta { padding: 8px 14px; font-size: 12px; }

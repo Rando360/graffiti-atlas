@@ -781,6 +781,39 @@ button { font-family: inherit; }
   box-shadow: 0 8px 40px rgba(0,0,0,0.22);
   animation: fadeScaleIn 0.22s cubic-bezier(0.16,1,0.3,1);
 }
+/* ── Photo source chooser (native camera / gallery) ── */
+.ul-source-sheet {
+  position: absolute; inset: 0; z-index: 10;
+  display: flex; align-items: flex-end; justify-content: center;
+  background: rgba(0,0,0,0.35);
+  border-radius: 16px;
+  animation: fadeScaleIn 0.18s ease;
+}
+.ul-source-card {
+  width: 100%; margin: 10px;
+  background: var(--surface); border-radius: 16px;
+  padding: 10px; display: flex; flex-direction: column; gap: 8px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+}
+.ul-source-title {
+  font-size: 13px; font-weight: 700; color: var(--text-2);
+  text-align: center; padding: 8px 0 4px; margin: 0;
+}
+.ul-source-btn {
+  display: flex; align-items: center; gap: 12px;
+  padding: 15px 16px; border-radius: 12px;
+  background: var(--bg); border: 1px solid var(--border);
+  font-size: 15px; font-weight: 600; color: var(--text);
+  font-family: inherit; cursor: pointer; transition: background 0.12s;
+}
+.ul-source-btn:active { background: var(--border); }
+.ul-source-ico { font-size: 20px; }
+.ul-source-cancel {
+  padding: 13px; border-radius: 12px; border: none;
+  background: transparent; color: var(--muted);
+  font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer;
+}
+
 .ul-close {
   position: absolute; top: 14px; right: 14px;
   background: var(--bg); border: none; border-radius: 50%;

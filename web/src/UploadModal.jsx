@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps'
+import { Capacitor } from '@capacitor/core'
 import exifr from 'exifr'
 import { supabase } from './supabase'
 import { t } from './i18n'
@@ -24,6 +25,7 @@ export default function UploadModal({ onClose, initialCenter }) {
   const [note, setNote] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
+  const [showSourceChoice, setShowSourceChoice] = useState(false)
   const fileInputRef = useRef(null)
 
   const center = initialCenter || { lat: 45.7640, lng: 4.8357 }
@@ -51,6 +53,37 @@ export default function UploadModal({ onClose, initialCenter }) {
       setGpsFromPhoto(false)
     }
   }, [center])
+
+  // Native: show our own styled chooser, then use the Camera plugin with the
+  // chosen source. Web: fall back to the file input.
+  const pickImage = () => {
+    if (!Capacitor.isNativePlatform()) {
+      fileInputRef.current?.click()
+      return
+    }
+    setShowSourceChoice(true)
+  }
+
+  const captureFrom = async (which) => {
+    setShowSourceChoice(false)
+    try {
+      const { Camera, CameraResultType, CameraSource } = await import('@capacitor/camera')
+      const photo = await Camera.getPhoto({
+        quality: 90,
+        allowEditing: false,
+        resultType: CameraResultType.Uri,
+        source: which === 'camera' ? CameraSource.Camera : CameraSource.Photos,
+      })
+      if (!photo?.webPath) return
+      const resp = await fetch(photo.webPath)
+      const blob = await resp.blob()
+      const ext = photo.format || 'jpg'
+      const f = new File([blob], `graffiti.${ext}`, { type: blob.type || 'image/jpeg' })
+      handleFile(f)
+    } catch {
+      /* user cancelled */
+    }
+  }
 
   const onDrop = (e) => {
     e.preventDefault()
@@ -119,7 +152,7 @@ export default function UploadModal({ onClose, initialCenter }) {
                 {!preview ? (
                   <div
                     className="ul-drop"
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={pickImage}
                     onDragOver={e => e.preventDefault()}
                     onDrop={onDrop}
                   >
@@ -130,7 +163,6 @@ export default function UploadModal({ onClose, initialCenter }) {
                       ref={fileInputRef}
                       type="file"
                       accept="image/*"
-                      capture="environment"
                       hidden
                       onChange={e => handleFile(e.target.files?.[0])}
                     />
@@ -225,6 +257,23 @@ export default function UploadModal({ onClose, initialCenter }) {
               </div>
             )}
           </>
+        )}
+
+        {showSourceChoice && (
+          <div className="ul-source-sheet" onClick={() => setShowSourceChoice(false)}>
+            <div className="ul-source-card" onClick={e => e.stopPropagation()}>
+              <p className="ul-source-title">{t('upload.source.title')}</p>
+              <button className="ul-source-btn" onClick={() => captureFrom('camera')}>
+                <span className="ul-source-ico">📷</span>{t('upload.source.camera')}
+              </button>
+              <button className="ul-source-btn" onClick={() => captureFrom('gallery')}>
+                <span className="ul-source-ico">🖼️</span>{t('upload.source.gallery')}
+              </button>
+              <button className="ul-source-cancel" onClick={() => setShowSourceChoice(false)}>
+                {t('common.cancel')}
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>

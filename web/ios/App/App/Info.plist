@@ -47,5 +47,24 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<!-- Camera & photo library access (required by Apple, or the app crashes on use) -->
+	<key>NSCameraUsageDescription</key>
+	<string>GraffitiAtlas uses the camera so you can photograph graffiti you want to add to the map.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>GraffitiAtlas needs access to your photos so you can choose an image of graffiti to add to the map.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>GraffitiAtlas may save photos to your library.</string>
+	<!-- OAuth deep link: io.graffitiatlas.app://login-callback (returns to the app after Google sign-in) -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>io.graffitiatlas.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>io.graffitiatlas.app</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

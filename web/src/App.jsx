@@ -3,6 +3,7 @@ import { APIProvider, Map, AdvancedMarker, useMap } from '@vis.gl/react-google-m
 const AuthModal = lazy(() => import('./AuthModal'))
 const UploadModal = lazy(() => import('./UploadModal'))
 const ModerationPanel = lazy(() => import('./ModerationPanel'))
+const ReportPanel = lazy(() => import('./ReportPanel'))
 const SettingsPanel = lazy(() => import('./SettingsPanel'))
 import { t, syncLanguageFromProfile } from './i18n'
 import { supabase } from './supabase'
@@ -252,7 +253,7 @@ function SettingsMenu() {
 /* ══════════════════════════════════════════════════════
    HEADER
    ══════════════════════════════════════════════════════ */
-function Header({ onSearchResult, user, onLoginClick, onLogout, onUploadClick, isAdmin, onModClick, onSettingsClick }) {
+function Header({ onSearchResult, user, onLoginClick, onLogout, onUploadClick, isAdmin, onModClick, onReportClick, onSettingsClick }) {
   return (
     <header className="app-header">
       <a className="header-logo" href="/" aria-label="Accueil">
@@ -275,6 +276,11 @@ function Header({ onSearchResult, user, onLoginClick, onLogout, onUploadClick, i
         {isAdmin && (
           <button className="header-btn mod" onClick={onModClick}>
             {t('header.moderation')}
+          </button>
+        )}
+        {isAdmin && (
+          <button className="header-btn mod" onClick={onReportClick}>
+            {t('header.report.data')}
           </button>
         )}
         {isAdmin && (
@@ -911,6 +917,7 @@ export default function App() {
   const [showAuth, setShowAuth] = useState(false)
   const [showUpload, setShowUpload] = useState(false)
   const [showMod, setShowMod] = useState(false)
+  const [showReport, setShowReport] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const mapCenterRef = useRef({ lat: 45.7640, lng: 4.8357 })
@@ -1103,6 +1110,7 @@ export default function App() {
         onUploadClick={() => setShowUpload(true)}
         isAdmin={isAdmin}
         onModClick={() => setShowMod(true)}
+        onReportClick={() => setShowReport(true)}
         onSettingsClick={() => setShowSettings(true)}
       />
 
@@ -1115,6 +1123,12 @@ export default function App() {
         />
       )}
       {showMod && <ModerationPanel onClose={() => setShowMod(false)} />}
+      {showReport && (
+        <ReportPanel
+          bounds={lastBoundsRef.current}
+          onClose={() => setShowReport(false)}
+        />
+      )}
       {showSettings && (
         <SettingsPanel
           user={user}

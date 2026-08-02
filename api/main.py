@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import graffiti, images, users, map, auth, uploads, moderation, contact
+from routers import graffiti, images, users, map, auth, uploads, moderation, contact, reports
 
 app = FastAPI(
     title="GraffitiAtlas API",
@@ -33,6 +33,7 @@ app.include_router(map.router, prefix="/map", tags=["map"])
 app.include_router(uploads.router, prefix="/uploads", tags=["uploads"])
 app.include_router(moderation.router, prefix="/moderation", tags=["moderation"])
 app.include_router(contact.router, prefix="/contact", tags=["contact"])
+app.include_router(reports.router, prefix="/reports", tags=["reports"])
 
 @app.get("/healthz")
 def health_check():

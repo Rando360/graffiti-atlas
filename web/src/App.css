@@ -1575,3 +1575,14 @@ a.header-btn.mod { text-decoration: none; display: inline-flex; align-items: cen
   .rp-panel { max-height: 94vh; }
   .rp-table-wrap { max-height: 30vh; }
 }
+
+/* ── Upload: surface type chips ── */
+.ul-surface-chips { display: flex; flex-wrap: wrap; gap: 7px; margin: 2px 0 6px; }
+.ul-surface-chip {
+  padding: 7px 12px; border-radius: 16px;
+  border: 1.5px solid var(--border, #E9E5DA); background: var(--surface, #fff);
+  font-size: 12.5px; font-weight: 600; color: var(--text-2, #6E675C);
+  cursor: pointer; font-family: inherit; transition: all 0.12s;
+}
+.ul-surface-chip:hover { border-color: var(--muted, #8A8378); }
+.ul-surface-chip.on { border-color: var(--accent, #E85D26); background: #E85D2618; color: var(--accent, #E85D26); }

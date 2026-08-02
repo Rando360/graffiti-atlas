@@ -15,6 +15,7 @@ export default function ModerationPanel({ onClose }) {
   const [error, setError] = useState(null)
   const [busyId, setBusyId] = useState(null)
   const [typeOverride, setTypeOverride] = useState({})
+  const [surfaceSel, setSurfaceSel] = useState({}) // pending id -> surface_type
   const [sizeSel, setSizeSel] = useState({})       // pending id -> size in m²
   const [nearbySel, setNearbySel] = useState({})   // pending id -> selected nearby graffiti
   const [zoomImg, setZoomImg] = useState(null)     // { url } enlarged for comparison  // { graffitiId: style }
@@ -74,6 +75,17 @@ export default function ModerationPanel({ onClose }) {
     { key: 'throwup', label: t('style.throwup') },
     { key: 'piece', label: t('style.piece') },
     { key: 'mural', label: t('style.mural') },
+  ]
+
+  const SURFACES = [
+    { key: 'bare_wall', label: t('surface.bare_wall') },
+    { key: 'painted_wall', label: t('surface.painted_wall') },
+    { key: 'concrete', label: t('surface.concrete') },
+    { key: 'brick', label: t('surface.brick') },
+    { key: 'metal', label: t('surface.metal') },
+    { key: 'glass', label: t('surface.glass') },
+    { key: 'wood', label: t('surface.wood') },
+    { key: 'other', label: t('surface.other') },
   ]
 
   // Preset surface estimates (m²); custom input overrides.
@@ -141,6 +153,22 @@ export default function ModerationPanel({ onClose }) {
                             key={s.key}
                             className={'mod-type' + (current === s.key ? ' on' : '')}
                             onClick={() => setTypeOverride(prev => ({ ...prev, [g.id]: s.key }))}
+                          >
+                            {s.label}
+                          </button>
+                        )
+                      })}
+                    </div>
+
+                    <div className="mod-type-row">
+                      <span className="mod-type-lbl">{t('mod.surface')}</span>
+                      {SURFACES.map(s => {
+                        const current = surfaceSel[g.id] ?? g.surface_type
+                        return (
+                          <button
+                            key={s.key}
+                            className={'mod-type' + (current === s.key ? ' on' : '')}
+                            onClick={() => setSurfaceSel(prev => ({ ...prev, [g.id]: prev[g.id] === s.key ? undefined : s.key }))}
                           >
                             {s.label}
                           </button>
@@ -234,7 +262,7 @@ export default function ModerationPanel({ onClose }) {
                             disabled={!nearbySel[g.id] || busyId === g.id}
                             onClick={() => act(
                               `${API_URL}/moderation/graffiti/${g.id}/approve-at-location`,
-                              g.id, { target_id: nearbySel[g.id].id, style: typeOverride[g.id] ?? g.style, size_m2: sizeSel[g.id] ?? null }
+                              g.id, { target_id: nearbySel[g.id].id, style: typeOverride[g.id] ?? g.style, surface_type: surfaceSel[g.id] ?? g.surface_type ?? null, size_m2: sizeSel[g.id] ?? null }
                             )}
                           >
                             {t('mod.newAtLocation')}
@@ -250,7 +278,7 @@ export default function ModerationPanel({ onClose }) {
                         onClick={() => act(
                           `${API_URL}/moderation/graffiti/${g.id}/approve`,
                           g.id,
-                          { style: typeOverride[g.id] ?? g.style, size_m2: sizeSel[g.id] ?? null }
+                          { style: typeOverride[g.id] ?? g.style, surface_type: surfaceSel[g.id] ?? g.surface_type ?? null, size_m2: sizeSel[g.id] ?? null }
                         )}
                       >
                         {t('mod.approve')}

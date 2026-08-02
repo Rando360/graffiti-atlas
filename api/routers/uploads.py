@@ -174,6 +174,7 @@ async def upload_graffiti(
     lat: float = Form(...),
     lng: float = Form(...),
     style: str = Form(None),
+    surface_type: str = Form(None),
     note: str = Form(None),
     user: dict = Depends(get_current_user),
 ):
@@ -228,10 +229,11 @@ async def upload_graffiti(
         "is_360": False,
     }).execute()
 
-    if style or note:
+    if style or surface_type or note:
         service.table("classifications").insert({
             "graffiti_id": graffiti_id,
             "style": style,
+            "surface_type": surface_type,
             "description_fr": note,
             "model_version": "user_submission",
         }).execute()

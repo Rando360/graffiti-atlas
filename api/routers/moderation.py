@@ -38,6 +38,7 @@ def _s3():
 
 class ApproveBody(BaseModel):
     style: str | None = None
+    surface_type: str | None = None
     size_m2: float | None = None  # moderator's surface estimate in m²
 
 
@@ -136,16 +137,19 @@ def approve_graffiti(graffiti_id: str, body: ApproveBody = None, user: dict = De
     if not res.data:
         raise HTTPException(status_code=404, detail="Graffiti introuvable")
 
-    # Moderator can set/correct the type at approval time.
-    if body and body.style:
+    # Moderator can set/correct the type and surface at approval time.
+    if body and (body.style or body.surface_type):
+        fields = {}
+        if body.style: fields["style"] = body.style
+        if body.surface_type: fields["surface_type"] = body.surface_type
         existing = service.table("classifications").select("id").eq("graffiti_id", graffiti_id).execute()
         if existing.data:
-            service.table("classifications").update({"style": body.style}) \
+            service.table("classifications").update(fields) \
                 .eq("graffiti_id", graffiti_id).execute()
         else:
             service.table("classifications").insert({
                 "graffiti_id": graffiti_id,
-                "style": body.style,
+                **fields,
                 "model_version": "moderator",
             }).execute()
 

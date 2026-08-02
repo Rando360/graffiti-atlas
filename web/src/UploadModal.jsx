@@ -15,6 +15,17 @@ const STYLE_OPTIONS = [
   { key: 'mural',   labelKey: 'style.mural',   hintKey: 'upload.hint.mural' },
 ]
 
+const SURFACE_OPTIONS = [
+  { key: 'bare_wall',    labelKey: 'surface.bare_wall' },
+  { key: 'painted_wall', labelKey: 'surface.painted_wall' },
+  { key: 'concrete',     labelKey: 'surface.concrete' },
+  { key: 'brick',        labelKey: 'surface.brick' },
+  { key: 'metal',        labelKey: 'surface.metal' },
+  { key: 'glass',        labelKey: 'surface.glass' },
+  { key: 'wood',         labelKey: 'surface.wood' },
+  { key: 'other',        labelKey: 'surface.other' },
+]
+
 export default function UploadModal({ onClose, initialCenter }) {
   const [step, setStep] = useState(1)          // 1 = photo+location, 2 = details, 3 = done
   const [file, setFile] = useState(null)
@@ -22,6 +33,7 @@ export default function UploadModal({ onClose, initialCenter }) {
   const [pin, setPin] = useState(null)          // { lat, lng }
   const [gpsFromPhoto, setGpsFromPhoto] = useState(false)
   const [style, setStyle] = useState(null)
+  const [surface, setSurface] = useState(null)
   const [note, setNote] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
@@ -103,6 +115,7 @@ export default function UploadModal({ onClose, initialCenter }) {
       form.append('lat', pin.lat)
       form.append('lng', pin.lng)
       if (style) form.append('style', style)
+      if (surface) form.append('surface_type', surface)
       if (note.trim()) form.append('note', note.trim())
 
       const res = await fetch(`${API_URL}/uploads/graffiti`, {
@@ -232,6 +245,20 @@ export default function UploadModal({ onClose, initialCenter }) {
                         <span className="ul-style-name">{t(o.labelKey)}</span>
                         <span className="ul-style-hint">{t(o.hintKey)}</span>
                       </span>
+                    </button>
+                  ))}
+                </div>
+
+                <label className="ul-field-label">{t('upload.surface.label')} <span>{t('upload.desc.optional')}</span></label>
+                <div className="ul-surface-chips">
+                  {SURFACE_OPTIONS.map(o => (
+                    <button
+                      key={o.key}
+                      type="button"
+                      className={'ul-surface-chip' + (surface === o.key ? ' on' : '')}
+                      onClick={() => setSurface(surface === o.key ? null : o.key)}
+                    >
+                      {t(o.labelKey)}
                     </button>
                   ))}
                 </div>

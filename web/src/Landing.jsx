@@ -8,8 +8,10 @@ const SettingsPanel = lazy(() => import('./SettingsPanel'))
 const UploadModal = lazy(() => import('./UploadModal'))
 const ModerationPanel = lazy(() => import('./ModerationPanel'))
 
-/* Update these as coverage grows — shown in the hero stat strip. */
-const STATS = { works: '1 500+', cities: '2' }
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+
+/* Fallback shown only if the live count can't be fetched. */
+const STATS_FALLBACK = { works: '1 000+', cities: '2' }
 
 /* Marker colours mirror the real map (tag / throwup / piece / mural). */
 const PIN_COLORS = ['#7B5CF5', '#1DB870', '#3B82F6', '#E85D26']
@@ -54,11 +56,28 @@ export default function Landing() {
   const [showUpload, setShowUpload] = useState(false)
   const [showMod, setShowMod] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [stats, setStats] = useState(STATS_FALLBACK)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null))
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setUser(s?.user ?? null))
     return () => subscription.unsubscribe()
+  }, [])
+
+  // Live counts for the hero stat strip — updates automatically as data grows.
+  useEffect(() => {
+    fetch(`${API_URL}/map/cities`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        const cities = d?.cities || []
+        if (!cities.length) return
+        const total = cities.reduce((sum, c) => sum + (c.count || 0), 0)
+        setStats({
+          works: total.toLocaleString(getLanguage()),
+          cities: String(cities.length),
+        })
+      })
+      .catch(() => { /* keep fallback */ })
   }, [])
 
   useEffect(() => {
@@ -146,9 +165,9 @@ export default function Landing() {
           </button>
 
           <div className="lp-stats">
-            <div><strong>{STATS.works}</strong><span>{t('landing.stat.works')}</span></div>
+            <div><strong>{stats.works}</strong><span>{t('landing.stat.works')}</span></div>
             <div className="lp-stats-div" />
-            <div><strong>{STATS.cities}</strong><span>{t('landing.stat.cities')}</span></div>
+            <div><strong>{stats.cities}</strong><span>{t('landing.stat.cities')}</span></div>
             <div className="lp-stats-div" />
             <div><strong>●</strong><span>{t('landing.stat.live')}</span></div>
           </div>

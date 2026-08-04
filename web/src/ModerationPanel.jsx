@@ -181,14 +181,25 @@ export default function ModerationPanel({ onClose }) {
                           </select>
                         </td>
                         <td>
-                          <select
-                            className="mod-tbl-select mod-tbl-size"
-                            value={sizeSel[g.id] ?? ''}
-                            onChange={e => setSizeSel(prev => ({ ...prev, [g.id]: e.target.value ? Number(e.target.value) : undefined }))}
-                          >
-                            <option value="">—</option>
-                            {SIZE_PRESETS.map(p => <option key={p.key} value={p.value}>{p.label}</option>)}
-                          </select>
+                          <div className="mod-tbl-size-cell">
+                            <select
+                              className="mod-tbl-select mod-tbl-size"
+                              value={sizeSel[g.id] ?? ''}
+                              onChange={e => setSizeSel(prev => ({ ...prev, [g.id]: e.target.value ? Number(e.target.value) : undefined }))}
+                            >
+                              <option value="">—</option>
+                              {SIZE_PRESETS.map(p => <option key={p.key} value={p.value}>{p.label}</option>)}
+                              {sizeSel[g.id] != null && !SIZE_PRESETS.some(p => p.value === sizeSel[g.id]) && (
+                                <option value={sizeSel[g.id]}>{sizeSel[g.id]} m²</option>
+                              )}
+                            </select>
+                            <button
+                              className="mod-tbl-measure"
+                              title={t('mod.measure')}
+                              disabled={!g.s3_key_thumb}
+                              onClick={() => setMeasureTarget({ id: g.id, url: `${CLOUDFRONT}/${g.s3_key_thumb.replace('thumb.jpg', 'medium.jpg')}` })}
+                            >📏</button>
+                          </div>
                         </td>
                         <td className="mod-tbl-actions">
                           <button

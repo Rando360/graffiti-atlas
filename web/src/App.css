@@ -1611,3 +1611,9 @@ a.header-btn.mod { text-decoration: none; display: inline-flex; align-items: cen
 .mod-reject.sm { background: #F2E9E5; color: #C0392B; }
 .mod-reject.sm:hover:not(:disabled) { background: #ecdcd6; }
 .mod-approve.sm:disabled, .mod-reject.sm:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Moderation table: measure button in size cell ── */
+.mod-tbl-size-cell { display: inline-flex; align-items: center; gap: 5px; }
+.mod-tbl-measure { width: 32px; height: 32px; padding: 0; border-radius: 8px; border: 1.5px solid var(--border,#E9E5DA); background: var(--surface,#fff); font-size: 15px; cursor: pointer; line-height: 1; }
+.mod-tbl-measure:hover:not(:disabled) { border-color: var(--accent,#E85D26); background: var(--bg,#FAF8F2); }
+.mod-tbl-measure:disabled { opacity: 0.4; cursor: not-allowed; }

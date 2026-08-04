@@ -82,12 +82,33 @@ def _delete_image_files(service, graffiti_id: str):
         pass
 
 
+def _pending_ids_by_source(service, *, community: bool):
+    """
+    IDs of graffiti awaiting review, split by origin.
+    community=True  → user uploads (source 'community')
+    community=False → everything else (bulk YOLO scans imported from Panoramax etc.)
+    Returns a set of ids so we can partition the RPC output without depending on
+    the RPC returning a `source` column.
+    """
+    q = service.table("graffiti").select("id").eq("status", "pending_review")
+    q = q.eq("source", "community") if community else q.neq("source", "community")
+    res = q.execute()
+    return {r["id"] for r in (res.data or [])}
+
+
 @router.get("/pending")
 def list_pending(user: dict = Depends(require_admin)):
-    """Graffiti submissions awaiting review, newest first."""
+    """
+    Community uploads awaiting review, newest first.
+
+    Only user-submitted (source 'community') photos are returned here so the
+    per-item nearby-duplicate lookup below never runs across thousands of
+    bulk-imported scans. Bulk YOLO scans go through /pending-fast instead.
+    """
     service = _service()
     rows = service.rpc("get_pending_graffiti", {}).execute()
-    pending = rows.data or []
+    community_ids = _pending_ids_by_source(service, community=True)
+    pending = [p for p in (rows.data or []) if p.get("id") in community_ids]
     # Comparison data: approved graffiti within 10 m of each pending upload.
     for p in pending:
         lat, lng = p.get("lat"), p.get("lng")
@@ -101,6 +122,50 @@ def list_pending(user: dict = Depends(require_admin)):
         except Exception:
             p["nearby"] = []
     return {"pending": pending}
+
+
+@router.get("/pending-fast")
+def list_pending_fast(
+    limit: int = 100,
+    offset: int = 0,
+    include_community: bool = False,
+    user: dict = Depends(require_admin),
+):
+    """
+    Lightweight, paginated pending list for bulk moderation (the table view).
+
+    Built for self-imported YOLO scans, which are already de-duplicated by the
+    pipeline and not yet in the DB — so this endpoint deliberately does NOT run
+    the per-item nearby-duplicate lookup that /pending does. That loop is the
+    thing that makes the panel crawl on a large batch.
+
+    By default it returns only bulk scans (source != 'community'); set
+    include_community=true to see every pending item. Pagination is offset-based;
+    because approving/rejecting removes items from the pending pool, re-fetching
+    offset 0 simply yields the next un-moderated batch.
+    """
+    limit = max(1, min(limit, 500))
+    offset = max(0, offset)
+
+    service = _service()
+    rows = service.rpc("get_pending_graffiti", {}).execute().data or []
+
+    if not include_community:
+        bulk_ids = _pending_ids_by_source(service, community=False)
+        rows = [r for r in rows if r.get("id") in bulk_ids]
+
+    total = len(rows)
+    page = rows[offset:offset + limit]
+    for p in page:
+        p["nearby"] = []   # never computed here — bulk scans are pre-de-duped
+
+    return {
+        "pending": page,
+        "total": total,
+        "offset": offset,
+        "limit": limit,
+        "has_more": offset + len(page) < total,
+    }
 
 
 @router.get("/removals")

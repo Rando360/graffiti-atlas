@@ -12,6 +12,11 @@ export default function ModerationPanel({ onClose }) {
   const [viewMode, setViewMode] = useState('cards') // 'cards' | 'table'
   const [pending, setPending] = useState([])
   const [removals, setRemovals] = useState([])
+  const [bulk, setBulk] = useState([])            // self-imported YOLO scans (table view)
+  const [bulkTotal, setBulkTotal] = useState(0)
+  const [bulkLimit, setBulkLimit] = useState(100) // how many of the pending pool to load
+  const [bulkLoading, setBulkLoading] = useState(false)
+  const [bulkLoaded, setBulkLoaded] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [busyId, setBusyId] = useState(null)
@@ -51,6 +56,31 @@ export default function ModerationPanel({ onClose }) {
 
   useEffect(() => { load() }, [load])
 
+  // Bulk pending list (self-imported YOLO scans) for the fast table view.
+  // Skips the per-item nearby lookup and paginates server-side.
+  const loadBulk = useCallback(async (limit = 100) => {
+    setBulkLoading(true); setError(null)
+    try {
+      const headers = await authHeader()
+      const res = await fetch(`${API_URL}/moderation/pending-fast?limit=${limit}&offset=0`, { headers })
+      if (res.status === 403) throw new Error(t('mod.err.forbidden'))
+      const j = await res.json()
+      setBulk(j.pending || [])
+      setBulkTotal(j.total || 0)
+      setBulkLimit(limit)
+      setBulkLoaded(true)
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setBulkLoading(false)
+    }
+  }, [authHeader])
+
+  // Load bulk scans the first time the table view is opened.
+  useEffect(() => {
+    if (viewMode === 'table' && !bulkLoaded && !bulkLoading) loadBulk(100)
+  }, [viewMode, bulkLoaded, bulkLoading, loadBulk])
+
   const act = async (url, id, body) => {
     setBusyId(id)
     try {
@@ -64,6 +94,8 @@ export default function ModerationPanel({ onClose }) {
       if (!res.ok) throw new Error(t('mod.err.failed'))
       setPending(p => p.filter(x => x.id !== id))
       setRemovals(r => r.filter(x => x.id !== id))
+      setBulk(b => b.filter(x => x.id !== id))
+      setBulkTotal(n => (n > 0 ? n - 1 : 0))
     } catch (e) {
       setError(e.message)
     } finally {
@@ -127,10 +159,28 @@ export default function ModerationPanel({ onClose }) {
           {loading ? (
             <div className="mod-empty">{t('common.loading')}</div>
           ) : tab === 'uploads' ? (
-            pending.length === 0 ? (
-              <div className="mod-empty">{t('mod.empty.uploads')}</div>
-            ) : viewMode === 'table' ? (
+            viewMode === 'table' ? (
+              bulkLoading && bulk.length === 0 ? (
+                <div className="mod-empty">{t('common.loading')}</div>
+              ) : bulk.length === 0 ? (
+                <div className="mod-empty">{t('mod.empty.bulk')}</div>
+              ) : (
               <div className="mod-table-wrap">
+                <div className="mod-tbl-bar">
+                  <span className="mod-tbl-count">{bulk.length} / {bulkTotal} {t('mod.bulk.pending')}</span>
+                  {bulk.length < bulkTotal && (
+                    <button
+                      className="mod-tbl-loadmore"
+                      disabled={bulkLoading}
+                      onClick={() => loadBulk(bulkLimit + 100)}
+                    >
+                      {bulkLoading ? t('common.loading') : t('mod.bulk.loadmore')}
+                    </button>
+                  )}
+                  <button className="mod-tbl-loadmore" disabled={bulkLoading} onClick={() => loadBulk(bulkLimit)}>
+                    {t('mod.bulk.refresh')}
+                  </button>
+                </div>
                 <table className="mod-table">
                   <thead>
                     <tr>
@@ -143,7 +193,7 @@ export default function ModerationPanel({ onClose }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {pending.map(g => (
+                    {bulk.map(g => (
                       <tr key={g.id} className={busyId === g.id ? 'busy' : ''}>
                         <td>
                           {g.s3_key_thumb ? (
@@ -226,6 +276,9 @@ export default function ModerationPanel({ onClose }) {
                   </tbody>
                 </table>
               </div>
+              )
+            ) : pending.length === 0 ? (
+              <div className="mod-empty">{t('mod.empty.uploads')}</div>
             ) : (
               pending.map(g => (
                 <div key={g.id} className="mod-card">

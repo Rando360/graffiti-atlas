@@ -9,6 +9,7 @@ const CLOUDFRONT = 'https://d36hw3x1088tvv.cloudfront.net'
 
 export default function ModerationPanel({ onClose }) {
   const [tab, setTab] = useState('uploads')      // 'uploads' | 'removals'
+  const [viewMode, setViewMode] = useState('cards') // 'cards' | 'table'
   const [pending, setPending] = useState([])
   const [removals, setRemovals] = useState([])
   const [loading, setLoading] = useState(true)
@@ -113,6 +114,12 @@ export default function ModerationPanel({ onClose }) {
           <button className={tab === 'removals' ? 'on' : ''} onClick={() => setTab('removals')}>
             {t('mod.tab.removals')} {removals.length > 0 && <span className="mod-badge">{removals.length}</span>}
           </button>
+          {tab === 'uploads' && (
+            <div className="mod-viewtoggle">
+              <button className={viewMode === 'cards' ? 'on' : ''} onClick={() => setViewMode('cards')}>{t('mod.view.cards')}</button>
+              <button className={viewMode === 'table' ? 'on' : ''} onClick={() => setViewMode('table')}>{t('mod.view.table')}</button>
+            </div>
+          )}
         </div>
 
         <div className="mod-body">
@@ -122,6 +129,92 @@ export default function ModerationPanel({ onClose }) {
           ) : tab === 'uploads' ? (
             pending.length === 0 ? (
               <div className="mod-empty">{t('mod.empty.uploads')}</div>
+            ) : viewMode === 'table' ? (
+              <div className="mod-table-wrap">
+                <table className="mod-table">
+                  <thead>
+                    <tr>
+                      <th>{t('mod.col.photo')}</th>
+                      <th>{t('report.col.city')}</th>
+                      <th>{t('mod.type')}</th>
+                      <th>{t('mod.surface')}</th>
+                      <th>m²</th>
+                      <th>{t('mod.col.actions')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pending.map(g => (
+                      <tr key={g.id} className={busyId === g.id ? 'busy' : ''}>
+                        <td>
+                          {g.s3_key_thumb ? (
+                            <img
+                              className="mod-tbl-thumb"
+                              src={`${CLOUDFRONT}/${g.s3_key_thumb}`}
+                              alt=""
+                              loading="lazy"
+                              onClick={() => setZoomImg({ url: `${CLOUDFRONT}/${g.s3_key_thumb.replace('thumb.jpg', 'medium.jpg')}` })}
+                            />
+                          ) : <span className="mod-tbl-noimg">—</span>}
+                        </td>
+                        <td>
+                          <div className="mod-tbl-city">{g.city || t('mod.unknownCity')}</div>
+                          <div className="mod-tbl-coords">{g.lat?.toFixed(4)}, {g.lng?.toFixed(4)}</div>
+                        </td>
+                        <td>
+                          <select
+                            className="mod-tbl-select"
+                            value={typeOverride[g.id] ?? g.style ?? ''}
+                            onChange={e => setTypeOverride(prev => ({ ...prev, [g.id]: e.target.value || null }))}
+                          >
+                            <option value="">—</option>
+                            {STYLES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
+                          </select>
+                        </td>
+                        <td>
+                          <select
+                            className="mod-tbl-select"
+                            value={surfaceSel[g.id] ?? g.surface_type ?? ''}
+                            onChange={e => setSurfaceSel(prev => ({ ...prev, [g.id]: e.target.value || undefined }))}
+                          >
+                            <option value="">—</option>
+                            {SURFACES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
+                          </select>
+                        </td>
+                        <td>
+                          <select
+                            className="mod-tbl-select mod-tbl-size"
+                            value={sizeSel[g.id] ?? ''}
+                            onChange={e => setSizeSel(prev => ({ ...prev, [g.id]: e.target.value ? Number(e.target.value) : undefined }))}
+                          >
+                            <option value="">—</option>
+                            {SIZE_PRESETS.map(p => <option key={p.key} value={p.value}>{p.label}</option>)}
+                          </select>
+                        </td>
+                        <td className="mod-tbl-actions">
+                          <button
+                            className="mod-approve sm"
+                            disabled={busyId === g.id}
+                            onClick={() => act(
+                              `${API_URL}/moderation/graffiti/${g.id}/approve`,
+                              g.id,
+                              { style: typeOverride[g.id] ?? g.style, surface_type: surfaceSel[g.id] ?? g.surface_type ?? null, size_m2: sizeSel[g.id] ?? null }
+                            )}
+                          >
+                            ✓
+                          </button>
+                          <button
+                            className="mod-reject sm"
+                            disabled={busyId === g.id}
+                            onClick={() => act(`${API_URL}/moderation/graffiti/${g.id}/reject`, g.id)}
+                          >
+                            ✕
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             ) : (
               pending.map(g => (
                 <div key={g.id} className="mod-card">

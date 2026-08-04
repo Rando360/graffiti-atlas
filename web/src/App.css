@@ -920,14 +920,14 @@ button { font-family: inherit; }
   backdrop-filter: blur(4px);
   z-index: 300;
   display: flex; align-items: center; justify-content: center;
-  padding: 20px;
+  padding: 12px;
   animation: fadeIn 0.2s ease;
 }
 .mod-panel {
   background: var(--surface);
   border-radius: 16px;
-  width: 560px; max-width: 100%;
-  max-height: 88vh;
+  width: 1600px; max-width: 97vw;
+  height: 94vh; max-height: 94vh;
   display: flex; flex-direction: column;
   box-shadow: 0 8px 40px rgba(0,0,0,0.22);
   animation: fadeScaleIn 0.22s cubic-bezier(0.16,1,0.3,1);

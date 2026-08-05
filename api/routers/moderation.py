@@ -204,6 +204,47 @@ def approve_graffiti(graffiti_id: str, body: ApproveBody = None, user: dict = De
     return {"status": "approved", "id": graffiti_id, "style": body.style if body else None}
 
 
+@router.post("/image/{image_id}/reject")
+def reject_image(image_id: str, user: dict = Depends(require_admin)):
+    """
+    Reject a single photo (e.g. a false positive on one side) while keeping the
+    marker and its other photo(s). Deletes the image's S3 files and its row.
+    If it was the marker's only photo, the marker is removed too (nothing left
+    to show).
+    """
+    service = _service()
+    row = service.table("images").select(
+        "graffiti_id, s3_key_thumb, s3_key_medium, s3_key_full, s3_key_raw"
+    ).eq("id", image_id).execute()
+    if not row.data:
+        raise HTTPException(status_code=404, detail="Image introuvable")
+    img = row.data[0]
+    graffiti_id = img["graffiti_id"]
+
+    # delete this image's S3 files (best-effort)
+    keys = [img[k] for k in ("s3_key_thumb", "s3_key_medium", "s3_key_full", "s3_key_raw") if img.get(k)]
+    if keys:
+        try:
+            _s3().delete_objects(Bucket=MEDIA_BUCKET,
+                                 Delete={"Objects": [{"Key": k} for k in set(keys)]})
+        except Exception:
+            pass
+
+    service.table("images").delete().eq("id", image_id).execute()
+
+    # if that was the last photo, remove the (now photoless) marker
+    remaining = service.table("images").select("id", count="exact") \
+        .eq("graffiti_id", graffiti_id).limit(1).execute()
+    marker_deleted = False
+    if (remaining.count or 0) == 0:
+        service.table("classifications").delete().eq("graffiti_id", graffiti_id).execute()
+        service.table("graffiti").delete().eq("id", graffiti_id).execute()
+        marker_deleted = True
+
+    return {"status": "deleted", "image_id": image_id,
+            "graffiti_id": graffiti_id, "marker_deleted": marker_deleted}
+
+
 class TargetBody(BaseModel):
     target_id: str
     style: str | None = None

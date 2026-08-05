@@ -105,6 +105,29 @@ export default function ModerationPanel({ onClose }) {
     }
   }
 
+  // Reject a single photo (keep the marker + its other photo). If it was the
+  // last photo, the marker goes too.
+  const rejectPhoto = async (imageId, gid) => {
+    setBusyId(gid); setError(null)
+    try {
+      const headers = await authHeader()
+      const res = await fetch(`${API_URL}/moderation/image/${imageId}/reject`, { method: 'POST', headers })
+      if (!res.ok) throw new Error(t('mod.err.failed'))
+      const j = await res.json()
+      setBulk(b => b.flatMap(x => {
+        if (x.id !== gid) return [x]
+        const imgs = (x.images || []).filter(im => im.id !== imageId)
+        if (j.marker_deleted || imgs.length === 0) return []
+        return [{ ...x, images: imgs, s3_key_thumb: imgs[0]?.key ?? x.s3_key_thumb }]
+      }))
+      if (j.marker_deleted) setBulkTotal(n => (n > 0 ? n - 1 : 0))
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setBusyId(null)
+    }
+  }
+
   // ── Table multi-select ──────────────────────────────────────────────────
   const toggleRow = (id) => setSelected(s => {
     const n = new Set(s)
@@ -286,15 +309,39 @@ export default function ModerationPanel({ onClose }) {
                           />
                         </td>
                         <td>
-                          {g.s3_key_thumb ? (
-                            <img
-                              className="mod-tbl-thumb"
-                              src={`${CLOUDFRONT}/${g.s3_key_thumb}`}
-                              alt=""
-                              loading="lazy"
-                              onClick={() => setZoomImg({ url: `${CLOUDFRONT}/${g.s3_key_thumb.replace('thumb.jpg', 'medium.jpg')}` })}
-                            />
-                          ) : <span className="mod-tbl-noimg">—</span>}
+                          {(() => {
+                            const imgs = (g.images && g.images.length)
+                              ? g.images
+                              : (g.s3_key_thumb ? [{ id: null, key: g.s3_key_thumb }] : [])
+                            if (!imgs.length) return <span className="mod-tbl-noimg">—</span>
+                            return (
+                              <div className="mod-tbl-photos">
+                                {imgs.map((im, ix) => (
+                                  <div className="mod-tbl-photo" key={im.id || ix}>
+                                    <img
+                                      className="mod-tbl-thumb"
+                                      src={`${CLOUDFRONT}/${im.key}`}
+                                      alt=""
+                                      loading="lazy"
+                                      onClick={() => setZoomImg({
+                                        url: `${CLOUDFRONT}/${im.key}`,
+                                        imageId: (im.id && imgs.length > 1) ? im.id : null,
+                                        graffitiId: g.id,
+                                      })}
+                                    />
+                                    {im.id && imgs.length > 1 && (
+                                      <button
+                                        className="mod-tbl-photo-x"
+                                        title={t('mod.rejectPhoto')}
+                                        disabled={busyId === g.id}
+                                        onClick={() => rejectPhoto(im.id, g.id)}
+                                      >✕</button>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            )
+                          })()}
                         </td>
                         <td>
                           <div className="mod-tbl-city">{g.city || t('mod.unknownCity')}</div>
@@ -597,6 +644,18 @@ export default function ModerationPanel({ onClose }) {
         <div className="mod-zoom" onClick={() => setZoomImg(null)}>
           <img src={zoomImg.url} alt="" onClick={(e) => e.stopPropagation()} />
           <button className="mod-zoom-close" onClick={() => setZoomImg(null)} aria-label={t('common.close')}>✕</button>
+          {zoomImg.imageId && (
+            <button
+              className="mod-zoom-reject"
+              onClick={(e) => {
+                e.stopPropagation()
+                rejectPhoto(zoomImg.imageId, zoomImg.graffitiId)
+                setZoomImg(null)
+              }}
+            >
+              {t('mod.rejectPhoto')}
+            </button>
+          )}
         </div>
       )}
       {measureTarget && (

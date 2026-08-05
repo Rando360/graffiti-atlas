@@ -404,6 +404,7 @@ const STRINGS = {
   'mod.bulk.clearSel': { fr: 'Effacer la sélection', en: 'Clear selection', es: 'Borrar selección', de: 'Auswahl aufheben', it: 'Cancella selezione' },
   'mod.bulk.selectAll': { fr: 'Tout sélectionner', en: 'Select all', es: 'Seleccionar todo', de: 'Alle auswählen', it: 'Seleziona tutto' },
   'mod.bulk.selectRow': { fr: 'Sélectionner la ligne', en: 'Select row', es: 'Seleccionar fila', de: 'Zeile auswählen', it: 'Seleziona riga' },
+  'mod.rejectPhoto': { fr: 'Rejeter cette photo (garder le marqueur)', en: 'Reject this photo (keep the marker)', es: 'Rechazar esta foto (mantener el marcador)', de: 'Dieses Foto ablehnen (Marker behalten)', it: 'Rifiuta questa foto (mantieni il segnaposto)' },
   'mod.bulk.confirmReject': {
     fr: 'Rejeter toutes les lignes sélectionnées ? Cette action est définitive.',
     en: 'Reject all selected rows? This cannot be undone.',

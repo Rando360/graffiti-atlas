@@ -1598,6 +1598,15 @@ a.header-btn.mod { text-decoration: none; display: inline-flex; align-items: cen
 .mod-tbl-loadmore { margin-left: 0; border: 1.5px solid var(--border,#E9E5DA); background: var(--surface,#fff); color: var(--text,#2A2520); padding: 6px 14px; border-radius: 8px; font-size: 12.5px; font-weight: 600; font-family: inherit; cursor: pointer; }
 .mod-tbl-loadmore:disabled { opacity: 0.5; cursor: default; }
 .mod-tbl-loadmore:hover:not(:disabled) { border-color: var(--accent,#E85D26); color: var(--accent,#E85D26); }
+.mod-tbl-checkcol { width: 34px; text-align: center; }
+.mod-tbl-checkcol input { width: 17px; height: 17px; cursor: pointer; accent-color: var(--accent,#E85D26); }
+.mod-table tr.sel { background: rgba(232,93,38,0.07); }
+.mod-tbl-selcount { font-size: 12.5px; font-weight: 700; color: var(--accent,#E85D26); }
+.mod-tbl-bulk { border: none; padding: 6px 14px; border-radius: 8px; font-size: 12.5px; font-weight: 700; font-family: inherit; cursor: pointer; color: #fff; }
+.mod-tbl-bulk:disabled { opacity: 0.55; cursor: default; }
+.mod-tbl-bulk.approve { background: #1DB870; }
+.mod-tbl-bulk.reject { background: #E4572E; }
+.mod-tbl-bulk:hover:not(:disabled) { filter: brightness(1.05); }
 .mod-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .mod-table th { text-align: left; padding: 8px 10px; background: var(--bg,#FAF8F2); font-weight: 600; color: var(--text,#2A2520); position: sticky; top: 0; border-bottom: 1px solid var(--border,#E9E5DA); white-space: nowrap; z-index: 1; }
 .mod-table td { padding: 6px 10px; border-bottom: 1px solid var(--border,#E9E5DA); vertical-align: middle; }

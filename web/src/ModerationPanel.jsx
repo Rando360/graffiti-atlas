@@ -28,6 +28,8 @@ export default function ModerationPanel({ onClose }) {
   const [blurTarget, setBlurTarget] = useState(null)    // { id, url }
   const [measureTarget, setMeasureTarget] = useState(null)  // { id, url }
   const [bust, setBust] = useState({})                  // cache-buster per id
+  const [selected, setSelected] = useState(() => new Set()) // table: checked row ids
+  const [bulkBusy, setBulkBusy] = useState(false)          // bulk approve/reject running
 
   const authHeader = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession()
@@ -103,6 +105,58 @@ export default function ModerationPanel({ onClose }) {
     }
   }
 
+  // ── Table multi-select ──────────────────────────────────────────────────
+  const toggleRow = (id) => setSelected(s => {
+    const n = new Set(s)
+    n.has(id) ? n.delete(id) : n.add(id)
+    return n
+  })
+  const allPageSelected = bulk.length > 0 && bulk.every(g => selected.has(g.id))
+  const toggleAllPage = () => setSelected(s => {
+    const n = new Set(s)
+    if (bulk.every(g => n.has(g.id))) bulk.forEach(g => n.delete(g.id))
+    else bulk.forEach(g => n.add(g.id))
+    return n
+  })
+  const selectedCount = bulk.reduce((a, g) => a + (selected.has(g.id) ? 1 : 0), 0)
+
+  // Approve or reject every selected row (limited concurrency), applying each
+  // row's own type/surface/size for approvals.
+  const runBulk = async (kind) => {
+    const ids = bulk.filter(g => selected.has(g.id)).map(g => g.id)
+    if (!ids.length || bulkBusy) return
+    if (kind === 'reject' && !window.confirm(t('mod.bulk.confirmReject'))) return
+    setBulkBusy(true); setError(null)
+    const headers = await authHeader()
+    let i = 0
+    const worker = async () => {
+      while (i < ids.length) {
+        const id = ids[i++]
+        const g = bulk.find(x => x.id === id)
+        try {
+          let url = `${API_URL}/moderation/graffiti/${id}/${kind === 'approve' ? 'approve' : 'reject'}`
+          const opts = { method: 'POST', headers }
+          if (kind === 'approve') {
+            opts.headers = { ...headers, 'Content-Type': 'application/json' }
+            opts.body = JSON.stringify({
+              style: typeOverride[id] ?? g?.style,
+              surface_type: surfaceSel[id] ?? g?.surface_type ?? null,
+              size_m2: sizeSel[id] ?? null,
+            })
+          }
+          const res = await fetch(url, opts)
+          if (res.ok) {
+            setBulk(b => b.filter(x => x.id !== id))
+            setBulkTotal(n => (n > 0 ? n - 1 : 0))
+            setSelected(s => { const n = new Set(s); n.delete(id); return n })
+          }
+        } catch { /* keep going */ }
+      }
+    }
+    await Promise.all(Array.from({ length: Math.min(6, ids.length) }, worker))
+    setBulkBusy(false)
+  }
+
   const STYLES = [
     { key: 'tag', label: t('style.tag') },
     { key: 'throwup', label: t('style.throwup') },
@@ -168,22 +222,50 @@ export default function ModerationPanel({ onClose }) {
               <div className="mod-table-wrap">
                 <div className="mod-tbl-bar">
                   <span className="mod-tbl-count">{bulk.length} / {bulkTotal} {t('mod.bulk.pending')}</span>
-                  {bulk.length < bulkTotal && (
-                    <button
-                      className="mod-tbl-loadmore"
-                      disabled={bulkLoading}
-                      onClick={() => loadBulk(bulkLimit + 100)}
-                    >
-                      {bulkLoading ? t('common.loading') : t('mod.bulk.loadmore')}
-                    </button>
+                  {selectedCount > 0 ? (
+                    <>
+                      <span className="mod-tbl-selcount">{selectedCount} {t('mod.bulk.selected')}</span>
+                      <button className="mod-tbl-bulk approve" disabled={bulkBusy}
+                        onClick={() => runBulk('approve')}>
+                        {bulkBusy ? t('common.loading') : `${t('mod.approve')} (${selectedCount})`}
+                      </button>
+                      <button className="mod-tbl-bulk reject" disabled={bulkBusy}
+                        onClick={() => runBulk('reject')}>
+                        {t('mod.reject')} ({selectedCount})
+                      </button>
+                      <button className="mod-tbl-loadmore" disabled={bulkBusy}
+                        onClick={() => setSelected(new Set())}>
+                        {t('mod.bulk.clearSel')}
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      {bulk.length < bulkTotal && (
+                        <button
+                          className="mod-tbl-loadmore"
+                          disabled={bulkLoading}
+                          onClick={() => loadBulk(bulkLimit + 100)}
+                        >
+                          {bulkLoading ? t('common.loading') : t('mod.bulk.loadmore')}
+                        </button>
+                      )}
+                      <button className="mod-tbl-loadmore" disabled={bulkLoading} onClick={() => loadBulk(bulkLimit)}>
+                        {t('mod.bulk.refresh')}
+                      </button>
+                    </>
                   )}
-                  <button className="mod-tbl-loadmore" disabled={bulkLoading} onClick={() => loadBulk(bulkLimit)}>
-                    {t('mod.bulk.refresh')}
-                  </button>
                 </div>
                 <table className="mod-table">
                   <thead>
                     <tr>
+                      <th className="mod-tbl-checkcol">
+                        <input
+                          type="checkbox"
+                          checked={allPageSelected}
+                          onChange={toggleAllPage}
+                          aria-label={t('mod.bulk.selectAll')}
+                        />
+                      </th>
                       <th>{t('mod.col.photo')}</th>
                       <th>{t('report.col.city')}</th>
                       <th>{t('mod.type')}</th>
@@ -194,7 +276,15 @@ export default function ModerationPanel({ onClose }) {
                   </thead>
                   <tbody>
                     {bulk.map(g => (
-                      <tr key={g.id} className={busyId === g.id ? 'busy' : ''}>
+                      <tr key={g.id} className={(busyId === g.id ? 'busy' : '') + (selected.has(g.id) ? ' sel' : '')}>
+                        <td className="mod-tbl-checkcol">
+                          <input
+                            type="checkbox"
+                            checked={selected.has(g.id)}
+                            onChange={() => toggleRow(g.id)}
+                            aria-label={t('mod.bulk.selectRow')}
+                          />
+                        </td>
                         <td>
                           {g.s3_key_thumb ? (
                             <img

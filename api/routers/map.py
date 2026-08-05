@@ -105,19 +105,14 @@ def get_location_timeline(location_id: str):
 @router.get("/cities")
 def get_cities():
     supabase = get_supabase()
-    result = supabase.table("graffiti") \
-        .select("city") \
-        .eq("status", "approved") \
-        .execute()
+    # Count in SQL (GROUP BY) so the total isn't capped at PostgREST's 1000-row
+    # limit — a plain select of every approved row would silently stop at 1000.
+    result = supabase.rpc("get_city_counts", {}).execute()
 
-    counts = {}
-    for r in result.data:
-        city = r["city"]
-        counts[city] = counts.get(city, 0) + 1
-
-    return {
-        "cities": [
-            {"name": city, "count": count}
-            for city, count in sorted(counts.items())
-        ]
-    }
+    cities = [
+        {"name": r["city"], "count": r["count"]}
+        for r in (result.data or [])
+        if r.get("city")
+    ]
+    cities.sort(key=lambda c: c["name"])
+    return {"cities": cities}

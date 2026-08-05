@@ -1611,7 +1611,7 @@ a.header-btn.mod { text-decoration: none; display: inline-flex; align-items: cen
 .mod-table th { text-align: left; padding: 8px 10px; background: var(--bg,#FAF8F2); font-weight: 600; color: var(--text,#2A2520); position: sticky; top: 0; border-bottom: 1px solid var(--border,#E9E5DA); white-space: nowrap; z-index: 1; }
 .mod-table td { padding: 6px 10px; border-bottom: 1px solid var(--border,#E9E5DA); vertical-align: middle; }
 .mod-table tr.busy { opacity: 0.45; }
-.mod-tbl-thumb { width: 64px; height: 48px; object-fit: cover; border-radius: 6px; cursor: zoom-in; display: block; background: #EDEAE2; }
+.mod-tbl-thumb { width: 160px; height: 120px; object-fit: cover; border-radius: 6px; cursor: zoom-in; display: block; background: #EDEAE2; }
 .mod-tbl-noimg { color: var(--muted,#8A8378); }
 .mod-tbl-city { font-weight: 600; color: var(--text,#2A2520); }
 .mod-tbl-coords { font-size: 11px; color: var(--muted,#8A8378); font-family: 'Space Mono', monospace; }

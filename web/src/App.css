@@ -1613,6 +1613,8 @@ a.header-btn.mod { text-decoration: none; display: inline-flex; align-items: cen
 .mod-table tr.busy { opacity: 0.45; }
 .mod-tbl-thumb { width: 320px; height: 240px; object-fit: cover; border-radius: 6px; cursor: zoom-in; display: block; background: #EDEAE2; }
 .mod-tbl-photos { display: flex; flex-direction: column; gap: 6px; }
+.mod-table td { vertical-align: top; }
+.mod-table tr.mk-first > td { border-top: 2px solid var(--border,#E9E5DA); }
 .mod-tbl-photo { position: relative; width: 320px; }
 .mod-tbl-photo-x { position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; border: none; border-radius: 50%; background: rgba(228,87,46,0.92); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
 .mod-tbl-photo-x:hover:not(:disabled) { background: #E4572E; }

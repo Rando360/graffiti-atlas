@@ -55,15 +55,21 @@ def get_graffiti_images(graffiti_id: str):
         .execute()
 
     classifications = supabase.table("classifications") \
-        .select("id, style, size_m2, surface_type, description_fr") \
+        .select("id, image_id, style, size_m2, surface_type, description_fr") \
         .eq("graffiti_id", graffiti_id) \
         .execute()
 
+    # Match each photo to its own classification (per-photo markers). Any
+    # classification without an image_id is the marker-level fallback (older
+    # single-classification data).
+    by_image = {c["image_id"]: c for c in classifications.data if c.get("image_id")}
+    marker_level = next((c for c in classifications.data if not c.get("image_id")), {})
+
     result = []
-    for i, img in enumerate(images.data):
+    for img in images.data:
         s3_key = img.get("s3_key_full", "")
         image_url = f"{CLOUDFRONT}/{s3_key}" if s3_key else None
-        classification = classifications.data[i] if i < len(classifications.data) else {}
+        classification = by_image.get(img["id"], marker_level)
 
         result.append({
             "image_url": image_url,

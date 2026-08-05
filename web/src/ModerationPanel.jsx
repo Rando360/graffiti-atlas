@@ -128,6 +128,27 @@ export default function ModerationPanel({ onClose }) {
     }
   }
 
+  // Build the approve payload for a marker: per-photo classifications when it
+  // has real image ids, else a single marker-level classification.
+  const approveBodyFor = (g) => {
+    const imgs = (g.images && g.images.length) ? g.images : []
+    const photos = imgs.filter(im => im.id).map(im => ({
+      image_id: im.id,
+      style: typeOverride[im.id] ?? im.style ?? null,
+      surface_type: surfaceSel[im.id] ?? im.surface_type ?? null,
+      size_m2: sizeSel[im.id] ?? im.size_m2 ?? null,
+    }))
+    if (photos.length) return { photos }
+    return {
+      style: typeOverride[g.id] ?? g.style ?? null,
+      surface_type: surfaceSel[g.id] ?? g.surface_type ?? null,
+      size_m2: sizeSel[g.id] ?? null,
+    }
+  }
+
+  const approveMarker = (g) =>
+    act(`${API_URL}/moderation/graffiti/${g.id}/approve`, g.id, approveBodyFor(g))
+
   // ── Table multi-select ──────────────────────────────────────────────────
   const toggleRow = (id) => setSelected(s => {
     const n = new Set(s)
@@ -161,11 +182,7 @@ export default function ModerationPanel({ onClose }) {
           const opts = { method: 'POST', headers }
           if (kind === 'approve') {
             opts.headers = { ...headers, 'Content-Type': 'application/json' }
-            opts.body = JSON.stringify({
-              style: typeOverride[id] ?? g?.style,
-              surface_type: surfaceSel[id] ?? g?.surface_type ?? null,
-              size_m2: sizeSel[id] ?? null,
-            })
+            opts.body = JSON.stringify(g ? approveBodyFor(g) : {})
           }
           const res = await fetch(url, opts)
           if (res.ok) {
@@ -298,118 +315,88 @@ export default function ModerationPanel({ onClose }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {bulk.map(g => (
-                      <tr key={g.id} className={(busyId === g.id ? 'busy' : '') + (selected.has(g.id) ? ' sel' : '')}>
-                        <td className="mod-tbl-checkcol">
-                          <input
-                            type="checkbox"
-                            checked={selected.has(g.id)}
-                            onChange={() => toggleRow(g.id)}
-                            aria-label={t('mod.bulk.selectRow')}
-                          />
-                        </td>
-                        <td>
-                          {(() => {
-                            const imgs = (g.images && g.images.length)
-                              ? g.images
-                              : (g.s3_key_thumb ? [{ id: null, key: g.s3_key_thumb }] : [])
-                            if (!imgs.length) return <span className="mod-tbl-noimg">—</span>
-                            return (
-                              <div className="mod-tbl-photos">
-                                {imgs.map((im, ix) => (
-                                  <div className="mod-tbl-photo" key={im.id || ix}>
-                                    <img
-                                      className="mod-tbl-thumb"
-                                      src={`${CLOUDFRONT}/${im.key}`}
-                                      alt=""
-                                      loading="lazy"
-                                      onClick={() => setZoomImg({
-                                        url: `${CLOUDFRONT}/${im.key}`,
-                                        imageId: (im.id && imgs.length > 1) ? im.id : null,
-                                        graffitiId: g.id,
-                                      })}
-                                    />
-                                    {im.id && imgs.length > 1 && (
-                                      <button
-                                        className="mod-tbl-photo-x"
-                                        title={t('mod.rejectPhoto')}
-                                        disabled={busyId === g.id}
-                                        onClick={() => rejectPhoto(im.id, g.id)}
-                                      >✕</button>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            )
-                          })()}
-                        </td>
-                        <td>
-                          <div className="mod-tbl-city">{g.city || t('mod.unknownCity')}</div>
-                          <div className="mod-tbl-coords">{g.lat?.toFixed(4)}, {g.lng?.toFixed(4)}</div>
-                        </td>
-                        <td>
-                          <select
-                            className="mod-tbl-select"
-                            value={typeOverride[g.id] ?? g.style ?? ''}
-                            onChange={e => setTypeOverride(prev => ({ ...prev, [g.id]: e.target.value || null }))}
-                          >
-                            <option value="">—</option>
-                            {STYLES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
-                          </select>
-                        </td>
-                        <td>
-                          <select
-                            className="mod-tbl-select"
-                            value={surfaceSel[g.id] ?? g.surface_type ?? ''}
-                            onChange={e => setSurfaceSel(prev => ({ ...prev, [g.id]: e.target.value || undefined }))}
-                          >
-                            <option value="">—</option>
-                            {SURFACES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
-                          </select>
-                        </td>
-                        <td>
-                          <div className="mod-tbl-size-cell">
-                            <select
-                              className="mod-tbl-select mod-tbl-size"
-                              value={sizeSel[g.id] ?? ''}
-                              onChange={e => setSizeSel(prev => ({ ...prev, [g.id]: e.target.value ? Number(e.target.value) : undefined }))}
-                            >
-                              <option value="">—</option>
-                              {SIZE_PRESETS.map(p => <option key={p.key} value={p.value}>{p.label}</option>)}
-                              {sizeSel[g.id] != null && !SIZE_PRESETS.some(p => p.value === sizeSel[g.id]) && (
-                                <option value={sizeSel[g.id]}>{sizeSel[g.id]} m²</option>
-                              )}
-                            </select>
-                            <button
-                              className="mod-tbl-measure"
-                              title={t('mod.measure')}
-                              disabled={!g.s3_key_thumb}
-                              onClick={() => setMeasureTarget({ id: g.id, url: `${CLOUDFRONT}/${g.s3_key_thumb.replace('thumb.jpg', 'medium.jpg')}` })}
-                            >📏</button>
-                          </div>
-                        </td>
-                        <td className="mod-tbl-actions">
-                          <button
-                            className="mod-approve sm"
-                            disabled={busyId === g.id}
-                            onClick={() => act(
-                              `${API_URL}/moderation/graffiti/${g.id}/approve`,
-                              g.id,
-                              { style: typeOverride[g.id] ?? g.style, surface_type: surfaceSel[g.id] ?? g.surface_type ?? null, size_m2: sizeSel[g.id] ?? null }
+                    {bulk.map(g => {
+                      const imgs = (g.images && g.images.length)
+                        ? g.images
+                        : [{ id: null, key: g.s3_key_thumb }]
+                      const rs = imgs.length
+                      const multi = rs > 1
+                      return imgs.map((im, j) => {
+                        const k = im.id ?? g.id      // per-photo state key (falls back to marker)
+                        const curSize = sizeSel[k] ?? im.size_m2
+                        return (
+                          <tr key={g.id + ':' + (im.id || j)}
+                              className={(busyId === g.id ? 'busy' : '') + (selected.has(g.id) ? ' sel' : '') + (j === 0 ? ' mk-first' : '')}>
+                            {j === 0 && (
+                              <td className="mod-tbl-checkcol" rowSpan={rs}>
+                                <input type="checkbox" checked={selected.has(g.id)}
+                                  onChange={() => toggleRow(g.id)} aria-label={t('mod.bulk.selectRow')} />
+                              </td>
                             )}
-                          >
-                            ✓
-                          </button>
-                          <button
-                            className="mod-reject sm"
-                            disabled={busyId === g.id}
-                            onClick={() => act(`${API_URL}/moderation/graffiti/${g.id}/reject`, g.id)}
-                          >
-                            ✕
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                            <td>
+                              {im.key ? (
+                                <div className="mod-tbl-photo">
+                                  <img className="mod-tbl-thumb" src={`${CLOUDFRONT}/${im.key}`} alt="" loading="lazy"
+                                    onClick={() => setZoomImg({
+                                      url: `${CLOUDFRONT}/${im.key}`,
+                                      imageId: (im.id && multi) ? im.id : null, graffitiId: g.id,
+                                    })} />
+                                  {im.id && multi && (
+                                    <button className="mod-tbl-photo-x" title={t('mod.rejectPhoto')}
+                                      disabled={busyId === g.id} onClick={() => rejectPhoto(im.id, g.id)}>✕</button>
+                                  )}
+                                </div>
+                              ) : <span className="mod-tbl-noimg">—</span>}
+                            </td>
+                            {j === 0 && (
+                              <td rowSpan={rs}>
+                                <div className="mod-tbl-city">{g.city || t('mod.unknownCity')}</div>
+                                <div className="mod-tbl-coords">{g.lat?.toFixed(4)}, {g.lng?.toFixed(4)}</div>
+                              </td>
+                            )}
+                            <td>
+                              <select className="mod-tbl-select"
+                                value={typeOverride[k] ?? im.style ?? ''}
+                                onChange={e => setTypeOverride(prev => ({ ...prev, [k]: e.target.value || null }))}>
+                                <option value="">—</option>
+                                {STYLES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
+                              </select>
+                            </td>
+                            <td>
+                              <select className="mod-tbl-select"
+                                value={surfaceSel[k] ?? im.surface_type ?? ''}
+                                onChange={e => setSurfaceSel(prev => ({ ...prev, [k]: e.target.value || undefined }))}>
+                                <option value="">—</option>
+                                {SURFACES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
+                              </select>
+                            </td>
+                            <td>
+                              <div className="mod-tbl-size-cell">
+                                <select className="mod-tbl-select mod-tbl-size"
+                                  value={curSize ?? ''}
+                                  onChange={e => setSizeSel(prev => ({ ...prev, [k]: e.target.value ? Number(e.target.value) : undefined }))}>
+                                  <option value="">—</option>
+                                  {SIZE_PRESETS.map(p => <option key={p.key} value={p.value}>{p.label}</option>)}
+                                  {curSize != null && !SIZE_PRESETS.some(p => p.value === curSize) && (
+                                    <option value={curSize}>{curSize} m²</option>
+                                  )}
+                                </select>
+                                <button className="mod-tbl-measure" title={t('mod.measure')} disabled={!im.key}
+                                  onClick={() => setMeasureTarget({ id: k, url: `${CLOUDFRONT}/${im.key}` })}>📏</button>
+                              </div>
+                            </td>
+                            {j === 0 && (
+                              <td className="mod-tbl-actions" rowSpan={rs}>
+                                <button className="mod-approve sm" disabled={busyId === g.id}
+                                  onClick={() => approveMarker(g)}>✓</button>
+                                <button className="mod-reject sm" disabled={busyId === g.id}
+                                  onClick={() => act(`${API_URL}/moderation/graffiti/${g.id}/reject`, g.id)}>✕</button>
+                              </td>
+                            )}
+                          </tr>
+                        )
+                      })
+                    })}
                   </tbody>
                 </table>
               </div>

@@ -36,10 +36,18 @@ def _s3():
     )
 
 
+class PhotoClass(BaseModel):
+    image_id: str
+    style: str | None = None
+    surface_type: str | None = None
+    size_m2: float | None = None
+
+
 class ApproveBody(BaseModel):
     style: str | None = None
     surface_type: str | None = None
     size_m2: float | None = None  # moderator's surface estimate in m²
+    photos: list[PhotoClass] | None = None  # per-photo type/surface/size (multi-photo markers)
 
 
 class BlurRect(BaseModel):
@@ -185,15 +193,39 @@ def approve_graffiti(graffiti_id: str, body: ApproveBody = None, user: dict = De
     if not res.data:
         raise HTTPException(status_code=404, detail="Graffiti introuvable")
 
-    # Moderator can set/correct the type and surface at approval time.
-    if body and (body.style or body.surface_type):
+    if body and body.photos:
+        # Per-photo classification: each image on this marker gets its own
+        # type / surface / size (used when a spot has different graffiti per side).
+        for ph in body.photos:
+            fields = {}
+            if ph.style: fields["style"] = ph.style
+            if ph.surface_type: fields["surface_type"] = ph.surface_type
+            if ph.size_m2 is not None and 0 < ph.size_m2 <= 10000:
+                fields["size_m2"] = ph.size_m2
+            if not fields:
+                continue
+            existing = service.table("classifications").select("id") \
+                .eq("image_id", ph.image_id).execute()
+            if existing.data:
+                service.table("classifications").update(fields) \
+                    .eq("image_id", ph.image_id).execute()
+            else:
+                service.table("classifications").insert({
+                    "graffiti_id": graffiti_id,
+                    "image_id": ph.image_id,
+                    **fields,
+                    "model_version": "moderator",
+                }).execute()
+    elif body and (body.style or body.surface_type):
+        # Single classification for the whole marker (community uploads etc.).
         fields = {}
         if body.style: fields["style"] = body.style
         if body.surface_type: fields["surface_type"] = body.surface_type
-        existing = service.table("classifications").select("id").eq("graffiti_id", graffiti_id).execute()
+        existing = service.table("classifications").select("id") \
+            .eq("graffiti_id", graffiti_id).is_("image_id", "null").execute()
         if existing.data:
             service.table("classifications").update(fields) \
-                .eq("graffiti_id", graffiti_id).execute()
+                .eq("graffiti_id", graffiti_id).is_("image_id", "null").execute()
         else:
             service.table("classifications").insert({
                 "graffiti_id": graffiti_id,
@@ -201,7 +233,7 @@ def approve_graffiti(graffiti_id: str, body: ApproveBody = None, user: dict = De
                 "model_version": "moderator",
             }).execute()
 
-    return {"status": "approved", "id": graffiti_id, "style": body.style if body else None}
+    return {"status": "approved", "id": graffiti_id}
 
 
 @router.post("/image/{image_id}/reject")

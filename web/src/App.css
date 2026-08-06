@@ -1061,10 +1061,17 @@ button { font-family: inherit; }
 .mod-size-input:focus { border-color: var(--accent); }
 
 /* ── Measure editor ── */
+.measure-modes {
+  display: flex; gap: 6px; padding: 10px 14px 2px;
+}
 .measure-refs {
   display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
   padding: 8px 14px; border-bottom: 1px solid var(--border);
 }
+.measure-svg { position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; }
+.measure-cnr { fill: var(--accent, #E85D26); stroke: #fff; stroke-width: 2; }
+.measure-cnr-t { fill: #fff; font-size: 11px; font-weight: 700; font-family: inherit; }
+.measure-refquad { fill: rgba(232,93,38,0.12); stroke: var(--accent, #E85D26); stroke-width: 2; stroke-dasharray: 5 4; }
 .measure-line {
   position: absolute; height: 0;
   border-top: 3px solid #1DB870;

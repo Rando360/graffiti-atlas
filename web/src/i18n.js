@@ -491,6 +491,8 @@ const STRINGS = {
   },
   'measure.ref.door': { fr: 'Porte', en: 'Door', es: 'Puerta', de: 'Tür', it: 'Porta' },
   'measure.ref.person': { fr: 'Personne', en: 'Person', es: 'Persona', de: 'Person', it: 'Persona' },
+  'measure.ref.car': { fr: 'Voiture', en: 'Car', es: 'Coche', de: 'Auto', it: 'Auto' },
+  'measure.shape.car': { fr: 'Voiture (côté)', en: 'Car (side)', es: 'Coche (lado)', de: 'Auto (Seite)', it: 'Auto (lato)' },
   'measure.ref.head': { fr: 'Tête', en: 'Head', es: 'Cabeza', de: 'Kopf', it: 'Testa' },
   'measure.ref.window': { fr: 'Fenêtre', en: 'Window', es: 'Ventana', de: 'Fenster', it: 'Finestra' },
   'measure.ref.custom': { fr: 'Autre…', en: 'Other…', es: 'Otro…', de: 'Andere…', it: 'Altro…' },

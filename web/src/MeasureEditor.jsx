@@ -72,6 +72,7 @@ function mapBoxArea(H, box) {
 
 const REFS = [
   { key: 'door',   meters: 2.0,  labelKey: 'measure.ref.door' },
+  { key: 'car',    meters: 4.4,  labelKey: 'measure.ref.car' },     // car length
   { key: 'person', meters: 1.7,  labelKey: 'measure.ref.person' },
   { key: 'window', meters: 1.15, labelKey: 'measure.ref.window' },
   { key: 'custom', meters: null, labelKey: 'measure.ref.custom' },
@@ -80,6 +81,7 @@ const SHAPES = [
   { key: 'door',   w: 0.9,  h: 2.0,  labelKey: 'measure.shape.door' },
   { key: 'window', w: 1.15, h: 1.15, labelKey: 'measure.shape.window' },
   { key: 'garage', w: 2.4,  h: 2.1,  labelKey: 'measure.shape.garage' },
+  { key: 'car',    w: 4.4,  h: 1.5,  labelKey: 'measure.shape.car' },   // car side (length × height)
   { key: 'plate',  w: 0.52, h: 0.11, labelKey: 'measure.shape.plate' },
   { key: 'bricks', w: null, h: null, labelKey: 'measure.shape.bricks' },
   { key: 'custom', w: null, h: null, labelKey: 'measure.shape.custom' },

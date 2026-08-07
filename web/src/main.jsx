@@ -78,7 +78,28 @@ window.addEventListener('unhandledrejection', (e) => {
 if (getConsent() === 'accepted') {
   import('@sentry/react').then((Sentry) => {
     const dsn = import.meta.env.VITE_SENTRY_DSN
-    if (dsn) Sentry.init({ dsn, sendDefaultPii: false, tracesSampleRate: 0.1 })
+    if (dsn) Sentry.init({
+      dsn,
+      sendDefaultPii: false,
+      tracesSampleRate: 0.1,
+      // Drop noise from in-app browser webviews (Instagram/Facebook/TikTok…),
+      // which inject their own tracking scripts that throw errors we can't fix.
+      ignoreErrors: [
+        'Java object is gone',
+        'Object Not Found Matching Id',
+        /postMessage/i,
+        'ResizeObserver loop limit exceeded',
+        'ResizeObserver loop completed with undelivered notifications',
+      ],
+      beforeSend(event) {
+        // Ignore anything whose stack comes from an injected in-app-browser script.
+        const frames = event.exception?.values?.flatMap(v => v.stacktrace?.frames || []) || []
+        if (frames.some(f => /iabjs:\/\/|navigation_performance_logger|gsdk|instagram|fbav/i.test(f.filename || ''))) {
+          return null
+        }
+        return event
+      },
+    })
   })
 }
 

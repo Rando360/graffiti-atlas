@@ -388,6 +388,9 @@ const STRINGS = {
   'mod.surface': { fr: 'Surface :', en: 'Surface:', es: 'Superficie:', de: 'Oberfläche:', it: 'Superficie:' },
   'mod.view.cards': { fr: 'Fiches', en: 'Cards', es: 'Fichas', de: 'Karten', it: 'Schede' },
   'mod.view.table': { fr: 'Tableau', en: 'Table', es: 'Tabla', de: 'Tabelle', it: 'Tabella' },
+  'mod.view.grid': { fr: 'Grille', en: 'Grid', es: 'Cuadrícula', de: 'Raster', it: 'Griglia' },
+  'mod.grid.hint': { fr: 'Cliquez pour sélectionner les doublons proches, puis rejetez.', en: 'Click to select nearby duplicates, then reject.', es: 'Haz clic para seleccionar duplicados cercanos y recházalos.', de: 'Klicken, um nahe Duplikate auszuwählen, dann ablehnen.', it: 'Clicca per selezionare i duplicati vicini, poi rifiuta.' },
+  'mod.grid.zoom': { fr: 'Agrandir', en: 'Enlarge', es: 'Ampliar', de: 'Vergrößern', it: 'Ingrandisci' },
   'mod.col.photo': { fr: 'Photo', en: 'Photo', es: 'Foto', de: 'Foto', it: 'Foto' },
   'mod.col.actions': { fr: 'Actions', en: 'Actions', es: 'Acciones', de: 'Aktionen', it: 'Azioni' },
   'mod.empty.bulk': {

@@ -78,9 +78,9 @@ export default function ModerationPanel({ onClose }) {
     }
   }, [authHeader])
 
-  // Load bulk scans the first time the table view is opened.
+  // Load bulk scans the first time the table or grid view is opened.
   useEffect(() => {
-    if (viewMode === 'table' && !bulkLoaded && !bulkLoading) loadBulk(100)
+    if ((viewMode === 'table' || viewMode === 'grid') && !bulkLoaded && !bulkLoading) loadBulk(100)
   }, [viewMode, bulkLoaded, bulkLoading, loadBulk])
 
   const act = async (url, id, body) => {
@@ -244,6 +244,7 @@ export default function ModerationPanel({ onClose }) {
             <div className="mod-viewtoggle">
               <button className={viewMode === 'cards' ? 'on' : ''} onClick={() => setViewMode('cards')}>{t('mod.view.cards')}</button>
               <button className={viewMode === 'table' ? 'on' : ''} onClick={() => setViewMode('table')}>{t('mod.view.table')}</button>
+              <button className={viewMode === 'grid' ? 'on' : ''} onClick={() => setViewMode('grid')}>{t('mod.view.grid')}</button>
             </div>
           )}
         </div>
@@ -253,11 +254,63 @@ export default function ModerationPanel({ onClose }) {
           {loading ? (
             <div className="mod-empty">{t('common.loading')}</div>
           ) : tab === 'uploads' ? (
-            viewMode === 'table' ? (
+            (viewMode === 'table' || viewMode === 'grid') ? (
               bulkLoading && bulk.length === 0 ? (
                 <div className="mod-empty">{t('common.loading')}</div>
               ) : bulk.length === 0 ? (
                 <div className="mod-empty">{t('mod.empty.bulk')}</div>
+              ) : viewMode === 'grid' ? (
+                <div className="mod-grid-wrap">
+                  <div className="mod-tbl-bar">
+                    <span className="mod-tbl-count">{bulk.length} / {bulkTotal} {t('mod.bulk.pending')}</span>
+                    {selectedCount > 0 ? (
+                      <>
+                        <span className="mod-tbl-selcount">{selectedCount} {t('mod.bulk.selected')}</span>
+                        <button className="mod-tbl-bulk reject" disabled={bulkBusy} onClick={() => runBulk('reject')}>
+                          {bulkBusy ? t('common.loading') : `${t('mod.reject')} (${selectedCount})`}
+                        </button>
+                        <button className="mod-tbl-bulk approve" disabled={bulkBusy} onClick={() => runBulk('approve')}>
+                          {t('mod.approve')} ({selectedCount})
+                        </button>
+                        <button className="mod-tbl-loadmore" disabled={bulkBusy} onClick={() => setSelected(new Set())}>
+                          {t('mod.bulk.clearSel')}
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="mod-grid-hint">{t('mod.grid.hint')}</span>
+                        {bulk.length < bulkTotal && (
+                          <button className="mod-tbl-loadmore" disabled={bulkLoading} onClick={() => loadBulk(bulkLimit + 100)}>
+                            {bulkLoading ? t('common.loading') : t('mod.bulk.loadmore')}
+                          </button>
+                        )}
+                        <button className="mod-tbl-loadmore" disabled={bulkLoading} onClick={() => loadBulk(bulkLimit)}>
+                          {t('mod.bulk.refresh')}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                  <div className="mod-grid">
+                    {bulk.map(g => {
+                      const key = (g.images && g.images[0]?.key) || g.s3_key_thumb
+                      const on = selected.has(g.id)
+                      return (
+                        <div key={g.id} className={'mod-grid-tile' + (on ? ' sel' : '')} onClick={() => toggleRow(g.id)}>
+                          {key
+                            ? <img src={`${CLOUDFRONT}/${key}`} alt="" loading="lazy" />
+                            : <div className="mod-grid-noimg">—</div>}
+                          {g.images && g.images.length > 1 && <span className="mod-grid-count">{g.images.length}</span>}
+                          <button
+                            className="mod-grid-zoom"
+                            title={t('mod.grid.zoom')}
+                            onClick={(e) => { e.stopPropagation(); if (key) setZoomImg({ url: `${CLOUDFRONT}/${key}` }) }}
+                          >⤢</button>
+                          {on && <span className="mod-grid-check">✓</span>}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
               ) : (
               <div className="mod-table-wrap">
                 <div className="mod-tbl-bar">

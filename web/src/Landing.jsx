@@ -56,7 +56,15 @@ export default function Landing() {
   const [showUpload, setShowUpload] = useState(false)
   const [showMod, setShowMod] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [stats, setStats] = useState(STATS_FALLBACK)
+  // Start from the last count we saw (cached) so a refresh shows the real number
+  // immediately instead of flashing the "1 000+" placeholder, then updates live.
+  const [stats, setStats] = useState(() => {
+    try {
+      const s = JSON.parse(localStorage.getItem('ga_stats'))
+      if (s && s.works) return s
+    } catch { /* ignore */ }
+    return STATS_FALLBACK
+  })
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null))
@@ -72,10 +80,12 @@ export default function Landing() {
         const cities = d?.cities || []
         if (!cities.length) return
         const total = cities.reduce((sum, c) => sum + (c.count || 0), 0)
-        setStats({
+        const next = {
           works: total.toLocaleString(getLanguage()),
           cities: String(cities.length),
-        })
+        }
+        setStats(next)
+        try { localStorage.setItem('ga_stats', JSON.stringify(next)) } catch { /* ignore */ }
       })
       .catch(() => { /* keep fallback */ })
   }, [])

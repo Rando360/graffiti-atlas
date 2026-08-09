@@ -135,7 +135,7 @@
   font-size: 26px; margin-bottom: 26px;
 }
 .lp-section-title::before {
-  content: ''; display: block; width: 44px; height: 3px; border-radius: 2px;
+  content: ''; display: block; width: 72px; height: 3px; border-radius: 2px;
   background: var(--accent); margin-bottom: 18px;
 }
 .lp-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
@@ -228,8 +228,8 @@
   display: flex; flex-direction: column; gap: 14px;
 }
 .lp-footer::before {
-  content: ''; align-self: center; width: 33%; max-width: 360px; height: 1px;
-  background: var(--border); margin-bottom: 34px;
+  content: ''; width: 100vw; margin-left: calc(-50vw + 50%);
+  height: 1px; background: var(--border); margin-bottom: 34px;
 }
 .lp-footer-brand { display: flex; align-items: center; gap: 9px; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 15px; }
 .lp-footer-tag { font-size: 13px; color: var(--muted); }

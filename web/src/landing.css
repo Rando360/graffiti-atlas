@@ -167,12 +167,12 @@
 .lp-muni-cta:hover { background: var(--accent-hover); }
 
 /* ── Android app band ── */
-.lp-app { background: var(--ink); color: #fff; }
+.lp-app { background: #1E1A15; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.08); }
 .lp-app-inner {
-  max-width: 1180px; margin: 0 auto; padding: 52px 28px;
-  display: flex; align-items: center; gap: 44px; flex-wrap: wrap;
+  max-width: 1080px; margin: 0 auto; padding: 60px 28px;
+  display: flex; align-items: center; justify-content: center; gap: 72px; flex-wrap: wrap;
 }
-.lp-app-text { flex: 1; min-width: 260px; }
+.lp-app-text { flex: 0 1 440px; min-width: 260px; }
 .lp-app-eyebrow {
   display: inline-flex; align-items: center; gap: 7px;
   font-family: 'Space Mono', monospace; font-size: 12px; letter-spacing: 0.14em;
@@ -191,8 +191,12 @@
 .lp-app-badge-t small { display: block; color: #b9b9b9; font-size: 10px; letter-spacing: 0.06em; }
 .lp-app-badge-t strong { display: block; color: #fff; font-size: 18px; font-weight: 600; }
 
-.lp-app-phone { flex: 0 0 auto; margin: 0 auto; }
-.lp-phone-frame { width: 190px; height: 384px; background: #12100E; border-radius: 30px; padding: 9px; border: 1px solid #3a352f; }
+.lp-app-phone { flex: 0 0 auto; margin: 0 auto; position: relative; }
+.lp-app-phone::before {
+  content: ''; position: absolute; z-index: 0; inset: -34px -30px;
+  background: rgba(232, 93, 38, 0.12); border-radius: 40px;
+}
+.lp-phone-frame { position: relative; z-index: 1; width: 232px; height: 470px; background: #12100E; border-radius: 34px; padding: 10px; border: 1px solid #3a352f; box-shadow: 0 20px 50px rgba(0,0,0,0.45); }
 .lp-phone-screen { position: relative; width: 100%; height: 100%; background: #EEEBE3; border-radius: 22px; overflow: hidden; }
 .lp-phone-bar {
   position: absolute; top: 0; left: 0; right: 0; height: 46px; background: var(--accent);

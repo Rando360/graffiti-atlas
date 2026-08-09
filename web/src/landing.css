@@ -148,7 +148,7 @@
 .lp-card p { font-size: 14px; line-height: 1.6; color: var(--ink-2); }
 
 /* ── Municipal band ── */
-.lp-muni { background: var(--ink); color: #fff; }
+.lp-muni { background: var(--bg); color: var(--ink); }
 .lp-muni-inner {
   max-width: 1180px; margin: 0 auto; padding: 56px 28px;
   display: flex; flex-direction: column; align-items: flex-start;
@@ -158,7 +158,7 @@
   text-transform: uppercase; color: var(--accent); margin-bottom: 14px;
 }
 .lp-muni-title { font-family: 'Space Grotesk', sans-serif; font-size: clamp(24px, 3vw, 34px); font-weight: 700; margin-bottom: 12px; }
-.lp-muni-desc { font-size: 15px; line-height: 1.65; color: #C9C2B6; max-width: 560px; margin-bottom: 26px; }
+.lp-muni-desc { font-size: 15px; line-height: 1.65; color: var(--ink-2); max-width: 560px; margin-bottom: 26px; }
 .lp-muni-cta {
   background: var(--accent); color: #fff; text-decoration: none;
   border-radius: 10px; padding: 13px 24px; font-size: 15px; font-weight: 600;

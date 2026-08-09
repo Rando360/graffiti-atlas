@@ -696,6 +696,23 @@ const STRINGS = {
     de: 'Behalte jedes Graffiti im Blick — auch wenn es übermalt wird. Die Historie bleibt.',
     it: 'Tieni traccia di ogni graffito — anche dopo che è stato coperto. La storia resta.',
   },
+  'landing.app.eyebrow': { fr: 'Mobile', en: 'Mobile', es: 'Móvil', de: 'Mobil', it: 'Mobile' },
+  'landing.app.title': {
+    fr: 'GraffitiAtlas est maintenant sur Android',
+    en: 'GraffitiAtlas is now on Android',
+    es: 'GraffitiAtlas ya está en Android',
+    de: 'GraffitiAtlas ist jetzt auf Android',
+    it: 'GraffitiAtlas è ora su Android',
+  },
+  'landing.app.desc': {
+    fr: 'Explorez la carte, signalez de nouveaux graffitis et contribuez où que vous soyez — directement depuis votre téléphone.',
+    en: 'Explore the map, report new graffiti, and contribute wherever you are — straight from your phone.',
+    es: 'Explora el mapa, reporta nuevos grafitis y contribuye estés donde estés, directamente desde tu teléfono.',
+    de: 'Erkunde die Karte, melde neue Graffiti und trage bei, wo immer du bist — direkt vom Handy.',
+    it: 'Esplora la mappa, segnala nuovi graffiti e contribuisci ovunque tu sia — direttamente dal telefono.',
+  },
+  'landing.app.badge.top': { fr: 'DISPONIBLE SUR', en: 'GET IT ON', es: 'DISPONIBLE EN', de: 'JETZT BEI', it: 'DISPONIBILE SU' },
+  'landing.app.phone.report': { fr: 'Signaler', en: 'Report', es: 'Reportar', de: 'Melden', it: 'Segnala' },
   'landing.muni.eyebrow': { fr: 'Collectivités', en: 'For cities', es: 'Para municipios', de: 'Für Kommunen', it: 'Per i comuni' },
   'landing.muni.title': {
     fr: 'Un outil de suivi pour les villes', en: 'A monitoring tool for municipalities',

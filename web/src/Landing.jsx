@@ -13,6 +13,9 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
 /* Fallback shown only if the live count can't be fetched. */
 const STATS_FALLBACK = { works: '1 000+', cities: '2' }
 
+/* Google Play listing — update if the store URL differs. */
+const PLAY_URL = 'https://play.google.com/store/apps/details?id=io.graffitiatlas.app'
+
 /* Marker colours mirror the real map (tag / throwup / piece / mural). */
 const PIN_COLORS = ['#7B5CF5', '#1DB870', '#3B82F6', '#E85D26']
 
@@ -195,6 +198,51 @@ export default function Landing() {
               <p>{t(`landing.how.${n}.d`)}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* ── Android app ── */}
+      <section className="lp-app">
+        <div className="lp-app-inner">
+          <div className="lp-app-text">
+            <p className="lp-app-eyebrow">{t('landing.app.eyebrow')}</p>
+            <h2 className="lp-app-title">{t('landing.app.title')}</h2>
+            <p className="lp-app-desc">{t('landing.app.desc')}</p>
+            <a className="lp-app-badge" href={PLAY_URL} target="_blank" rel="noopener noreferrer">
+              <svg width="24" height="26" viewBox="0 0 24 26" aria-hidden="true">
+                <path d="M2 1.5 13.8 13 2 24.5c-.4-.3-.7-.8-.7-1.5V3c0-.7.3-1.2.7-1.5Z" fill="#00D4FF"/>
+                <path d="M17.9 9.1 15 12 3.2 1.1C3.7.9 4.3 1 5 1.4l12.9 7.7Z" fill="#00F076"/>
+                <path d="M17.9 16.9 5 24.6c-.7.4-1.3.5-1.8.3L15 14l2.9 2.9Z" fill="#FF3A44"/>
+                <path d="m22 11.3-3.4-2L15.4 13l3.2 3.7 3.4-2c1-.8 1-2.6 0-3.4Z" fill="#FFC900"/>
+              </svg>
+              <span className="lp-app-badge-t">
+                <small>{t('landing.app.badge.top')}</small>
+                <strong>Google Play</strong>
+              </span>
+            </a>
+          </div>
+
+          <div className="lp-app-phone" aria-hidden="true">
+            <div className="lp-phone-frame">
+              <div className="lp-phone-screen">
+                <div className="lp-phone-bar"><span className="lp-phone-logo" />GraffitiAtlas</div>
+                <div className="lp-phone-map">
+                  {PINS.slice(0, 6).map((p, i) => (
+                    <span key={i} className="lp-phone-pin" style={{ left: `${p.x}%`, top: `${p.y}%` }}>
+                      <Pin color={PIN_COLORS[p.c]} size={i === 3 ? 26 : 20} />
+                    </span>
+                  ))}
+                </div>
+                <div className="lp-phone-fab">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M4 8h3l2-2h6l2 2h3v11H4V8Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
+                    <circle cx="12" cy="13" r="3" stroke="currentColor" strokeWidth="1.8"/>
+                  </svg>
+                  {t('landing.app.phone.report')}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

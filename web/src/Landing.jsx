@@ -222,25 +222,9 @@ export default function Landing() {
             </a>
           </div>
 
-          <div className="lp-app-phone" aria-hidden="true">
+          <div className="lp-app-phone">
             <div className="lp-phone-frame">
-              <div className="lp-phone-screen">
-                <div className="lp-phone-bar"><Logo size={18} />GraffitiAtlas</div>
-                <div className="lp-phone-map">
-                  {PINS.slice(0, 6).map((p, i) => (
-                    <span key={i} className="lp-phone-pin" style={{ left: `${p.x}%`, top: `${p.y}%` }}>
-                      <Pin color={PIN_COLORS[p.c]} size={i === 3 ? 26 : 20} />
-                    </span>
-                  ))}
-                </div>
-                <div className="lp-phone-fab">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path d="M4 8h3l2-2h6l2 2h3v11H4V8Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
-                    <circle cx="12" cy="13" r="3" stroke="currentColor" strokeWidth="1.8"/>
-                  </svg>
-                  {t('landing.app.phone.report')}
-                </div>
-              </div>
+              <img className="lp-phone-shot" src="/app-mobile.webp" alt="GraffitiAtlas on Android" loading="lazy" />
             </div>
           </div>
         </div>

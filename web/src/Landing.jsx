@@ -225,7 +225,7 @@ export default function Landing() {
           <div className="lp-app-phone" aria-hidden="true">
             <div className="lp-phone-frame">
               <div className="lp-phone-screen">
-                <div className="lp-phone-bar"><span className="lp-phone-logo" />GraffitiAtlas</div>
+                <div className="lp-phone-bar"><Logo size={18} />GraffitiAtlas</div>
                 <div className="lp-phone-map">
                   {PINS.slice(0, 6).map((p, i) => (
                     <span key={i} className="lp-phone-pin" style={{ left: `${p.x}%`, top: `${p.y}%` }}>

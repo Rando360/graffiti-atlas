@@ -3,9 +3,7 @@
   "appName": "GraffitiAtlas",
   "webDir": "dist",
   "server": {
-    "androidScheme": "https",
-    "url": "https://graffitiatlas.io",
-    "cleartext": false
+    "androidScheme": "https"
   },
   "ios": {
     "contentInset": "automatic"

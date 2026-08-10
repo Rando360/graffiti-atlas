@@ -1650,6 +1650,14 @@ a.header-btn.mod { text-decoration: none; display: inline-flex; align-items: cen
 .mod-tbl-noimg { color: var(--muted,#8A8378); }
 .mod-tbl-city { font-weight: 600; color: var(--text,#2A2520); }
 .mod-tbl-coords { font-size: 11px; color: var(--muted,#8A8378); font-family: 'Space Mono', monospace; }
+.mod-tbl-types { display: flex; flex-wrap: wrap; gap: 5px; max-width: 220px; }
+.mod-tbl-type {
+  border: 1.5px solid var(--border,#E9E5DA); background: var(--surface,#fff);
+  color: var(--text-2,#6E675C); padding: 7px 12px; border-radius: 8px;
+  font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; line-height: 1;
+}
+.mod-tbl-type:hover { border-color: var(--accent,#E85D26); }
+.mod-tbl-type.on { background: var(--accent,#E85D26); border-color: var(--accent,#E85D26); color: #fff; }
 .mod-tbl-select { padding: 6px 8px; border: 1.5px solid var(--border,#E9E5DA); border-radius: 8px; font-size: 12.5px; font-family: inherit; color: var(--text,#2A2520); background: var(--surface,#fff); cursor: pointer; max-width: 130px; }
 .mod-tbl-select:focus { outline: none; border-color: var(--accent,#E85D26); }
 .mod-tbl-size { max-width: 88px; }

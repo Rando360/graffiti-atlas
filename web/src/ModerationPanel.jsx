@@ -408,12 +408,20 @@ export default function ModerationPanel({ onClose }) {
                               </td>
                             )}
                             <td>
-                              <select className="mod-tbl-select"
-                                value={typeOverride[k] ?? im.style ?? ''}
-                                onChange={e => setTypeOverride(prev => ({ ...prev, [k]: e.target.value || null }))}>
-                                <option value="">—</option>
-                                {STYLES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
-                              </select>
+                              <div className="mod-tbl-types">
+                                {STYLES.map(s => {
+                                  const cur = typeOverride[k] ?? im.style
+                                  return (
+                                    <button
+                                      key={s.key}
+                                      className={'mod-tbl-type' + (cur === s.key ? ' on' : '')}
+                                      onClick={() => setTypeOverride(prev => ({ ...prev, [k]: prev[k] === s.key ? null : s.key }))}
+                                    >
+                                      {s.label}
+                                    </button>
+                                  )
+                                })}
+                              </div>
                             </td>
                             <td>
                               <select className="mod-tbl-select"

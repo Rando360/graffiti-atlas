@@ -415,6 +415,13 @@ const STRINGS = {
     de: 'Alle ausgewählten Zeilen ablehnen? Dies kann nicht rückgängig gemacht werden.',
     it: 'Rifiutare tutte le righe selezionate? Operazione irreversibile.',
   },
+  'mod.bulk.confirmApprove': {
+    fr: 'Approuver et publier ce nombre de photos sélectionnées ?',
+    en: 'Approve and publish this many selected photos?',
+    es: '¿Aprobar y publicar esta cantidad de fotos seleccionadas?',
+    de: 'So viele ausgewählte Fotos genehmigen und veröffentlichen?',
+    it: 'Approvare e pubblicare questo numero di foto selezionate?',
+  },
   'surface.bare_wall': { fr: 'Mur brut', en: 'Bare wall', es: 'Muro desnudo', de: 'Rohe Wand', it: 'Muro grezzo' },
   'surface.painted_wall': { fr: 'Mur peint', en: 'Painted wall', es: 'Muro pintado', de: 'Bemalte Wand', it: 'Muro dipinto' },
   'surface.concrete': { fr: 'Béton', en: 'Concrete', es: 'Hormigón', de: 'Beton', it: 'Cemento' },

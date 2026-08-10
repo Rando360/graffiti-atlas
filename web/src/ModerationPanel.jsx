@@ -170,6 +170,7 @@ export default function ModerationPanel({ onClose }) {
     const ids = bulk.filter(g => selected.has(g.id)).map(g => g.id)
     if (!ids.length || bulkBusy) return
     if (kind === 'reject' && !window.confirm(t('mod.bulk.confirmReject'))) return
+    if (kind === 'approve' && !window.confirm(`${t('mod.bulk.confirmApprove')} (${ids.length})`)) return
     setBulkBusy(true); setError(null)
     const headers = await authHeader()
     let i = 0

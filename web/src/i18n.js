@@ -263,6 +263,7 @@ const STRINGS = {
   'upload.continue': { fr: 'Continuer', en: 'Continue', es: 'Continuar', de: 'Weiter', it: 'Continua' },
   'upload.back': { fr: '← Retour', en: '← Back', es: '← Atrás', de: '← Zurück', it: '← Indietro' },
   'upload.type.label': { fr: 'Type de graffiti', en: 'Graffiti type', es: 'Tipo de grafiti', de: 'Graffiti-Typ', it: 'Tipo di graffito' },
+  'upload.density.label': { fr: 'Densité', en: 'Density', es: 'Densidad', de: 'Dichte', it: 'Densità' },
   'upload.type.required': { fr: 'obligatoire', en: 'required', es: 'obligatorio', de: 'erforderlich', it: 'obbligatorio' },
   'upload.hint.tag': {
     fr: 'Signature rapide, un seul trait, souvent une couleur.',

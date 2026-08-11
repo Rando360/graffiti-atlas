@@ -168,12 +168,17 @@ def _reverse_geocode_city(lat: float, lng: float):
         return None
 
 
+_STYLE_RANK = {"piece": 5, "mural": 4, "throwup": 3, "tag": 2, "sticker": 1, "other": 0}
+
+
 @router.post("/graffiti")
 async def upload_graffiti(
     photo: UploadFile = File(...),
     lat: float = Form(...),
     lng: float = Form(...),
-    style: str = Form(None),
+    style: str = Form(None),            # legacy single value
+    styles: list[str] = Form(None),     # multi-select types
+    density: str = Form(None),          # 'light' | 'medium' | 'heavy'
     surface_type: str = Form(None),
     note: str = Form(None),
     user: dict = Depends(get_current_user),
@@ -229,14 +234,20 @@ async def upload_graffiti(
         "is_360": False,
     }).execute()
 
-    if style or surface_type or note:
-        service.table("classifications").insert({
+    sl = [s for s in (styles or []) if s] or ([style] if style else [])
+    if sl or surface_type or note or density:
+        row = {
             "graffiti_id": graffiti_id,
-            "style": style,
             "surface_type": surface_type,
             "description_fr": note,
             "model_version": "user_submission",
-        }).execute()
+        }
+        if sl:
+            row["styles"] = sl
+            row["style"] = max(sl, key=lambda s: _STYLE_RANK.get(s, -1))  # primary → pin colour
+        if density in ("light", "medium", "heavy"):
+            row["density"] = density
+        service.table("classifications").insert(row).execute()
 
     return {
         "id": graffiti_id,

@@ -15,6 +15,12 @@ const STYLE_OPTIONS = [
   { key: 'mural',   labelKey: 'style.mural',   hintKey: 'upload.hint.mural' },
 ]
 
+const DENSITY_OPTIONS = [
+  { key: 'light',  labelKey: 'density.light' },
+  { key: 'medium', labelKey: 'density.medium' },
+  { key: 'heavy',  labelKey: 'density.heavy' },
+]
+
 const SURFACE_OPTIONS = [
   { key: 'bare_wall',    labelKey: 'surface.bare_wall' },
   { key: 'painted_wall', labelKey: 'surface.painted_wall' },
@@ -32,7 +38,8 @@ export default function UploadModal({ onClose, initialCenter }) {
   const [preview, setPreview] = useState(null)
   const [pin, setPin] = useState(null)          // { lat, lng }
   const [gpsFromPhoto, setGpsFromPhoto] = useState(false)
-  const [style, setStyle] = useState(null)
+  const [styles, setStyles] = useState([])       // multi-select types
+  const [density, setDensity] = useState(null)    // 'light' | 'medium' | 'heavy'
   const [surface, setSurface] = useState(null)
   const [note, setNote] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -114,7 +121,8 @@ export default function UploadModal({ onClose, initialCenter }) {
       form.append('photo', file)
       form.append('lat', pin.lat)
       form.append('lng', pin.lng)
-      if (style) form.append('style', style)
+      styles.forEach(s => form.append('styles', s))
+      if (density) form.append('density', density)
       if (surface) form.append('surface_type', surface)
       if (note.trim()) form.append('note', note.trim())
 
@@ -237,14 +245,28 @@ export default function UploadModal({ onClose, initialCenter }) {
                   {STYLE_OPTIONS.map(o => (
                     <button
                       key={o.key}
-                      className={'ul-style-card' + (style === o.key ? ' on' : '')}
-                      onClick={() => setStyle(o.key)}
+                      className={'ul-style-card' + (styles.includes(o.key) ? ' on' : '')}
+                      onClick={() => setStyles(cur => cur.includes(o.key) ? cur.filter(x => x !== o.key) : [...cur, o.key])}
                     >
                       <span className="ul-style-check" aria-hidden="true" />
                       <span className="ul-style-text">
                         <span className="ul-style-name">{t(o.labelKey)}</span>
                         <span className="ul-style-hint">{t(o.hintKey)}</span>
                       </span>
+                    </button>
+                  ))}
+                </div>
+
+                <label className="ul-field-label">{t('upload.density.label')} <span>{t('upload.desc.optional')}</span></label>
+                <div className="ul-surface-chips">
+                  {DENSITY_OPTIONS.map(o => (
+                    <button
+                      key={o.key}
+                      type="button"
+                      className={'ul-surface-chip' + (density === o.key ? ' on' : '')}
+                      onClick={() => setDensity(density === o.key ? null : o.key)}
+                    >
+                      {t(o.labelKey)}
                     </button>
                   ))}
                 </div>
@@ -277,7 +299,7 @@ export default function UploadModal({ onClose, initialCenter }) {
 
                 <div className="ul-actions">
                   <button className="ul-cancel" onClick={() => setStep(1)}>{t('upload.back')}</button>
-                  <button className="ul-submit" disabled={submitting || !style} onClick={submit}>
+                  <button className="ul-submit" disabled={submitting || styles.length === 0} onClick={submit}>
                     {submitting ? t('upload.submitting') : t('upload.submit')}
                   </button>
                 </div>

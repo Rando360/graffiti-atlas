@@ -122,6 +122,19 @@ export default function ModerationPanel({ onClose }) {
     }
   }, [authHeader])
 
+  // Reject/delete a pending point straight from the map view.
+  const deleteMapPoint = useCallback(async (id) => {
+    try {
+      const headers = await authHeader()
+      const res = await fetch(`${API_URL}/moderation/graffiti/${id}/reject`,
+        { method: 'POST', headers })
+      if (!res.ok) throw new Error(t('mod.err.failed'))
+      setMapPoints(ps => ps.filter(p => p.id !== id))
+    } catch (e) {
+      setError(e.message)
+    }
+  }, [authHeader])
+
   const act = async (url, id, body) => {
     setBusyId(id)
     try {
@@ -299,7 +312,7 @@ export default function ModerationPanel({ onClose }) {
               mapLoading ? (
                 <div className="mod-empty">{t('common.loading')}</div>
               ) : (
-                <ModerationMap points={mapPoints} onLink={linkPoints} />
+                <ModerationMap points={mapPoints} onLink={linkPoints} onDelete={deleteMapPoint} />
               )
             ) : (viewMode === 'table' || viewMode === 'grid') ? (
               bulkLoading && bulk.length === 0 ? (

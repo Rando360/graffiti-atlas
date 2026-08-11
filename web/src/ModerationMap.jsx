@@ -36,7 +36,7 @@ function BoundsWatcher({ points, onBounds }) {
   return null
 }
 
-export default function ModerationMap({ points, onLink }) {
+export default function ModerationMap({ points, onLink, onDelete }) {
   const [bounds, setBounds] = useState(null)
   const [version, setVersion] = useState(0)   // bump to snap dragged markers back
   const [compare, setCompare] = useState([])  // up to 2 selected points
@@ -73,6 +73,12 @@ export default function ModerationMap({ points, onLink }) {
     setCompare(c => c.filter(x => x.id !== compare[1].id))
   }
 
+  const doDelete = async (p) => {
+    if (!onDelete || !window.confirm(t('mod.map.confirmDelete'))) return
+    await onDelete(p.id)
+    setCompare(c => c.filter(x => x.id !== p.id))
+  }
+
   const handleDrop = async (p, e) => {
     const ll = e?.latLng
     const lat = ll ? (typeof ll.lat === 'function' ? ll.lat() : ll.lat) : null
@@ -104,7 +110,7 @@ export default function ModerationMap({ points, onLink }) {
 
       <div className="mod-map">
         <APIProvider apiKey={API_KEY}>
-          <Map defaultCenter={center} defaultZoom={16} gestureHandling="greedy"
+          <Map className="mod-map-canvas" defaultCenter={center} defaultZoom={16} gestureHandling="greedy"
                mapId="graffiti-atlas-map" clickableIcons={false}>
             <BoundsWatcher points={points} onBounds={setBounds} />
             {visible.map(p => (
@@ -116,9 +122,12 @@ export default function ModerationMap({ points, onLink }) {
                 onClick={() => toggleCompare(p)}
                 title={t('mod.map.dragTip')}
               >
-                <div className={'mod-map-pin'
-                  + (dupIds.has(p.id) ? ' dup' : '')
-                  + (compareIds.has(p.id) ? ' sel' : '')} />
+                {/* larger transparent hit area, centred on the point, so the small dot is easy to tap */}
+                <div className="mod-map-hit">
+                  <span className={'mod-map-pin'
+                    + (dupIds.has(p.id) ? ' dup' : '')
+                    + (compareIds.has(p.id) ? ' sel' : '')} />
+                </div>
               </AdvancedMarker>
             ))}
           </Map>
@@ -129,29 +138,34 @@ export default function ModerationMap({ points, onLink }) {
           <span><i className="mod-map-dot" /> {t('mod.map.legend.iso')}</span>
           <span><i className="mod-map-dot sel" /> {t('mod.map.legend.picked')}</span>
         </div>
-      </div>
 
-      {compare.length > 0 && (
-        <div className="mod-map-compare">
-          {compare.map(p => (
-            <div className="mod-map-cmp" key={p.id}>
-              {p.key
-                ? <img src={`${CLOUDFRONT}/${p.key}`} alt="" />
-                : <div className="mod-map-cmp-noimg">—</div>}
-              <div className="mod-map-cmp-meta">{p.lat.toFixed(5)}, {p.lng.toFixed(5)}</div>
+        {compare.length > 0 && (
+          <div className="mod-map-compare">
+            {compare.map(p => (
+              <div className="mod-map-cmp" key={p.id}>
+                {p.key
+                  ? <img src={`${CLOUDFRONT}/${p.key}`} alt="" />
+                  : <div className="mod-map-cmp-noimg">—</div>}
+                <div className="mod-map-cmp-row">
+                  <span className="mod-map-cmp-meta">{p.lat.toFixed(5)}, {p.lng.toFixed(5)}</span>
+                  {onDelete && (
+                    <button className="mod-map-cmp-del" onClick={() => doDelete(p)}>{t('mod.map.delete')}</button>
+                  )}
+                </div>
+              </div>
+            ))}
+            <div className="mod-map-cmp-actions">
+              {compare.length === 2
+                ? <div className="mod-map-dist">{Math.round(haversine(compare[0], compare[1]))} m {t('mod.map.apart')}</div>
+                : <div className="mod-map-hint">{t('mod.map.pick2')}</div>}
+              {compare.length === 2 && (
+                <button className="mod-tbl-bulk approve" onClick={doMerge}>{t('mod.map.merge')}</button>
+              )}
+              <button className="mod-tbl-loadmore" onClick={() => setCompare([])}>{t('mod.map.clear')}</button>
             </div>
-          ))}
-          <div className="mod-map-cmp-actions">
-            {compare.length === 2
-              ? <div className="mod-map-dist">{Math.round(haversine(compare[0], compare[1]))} m {t('mod.map.apart')}</div>
-              : <div className="mod-map-hint">{t('mod.map.pick2')}</div>}
-            {compare.length === 2 && (
-              <button className="mod-tbl-bulk approve" onClick={doMerge}>{t('mod.map.merge')}</button>
-            )}
-            <button className="mod-tbl-loadmore" onClick={() => setCompare([])}>{t('mod.map.clear')}</button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }

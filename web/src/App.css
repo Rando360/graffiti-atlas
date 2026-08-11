@@ -1609,6 +1609,7 @@ a.header-btn.mod { text-decoration: none; display: inline-flex; align-items: cen
 .mod-map-pin { width: 16px; height: 16px; border-radius: 50%; background: #3B82F6; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.4); cursor: grab; }
 .mod-map-pin.dup { background: #E4572E; width: 20px; height: 20px; }
 .mod-map-pin:active { cursor: grabbing; }
+.mod-map-photo { display: block; width: 260px; max-width: 60vw; height: auto; border-radius: 6px; }
 .mod-grid-wrap { display: flex; flex-direction: column; }
 .mod-grid-hint { font-size: 12.5px; color: var(--text-2,#6E675C); }
 .mod-grid {

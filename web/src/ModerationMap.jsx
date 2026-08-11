@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { APIProvider, Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
+import { APIProvider, Map, AdvancedMarker, InfoWindow, useMap } from '@vis.gl/react-google-maps'
 import { t } from './i18n'
 
 const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+const CLOUDFRONT = 'https://d36hw3x1088tvv.cloudfront.net'
 const DUP_M = 8      // highlight any point within 8 m of another
 const DROP_M = 25    // drop within 25 m of another point = link them
 
@@ -38,6 +39,7 @@ function BoundsWatcher({ points, onBounds }) {
 export default function ModerationMap({ points, onLink }) {
   const [bounds, setBounds] = useState(null)
   const [version, setVersion] = useState(0)   // bump to snap dragged markers back
+  const [selected, setSelected] = useState(null)  // point whose photo is shown
 
   // ids that have a neighbour within DUP_M — the likely duplicates
   const dupIds = useMemo(() => {
@@ -100,11 +102,18 @@ export default function ModerationMap({ points, onLink }) {
                 position={{ lat: p.lat, lng: p.lng }}
                 draggable
                 onDragEnd={(e) => handleDrop(p, e)}
+                onClick={() => setSelected(p)}
                 title={t('mod.map.dragTip')}
               >
                 <div className={'mod-map-pin' + (dupIds.has(p.id) ? ' dup' : '')} />
               </AdvancedMarker>
             ))}
+
+            {selected && selected.key && (
+              <InfoWindow position={{ lat: selected.lat, lng: selected.lng }} onCloseClick={() => setSelected(null)}>
+                <img className="mod-map-photo" src={`${CLOUDFRONT}/${selected.key}`} alt="" />
+              </InfoWindow>
+            )}
           </Map>
         </APIProvider>
       </div>

@@ -99,12 +99,14 @@ function sprayCanSVG(color) {
 function ClusteredMarkers({ points, selectedId, onSelect }) {
   const map = useMap()
   const markerLib = useMapsLibrary('marker')   // wait until AdvancedMarkerElement exists
-  const elMap = useRef(new Map())
+  // NB: `Map` in this module is the @vis.gl React component, so use the JS
+  // built-in explicitly (globalThis.Map) for our id→element lookup.
+  const elMap = useRef(new globalThis.Map())
 
   useEffect(() => {
     if (!map || !markerLib) return
     const AME = markerLib.AdvancedMarkerElement
-    elMap.current = new Map()
+    elMap.current = new globalThis.Map()
     const markers = points
       .filter(g => typeof g.lat === 'number' && typeof g.lng === 'number')
       .map(g => {

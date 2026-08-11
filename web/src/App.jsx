@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef, useMemo, memo, lazy, Suspense } from 'react'
-import { APIProvider, Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
+import { APIProvider, Map, AdvancedMarker, useMap, useMapsLibrary } from '@vis.gl/react-google-maps'
 import { MarkerClusterer } from '@googlemaps/markerclusterer'
 const AuthModal = lazy(() => import('./AuthModal'))
 const UploadModal = lazy(() => import('./UploadModal'))
@@ -98,10 +98,12 @@ function sprayCanSVG(color) {
    them by screen distance. Clicking a cluster zooms in; a marker opens detail. */
 function ClusteredMarkers({ points, selectedId, onSelect }) {
   const map = useMap()
+  const markerLib = useMapsLibrary('marker')   // wait until AdvancedMarkerElement exists
   const elMap = useRef(new Map())
 
   useEffect(() => {
-    if (!map || !window.google?.maps?.marker) return
+    if (!map || !markerLib) return
+    const AME = markerLib.AdvancedMarkerElement
     elMap.current = new Map()
     const markers = points
       .filter(g => typeof g.lat === 'number' && typeof g.lng === 'number')
@@ -110,9 +112,7 @@ function ClusteredMarkers({ points, selectedId, onSelect }) {
         el.className = 'marker-can' + (g.cleaned ? ' cleaned' : '') + (g.id === selectedId ? ' selected' : '')
         el.innerHTML = sprayCanSVG(g.cleaned ? '#D8D1C2' : (STYLE_COLORS[g.style] || '#888'))
         elMap.current.set(g.id, el)
-        const m = new window.google.maps.marker.AdvancedMarkerElement({
-          position: { lat: g.lat, lng: g.lng }, content: el,
-        })
+        const m = new AME({ position: { lat: g.lat, lng: g.lng }, content: el })
         m.addListener('click', () => onSelect(g))
         return m
       })
@@ -124,15 +124,13 @@ function ClusteredMarkers({ points, selectedId, onSelect }) {
         div.style.width = size + 'px'
         div.style.height = size + 'px'
         div.textContent = String(count)
-        return new window.google.maps.marker.AdvancedMarkerElement({
-          position, content: div, zIndex: 1000,
-        })
+        return new AME({ position, content: div, zIndex: 1000 })
       },
     }
     const clusterer = new MarkerClusterer({ map, markers, renderer })
     return () => clusterer.clearMarkers()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [map, points])
+  }, [map, markerLib, points])
 
   // Highlight the selected marker without rebuilding the whole cluster layer.
   useEffect(() => {

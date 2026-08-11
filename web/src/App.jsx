@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef, useMemo, memo, lazy, Suspense } from 'react'
 import { APIProvider, Map, AdvancedMarker, useMap, useMapsLibrary } from '@vis.gl/react-google-maps'
-import { MarkerClusterer } from '@googlemaps/markerclusterer'
+import { MarkerClusterer, SuperClusterAlgorithm } from '@googlemaps/markerclusterer'
 const AuthModal = lazy(() => import('./AuthModal'))
 const UploadModal = lazy(() => import('./UploadModal'))
 const ModerationPanel = lazy(() => import('./ModerationPanel'))
@@ -129,7 +129,12 @@ function ClusteredMarkers({ points, selectedId, onSelect }) {
         return new AME({ position, content: div, zIndex: 1000 })
       },
     }
-    const clusterer = new MarkerClusterer({ map, markers, renderer })
+    const clusterer = new MarkerClusterer({
+      map, markers, renderer,
+      // radius: larger = tighter/cleaner grouping when zoomed out.
+      // maxZoom: past this zoom nothing clusters — every point shows as an individual pin.
+      algorithm: new SuperClusterAlgorithm({ radius: 90, maxZoom: 15 }),
+    })
     return () => clusterer.clearMarkers()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, markerLib, points])

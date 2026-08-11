@@ -31,10 +31,12 @@ def get_map_graffiti(
     more than what's needed for the current view.
     """
     supabase = get_supabase()
+    # Always return individual points (zoom forced high) — clustering is now done
+    # client-side (MarkerClusterer) for smooth, non-overlapping bubbles.
     result = supabase.rpc("get_map_clusters", {
         "min_lat": south, "min_lng": west,
         "max_lat": north, "max_lng": east,
-        "zoom": zoom,
+        "zoom": 99,
     }).execute()
 
     features = []

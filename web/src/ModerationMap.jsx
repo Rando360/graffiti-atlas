@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { APIProvider, Map, AdvancedMarker, InfoWindow, useMap } from '@vis.gl/react-google-maps'
+import { APIProvider, Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
 import { t } from './i18n'
 
 const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
@@ -39,9 +39,8 @@ function BoundsWatcher({ points, onBounds }) {
 export default function ModerationMap({ points, onLink }) {
   const [bounds, setBounds] = useState(null)
   const [version, setVersion] = useState(0)   // bump to snap dragged markers back
-  const [selected, setSelected] = useState(null)  // point whose photo is shown
+  const [compare, setCompare] = useState([])  // up to 2 selected points
 
-  // ids that have a neighbour within DUP_M — the likely duplicates
   const dupIds = useMemo(() => {
     const s = new Set()
     for (let i = 0; i < points.length; i++) {
@@ -52,16 +51,27 @@ export default function ModerationMap({ points, onLink }) {
     return s
   }, [points])
 
-  // only render markers inside the viewport (keeps it fast with thousands)
   const visible = useMemo(() => {
     if (!bounds) return points.slice(0, 500)
-    const inB = points.filter(p =>
-      p.lat <= bounds.n && p.lat >= bounds.s && p.lng <= bounds.e && p.lng >= bounds.w)
-    return inB.slice(0, 1500)
+    return points.filter(p =>
+      p.lat <= bounds.n && p.lat >= bounds.s && p.lng <= bounds.e && p.lng >= bounds.w).slice(0, 1500)
   }, [points, bounds])
 
+  const compareIds = useMemo(() => new Set(compare.map(p => p.id)), [compare])
   const center = points.length ? { lat: points[0].lat, lng: points[0].lng } : { lat: 45.188, lng: 5.724 }
-  const dupCount = dupIds.size
+
+  const toggleCompare = (p) => setCompare(cur => {
+    if (cur.find(x => x.id === p.id)) return cur.filter(x => x.id !== p.id)
+    if (cur.length < 2) return [...cur, p]
+    return [cur[1], p]  // keep last picked, replace the oldest
+  })
+
+  const doMerge = async () => {
+    if (compare.length !== 2) return
+    if (!window.confirm(t('mod.map.confirmLink'))) return
+    await onLink(compare[1].id, compare[0].id)   // link the 2nd into the 1st's location
+    setCompare(c => c.filter(x => x.id !== compare[1].id))
+  }
 
   const handleDrop = async (p, e) => {
     const ll = e?.latLng
@@ -78,7 +88,7 @@ export default function ModerationMap({ points, onLink }) {
         await onLink(p.id, best.id)
       }
     }
-    setVersion(v => v + 1)  // re-key markers so any un-dropped drag snaps back
+    setVersion(v => v + 1)
   }
 
   if (!API_KEY) return <div className="mod-empty">{t('mod.map.nokey')}</div>
@@ -88,9 +98,10 @@ export default function ModerationMap({ points, onLink }) {
     <div className="mod-map-wrap">
       <div className="mod-map-bar">
         <span className="mod-tbl-count">{points.length} {t('mod.bulk.pending')}</span>
-        <span className="mod-map-dup">{dupCount} {t('mod.map.close')}</span>
-        <span className="mod-map-hint">{t('mod.map.hint')}</span>
+        <span className="mod-map-dup">{dupIds.size} {t('mod.map.close')}</span>
+        <span className="mod-map-hint">{t('mod.map.compareHint')}</span>
       </div>
+
       <div className="mod-map">
         <APIProvider apiKey={API_KEY}>
           <Map defaultCenter={center} defaultZoom={16} gestureHandling="greedy"
@@ -102,21 +113,45 @@ export default function ModerationMap({ points, onLink }) {
                 position={{ lat: p.lat, lng: p.lng }}
                 draggable
                 onDragEnd={(e) => handleDrop(p, e)}
-                onClick={() => setSelected(p)}
+                onClick={() => toggleCompare(p)}
                 title={t('mod.map.dragTip')}
               >
-                <div className={'mod-map-pin' + (dupIds.has(p.id) ? ' dup' : '')} />
+                <div className={'mod-map-pin'
+                  + (dupIds.has(p.id) ? ' dup' : '')
+                  + (compareIds.has(p.id) ? ' sel' : '')} />
               </AdvancedMarker>
             ))}
-
-            {selected && selected.key && (
-              <InfoWindow position={{ lat: selected.lat, lng: selected.lng }} onCloseClick={() => setSelected(null)}>
-                <img className="mod-map-photo" src={`${CLOUDFRONT}/${selected.key}`} alt="" />
-              </InfoWindow>
-            )}
           </Map>
         </APIProvider>
+
+        <div className="mod-map-legend">
+          <span><i className="mod-map-dot dup" /> {t('mod.map.legend.close')}</span>
+          <span><i className="mod-map-dot" /> {t('mod.map.legend.iso')}</span>
+          <span><i className="mod-map-dot sel" /> {t('mod.map.legend.picked')}</span>
+        </div>
       </div>
+
+      {compare.length > 0 && (
+        <div className="mod-map-compare">
+          {compare.map(p => (
+            <div className="mod-map-cmp" key={p.id}>
+              {p.key
+                ? <img src={`${CLOUDFRONT}/${p.key}`} alt="" />
+                : <div className="mod-map-cmp-noimg">—</div>}
+              <div className="mod-map-cmp-meta">{p.lat.toFixed(5)}, {p.lng.toFixed(5)}</div>
+            </div>
+          ))}
+          <div className="mod-map-cmp-actions">
+            {compare.length === 2
+              ? <div className="mod-map-dist">{Math.round(haversine(compare[0], compare[1]))} m {t('mod.map.apart')}</div>
+              : <div className="mod-map-hint">{t('mod.map.pick2')}</div>}
+            {compare.length === 2 && (
+              <button className="mod-tbl-bulk approve" onClick={doMerge}>{t('mod.map.merge')}</button>
+            )}
+            <button className="mod-tbl-loadmore" onClick={() => setCompare([])}>{t('mod.map.clear')}</button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -875,6 +875,7 @@ button { font-family: inherit; }
 
 .ul-field-label { font-size: 12px; font-weight: 600; color: var(--text); }
 .ul-field-label span { color: var(--muted); font-weight: 400; }
+.ul-field-hint { font-size: 11.5px; color: var(--muted); margin: 2px 0 8px; }
 
 .ul-styles { display: flex; flex-wrap: wrap; gap: 6px; }
 .ul-style {

@@ -265,6 +265,7 @@ const STRINGS = {
   'upload.type.label': { fr: 'Type de graffiti', en: 'Graffiti type', es: 'Tipo de grafiti', de: 'Graffiti-Typ', it: 'Tipo di graffito' },
   'upload.density.label': { fr: 'Densité', en: 'Density', es: 'Densidad', de: 'Dichte', it: 'Densità' },
   'upload.type.required': { fr: 'obligatoire', en: 'required', es: 'obligatorio', de: 'erforderlich', it: 'obbligatorio' },
+  'upload.type.multi': { fr: 'Vous pouvez en choisir plusieurs', en: 'You can select more than one', es: 'Puedes elegir varios', de: 'Sie können mehrere auswählen', it: 'Puoi selezionarne più di uno' },
   'upload.hint.tag': {
     fr: 'Signature rapide, un seul trait, souvent une couleur.',
     en: 'Quick signature, single stroke, usually one colour.',

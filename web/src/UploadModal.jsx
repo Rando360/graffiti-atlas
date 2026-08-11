@@ -241,6 +241,7 @@ export default function UploadModal({ onClose, initialCenter }) {
             {step === 2 && (
               <div className="ul-body">
                 <label className="ul-field-label">{t('upload.type.label')} <span className="req">{t('upload.type.required')}</span></label>
+                <p className="ul-field-hint">{t('upload.type.multi')}</p>
                 <div className="ul-styles">
                   {STYLE_OPTIONS.map(o => (
                     <button

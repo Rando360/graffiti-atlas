@@ -1605,7 +1605,7 @@ a.header-btn.mod { text-decoration: none; display: inline-flex; align-items: cen
 .mod-map-dup { font-size: 12.5px; font-weight: 700; color: #E4572E; }
 .mod-map-hint { font-size: 12.5px; color: var(--text-2,#6E675C); }
 .mod-map { position: relative; flex: 1; min-height: 460px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border,#E9E5DA); }
-.mod-map > div { width: 100%; height: 100%; }
+.mod-map > div:not(.mod-map-legend) { width: 100%; height: 100%; }
 .mod-map-pin { width: 16px; height: 16px; border-radius: 50%; background: #3B82F6; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.4); cursor: grab; }
 .mod-map-pin.dup { background: #E4572E; width: 20px; height: 20px; }
 .mod-map-pin.sel { box-shadow: 0 0 0 4px #2A2520, 0 1px 4px rgba(0,0,0,0.4); }

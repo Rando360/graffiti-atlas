@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef, useMemo, memo, lazy, Suspense } from 'react'
 import { APIProvider, Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
+import { MarkerClusterer } from '@googlemaps/markerclusterer'
 const AuthModal = lazy(() => import('./AuthModal'))
 const UploadModal = lazy(() => import('./UploadModal'))
 const ModerationPanel = lazy(() => import('./ModerationPanel'))
@@ -77,6 +78,68 @@ function useIsMobile(breakpoint = 768) {
     return () => window.removeEventListener('resize', onResize)
   }, [breakpoint])
   return isMobile
+}
+
+/* Spray-can marker as an HTML string, for imperative AdvancedMarkerElements. */
+function sprayCanSVG(color) {
+  return `<svg width="24" height="32" viewBox="0 0 24 32" fill="none" aria-hidden="true">
+    <circle cx="20" cy="4" r="1.2" fill="${color}" opacity="0.7"/>
+    <circle cx="22" cy="7" r="1" fill="${color}" opacity="0.5"/>
+    <rect x="13" y="6" width="5" height="2.5" rx="1" fill="#555"/>
+    <rect x="8" y="4" width="7" height="4" rx="2" fill="#333"/>
+    <rect x="6" y="8" width="11" height="20" rx="3" fill="${color}"/>
+    <rect x="6" y="14" width="11" height="6" fill="white" opacity="0.2"/>
+    <rect x="7" y="27" width="9" height="3" rx="1.5" fill="${color}" opacity="0.8"/>
+  </svg>`
+}
+
+/* Client-side clustering (AllTrails-style): smooth, non-overlapping bubbles that
+   split as you zoom. Fed all individual points in view; MarkerClusterer groups
+   them by screen distance. Clicking a cluster zooms in; a marker opens detail. */
+function ClusteredMarkers({ points, selectedId, onSelect }) {
+  const map = useMap()
+  const elMap = useRef(new Map())
+
+  useEffect(() => {
+    if (!map || !window.google?.maps?.marker) return
+    elMap.current = new Map()
+    const markers = points
+      .filter(g => typeof g.lat === 'number' && typeof g.lng === 'number')
+      .map(g => {
+        const el = document.createElement('div')
+        el.className = 'marker-can' + (g.cleaned ? ' cleaned' : '') + (g.id === selectedId ? ' selected' : '')
+        el.innerHTML = sprayCanSVG(g.cleaned ? '#D8D1C2' : (STYLE_COLORS[g.style] || '#888'))
+        elMap.current.set(g.id, el)
+        const m = new window.google.maps.marker.AdvancedMarkerElement({
+          position: { lat: g.lat, lng: g.lng }, content: el,
+        })
+        m.addListener('click', () => onSelect(g))
+        return m
+      })
+    const renderer = {
+      render: ({ count, position }) => {
+        const size = count < 10 ? 40 : count < 50 ? 48 : count < 100 ? 56 : 64
+        const div = document.createElement('div')
+        div.className = 'cluster-bubble'
+        div.style.width = size + 'px'
+        div.style.height = size + 'px'
+        div.textContent = String(count)
+        return new window.google.maps.marker.AdvancedMarkerElement({
+          position, content: div, zIndex: 1000,
+        })
+      },
+    }
+    const clusterer = new MarkerClusterer({ map, markers, renderer })
+    return () => clusterer.clearMarkers()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, points])
+
+  // Highlight the selected marker without rebuilding the whole cluster layer.
+  useEffect(() => {
+    elMap.current.forEach((el, id) => el.classList.toggle('selected', id === selectedId))
+  }, [selectedId])
+
+  return null
 }
 
 const ServerMarkers = memo(function ServerMarkers({ points, selectedId, onSelect, onClusterClick }) {
@@ -1182,11 +1245,10 @@ export default function App() {
                 clickableIcons={false}
               >
                 <MapController panTo={panTo} onBackgroundClick={deselect} zoomRef={lastZoomRef} />
-                <ServerMarkers
-                  points={filtered}
+                <ClusteredMarkers
+                  points={individuals}
                   selectedId={selectedId}
                   onSelect={handleSelect}
-                  onClusterClick={handleClusterClick}
                 />
               </Map>
             </APIProvider>

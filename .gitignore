@@ -219,3 +219,6 @@ __marimo__/
 worker/
 worker/
 worker/
+
+# local pipeline reference (keep off GitHub)
+GraffitiAtlas_Pipeline_Commands.docx

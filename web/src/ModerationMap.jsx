@@ -119,11 +119,11 @@ export default function ModerationMap({ points, onLink, onDelete }) {
                 position={{ lat: p.lat, lng: p.lng }}
                 draggable
                 onDragEnd={(e) => handleDrop(p, e)}
-                onClick={() => toggleCompare(p)}
                 title={t('mod.map.dragTip')}
               >
-                {/* larger transparent hit area, centred on the point, so the small dot is easy to tap */}
-                <div className="mod-map-hit">
+                {/* Click handled on the DOM element (not the draggable marker, which
+                    swallows clicks as drags). Larger transparent hit area, centred on the point. */}
+                <div className="mod-map-hit" onClick={() => toggleCompare(p)}>
                   <span className={'mod-map-pin'
                     + (dupIds.has(p.id) ? ' dup' : '')
                     + (compareIds.has(p.id) ? ' sel' : '')} />

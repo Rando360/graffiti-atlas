@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import BlurEditor from './BlurEditor'
 import MeasureEditor from './MeasureEditor'
+import ModerationMap from './ModerationMap'
 import { t } from './i18n'
 import { supabase } from './supabase'
 
@@ -28,6 +29,9 @@ export default function ModerationPanel({ onClose }) {
   const [blurTarget, setBlurTarget] = useState(null)    // { id, url }
   const [measureTarget, setMeasureTarget] = useState(null)  // { id, url }
   const [bust, setBust] = useState({})                  // cache-buster per id
+  const [mapPoints, setMapPoints] = useState([])        // pending coords for the map view
+  const [mapLoaded, setMapLoaded] = useState(false)
+  const [mapLoading, setMapLoading] = useState(false)
   const [selected, setSelected] = useState(() => new Set()) // table: checked row ids
   const [bulkBusy, setBulkBusy] = useState(false)          // bulk approve/reject running
 
@@ -82,6 +86,41 @@ export default function ModerationPanel({ onClose }) {
   useEffect(() => {
     if ((viewMode === 'table' || viewMode === 'grid') && !bulkLoaded && !bulkLoading) loadBulk(100)
   }, [viewMode, bulkLoaded, bulkLoading, loadBulk])
+
+  // Load all pending coordinates for the map view.
+  const loadMapPoints = useCallback(async () => {
+    setMapLoading(true); setError(null)
+    try {
+      const headers = await authHeader()
+      const res = await fetch(`${API_URL}/moderation/pending-points`, { headers })
+      if (res.status === 403) throw new Error(t('mod.err.forbidden'))
+      const j = await res.json()
+      setMapPoints(j.points || [])
+      setMapLoaded(true)
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setMapLoading(false)
+    }
+  }, [authHeader])
+
+  useEffect(() => {
+    if (viewMode === 'map' && !mapLoaded && !mapLoading) loadMapPoints()
+  }, [viewMode, mapLoaded, mapLoading, loadMapPoints])
+
+  // Link one point into another's location (consolidate — nothing deleted).
+  const linkPoints = useCallback(async (srcId, targetId) => {
+    try {
+      const headers = await authHeader()
+      const res = await fetch(`${API_URL}/moderation/graffiti/${srcId}/link-to/${targetId}`,
+        { method: 'POST', headers })
+      if (!res.ok) throw new Error(t('mod.err.failed'))
+      // consolidated — drop the dragged point from the map
+      setMapPoints(ps => ps.filter(p => p.id !== srcId))
+    } catch (e) {
+      setError(e.message)
+    }
+  }, [authHeader])
 
   const act = async (url, id, body) => {
     setBusyId(id)
@@ -246,6 +285,7 @@ export default function ModerationPanel({ onClose }) {
               <button className={viewMode === 'cards' ? 'on' : ''} onClick={() => setViewMode('cards')}>{t('mod.view.cards')}</button>
               <button className={viewMode === 'table' ? 'on' : ''} onClick={() => setViewMode('table')}>{t('mod.view.table')}</button>
               <button className={viewMode === 'grid' ? 'on' : ''} onClick={() => setViewMode('grid')}>{t('mod.view.grid')}</button>
+              <button className={viewMode === 'map' ? 'on' : ''} onClick={() => setViewMode('map')}>{t('mod.view.map')}</button>
             </div>
           )}
         </div>
@@ -255,7 +295,13 @@ export default function ModerationPanel({ onClose }) {
           {loading ? (
             <div className="mod-empty">{t('common.loading')}</div>
           ) : tab === 'uploads' ? (
-            (viewMode === 'table' || viewMode === 'grid') ? (
+            viewMode === 'map' ? (
+              mapLoading ? (
+                <div className="mod-empty">{t('common.loading')}</div>
+              ) : (
+                <ModerationMap points={mapPoints} onLink={linkPoints} />
+              )
+            ) : (viewMode === 'table' || viewMode === 'grid') ? (
               bulkLoading && bulk.length === 0 ? (
                 <div className="mod-empty">{t('common.loading')}</div>
               ) : bulk.length === 0 ? (

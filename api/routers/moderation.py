@@ -159,6 +159,46 @@ def list_pending_fast(
     }
 
 
+@router.get("/pending-points")
+def pending_points(user: dict = Depends(require_admin)):
+    """All pending bulk points (id + coords + thumbnail) for the moderation map —
+    used to spot near-duplicates and drag them together."""
+    service = _service()
+    pts, step, off = [], 500, 0
+    while True:
+        chunk = service.rpc("get_pending_graffiti_bulk",
+                            {"p_limit": step, "p_offset": off}).execute().data or []
+        pts += chunk
+        if len(chunk) < step:
+            break
+        off += step
+    out = [{"id": p["id"], "lat": p["lat"], "lng": p["lng"], "key": p.get("s3_key_thumb")}
+           for p in pts if p.get("lat") is not None and p.get("lng") is not None]
+    return {"points": out}
+
+
+@router.post("/graffiti/{graffiti_id}/link-to/{target_id}")
+def link_to_location(graffiti_id: str, target_id: str, user: dict = Depends(require_admin)):
+    """Consolidate two nearby points into one location: give this point the
+    target's location_id so they collapse to a single pin with a shared timeline.
+    Nothing is deleted — both photos remain, newest shown, older in the history."""
+    if graffiti_id == target_id:
+        raise HTTPException(status_code=400, detail="Même point")
+    service = _service()
+    target = service.table("graffiti").select("id, location_id").eq("id", target_id).execute()
+    if not target.data:
+        raise HTTPException(status_code=404, detail="Cible introuvable")
+    loc = target.data[0].get("location_id") or target_id
+    src = service.table("graffiti").select("id").eq("id", graffiti_id).execute()
+    if not src.data:
+        raise HTTPException(status_code=404, detail="Graffiti introuvable")
+    service.table("graffiti").update({
+        "location_id": loc,
+        "updated_at": datetime.utcnow().isoformat(),
+    }).eq("id", graffiti_id).execute()
+    return {"status": "linked", "id": graffiti_id, "target": target_id, "location_id": loc}
+
+
 @router.get("/removals")
 def list_removals(user: dict = Depends(require_admin)):
     """Removal reports awaiting review."""

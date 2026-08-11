@@ -67,6 +67,8 @@ def get_map_graffiti(
                 "lng": r["lng"],
                 "city": r.get("city"),
                 "style": r.get("style"),
+                "styles": r.get("styles") or ([r.get("style")] if r.get("style") else []),
+                "density": r.get("density"),
                 "size_m2": r.get("size_m2"),
                 "surface_type": r.get("surface_type"),
                 "description_fr": r.get("description_fr"),

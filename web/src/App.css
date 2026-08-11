@@ -488,6 +488,23 @@ button { font-family: inherit; }
 
 .map-wrap { flex: 1; overflow: hidden; min-height: 0; position: relative; }
 
+/* Floating Clusters / Individual switch on the map */
+.map-cluster-toggle {
+  position: absolute; top: 10px; right: 10px; z-index: 5;
+  display: flex; background: rgba(255,255,255,0.96); border: 1px solid var(--border,#E9E5DA);
+  border-radius: 9px; padding: 3px; gap: 3px; box-shadow: 0 2px 8px rgba(0,0,0,0.14);
+}
+.map-cluster-toggle button {
+  border: none; background: none; cursor: pointer; font-family: inherit;
+  font-size: 12.5px; font-weight: 600; color: var(--text-2,#6E675C);
+  padding: 6px 12px; border-radius: 7px; transition: background 0.15s, color 0.15s;
+}
+.map-cluster-toggle button.on { background: var(--accent,#E4572E); color: #fff; }
+@media (max-width: 720px) {
+  .map-cluster-toggle { top: 8px; right: 8px; }
+  .map-cluster-toggle button { padding: 5px 10px; font-size: 12px; }
+}
+
 /* ── LIGHTBOX ────────────────────────────────────────── */
 .img-overlay {
   position: fixed; top: 0; left: 0;
@@ -1694,6 +1711,8 @@ a.header-btn.mod { text-decoration: none; display: inline-flex; align-items: cen
 }
 .mod-tbl-type:hover { border-color: var(--accent,#E85D26); }
 .mod-tbl-type.on { background: var(--accent,#E85D26); border-color: var(--accent,#E85D26); color: #fff; }
+/* Density chips use a coverage ramp so they read apart from type chips. */
+.mod-tbl-type.dens.on { background: #E0912B; border-color: #E0912B; }
 .mod-tbl-select { padding: 6px 8px; border: 1.5px solid var(--border,#E9E5DA); border-radius: 8px; font-size: 12.5px; font-family: inherit; color: var(--text,#2A2520); background: var(--surface,#fff); cursor: pointer; max-width: 130px; }
 .mod-tbl-select:focus { outline: none; border-color: var(--accent,#E85D26); }
 .mod-tbl-size { max-width: 88px; }

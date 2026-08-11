@@ -38,16 +38,52 @@ def _s3():
 
 class PhotoClass(BaseModel):
     image_id: str
-    style: str | None = None
+    style: str | None = None            # kept for back-compat; ignored if `styles` given
+    styles: list[str] | None = None     # all types present in the photo
+    density: str | None = None          # 'light' | 'medium' | 'heavy'
     surface_type: str | None = None
     size_m2: float | None = None
 
 
 class ApproveBody(BaseModel):
     style: str | None = None
+    styles: list[str] | None = None
+    density: str | None = None
     surface_type: str | None = None
     size_m2: float | None = None  # moderator's surface estimate in m²
     photos: list[PhotoClass] | None = None  # per-photo type/surface/size (multi-photo markers)
+
+
+# Rank for deriving the primary/most-significant type (drives map pin colour).
+_STYLE_RANK = {"piece": 5, "mural": 4, "throwup": 3, "tag": 2, "sticker": 1, "other": 0}
+_DENSITY_OK = {"light", "medium", "heavy"}
+
+
+def _primary_style(styles, fallback=None):
+    """Most significant type in a list, for the single `style` column / pin colour."""
+    vals = [s for s in (styles or []) if s]
+    if not vals:
+        return fallback
+    return max(vals, key=lambda s: _STYLE_RANK.get(s, -1))
+
+
+def _class_fields(styles, style, density, surface_type, size_m2):
+    """Build the classification column dict from multi-type + density inputs."""
+    fields = {}
+    sl = [s for s in (styles or []) if s]
+    if sl:
+        fields["styles"] = sl
+        fields["style"] = _primary_style(sl)
+    elif style:
+        fields["styles"] = [style]
+        fields["style"] = style
+    if density in _DENSITY_OK:
+        fields["density"] = density
+    if surface_type:
+        fields["surface_type"] = surface_type
+    if size_m2 is not None and 0 < size_m2 <= 10000:
+        fields["size_m2"] = size_m2
+    return fields
 
 
 class BlurRect(BaseModel):
@@ -235,13 +271,10 @@ def approve_graffiti(graffiti_id: str, body: ApproveBody = None, user: dict = De
 
     if body and body.photos:
         # Per-photo classification: each image on this marker gets its own
-        # type / surface / size (used when a spot has different graffiti per side).
+        # types / density / surface / size (used when a spot has different
+        # graffiti per side).
         for ph in body.photos:
-            fields = {}
-            if ph.style: fields["style"] = ph.style
-            if ph.surface_type: fields["surface_type"] = ph.surface_type
-            if ph.size_m2 is not None and 0 < ph.size_m2 <= 10000:
-                fields["size_m2"] = ph.size_m2
+            fields = _class_fields(ph.styles, ph.style, ph.density, ph.surface_type, ph.size_m2)
             if not fields:
                 continue
             existing = service.table("classifications").select("id") \
@@ -256,11 +289,9 @@ def approve_graffiti(graffiti_id: str, body: ApproveBody = None, user: dict = De
                     **fields,
                     "model_version": "moderator",
                 }).execute()
-    elif body and (body.style or body.surface_type):
+    elif body and (body.style or body.styles or body.surface_type):
         # Single classification for the whole marker (community uploads etc.).
-        fields = {}
-        if body.style: fields["style"] = body.style
-        if body.surface_type: fields["surface_type"] = body.surface_type
+        fields = _class_fields(body.styles, body.style, body.density, body.surface_type, None)
         existing = service.table("classifications").select("id") \
             .eq("graffiti_id", graffiti_id).is_("image_id", "null").execute()
         if existing.data:
@@ -320,6 +351,8 @@ def reject_image(image_id: str, user: dict = Depends(require_admin)):
 class TargetBody(BaseModel):
     target_id: str
     style: str | None = None
+    styles: list[str] | None = None
+    density: str | None = None
     size_m2: float | None = None
 
 
@@ -356,13 +389,14 @@ def approve_at_location(graffiti_id: str, body: TargetBody, user: dict = Depends
     if body.size_m2 is not None and 0 < body.size_m2 <= 10000:
         update["size_m2"] = body.size_m2
     service.table("graffiti").update(update).eq("id", graffiti_id).execute()
-    if body.style:
+    cfields = _class_fields(body.styles, body.style, body.density, None, None)
+    if cfields:
         existing = service.table("classifications").select("id").eq("graffiti_id", graffiti_id).execute()
         if existing.data:
-            service.table("classifications").update({"style": body.style}).eq("graffiti_id", graffiti_id).execute()
+            service.table("classifications").update(cfields).eq("graffiti_id", graffiti_id).execute()
         else:
             service.table("classifications").insert({
-                "graffiti_id": graffiti_id, "style": body.style,
+                "graffiti_id": graffiti_id, **cfields,
                 "model_version": "moderator",
             }).execute()
     return {"status": "approved", "location_id": loc}

@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef, useMemo, memo, lazy, Suspense } from 'react'
 import { APIProvider, Map, AdvancedMarker, useMap, useMapsLibrary } from '@vis.gl/react-google-maps'
-import { MarkerClusterer, SuperClusterAlgorithm } from '@googlemaps/markerclusterer'
+import { MarkerClusterer, SuperClusterAlgorithm, NoopAlgorithm } from '@googlemaps/markerclusterer'
 const AuthModal = lazy(() => import('./AuthModal'))
 const UploadModal = lazy(() => import('./UploadModal'))
 const ModerationPanel = lazy(() => import('./ModerationPanel'))
@@ -19,6 +19,13 @@ const STYLE_COLORS = {
   mural: '#E85D26',
   sticker: '#F7B84B',
   other: '#888',
+}
+
+// Coverage/density ramp — pale → deep, independent of type.
+const DENSITY_COLORS = {
+  light: '#8FBF8F',
+  medium: '#E0912B',
+  heavy: '#C1440E',
 }
 
 const STYLE_LABELS = {
@@ -96,7 +103,7 @@ function sprayCanSVG(color) {
 /* Client-side clustering (AllTrails-style): smooth, non-overlapping bubbles that
    split as you zoom. Fed all individual points in view; MarkerClusterer groups
    them by screen distance. Clicking a cluster zooms in; a marker opens detail. */
-function ClusteredMarkers({ points, selectedId, onSelect }) {
+function ClusteredMarkers({ points, selectedId, onSelect, mode = 'cluster' }) {
   const map = useMap()
   const markerLib = useMapsLibrary('marker')   // wait until AdvancedMarkerElement exists
   // NB: `Map` in this module is the @vis.gl React component, so use the JS
@@ -131,13 +138,15 @@ function ClusteredMarkers({ points, selectedId, onSelect }) {
     }
     const clusterer = new MarkerClusterer({
       map, markers, renderer,
-      // radius: larger = tighter/cleaner grouping when zoomed out.
-      // maxZoom: past this zoom nothing clusters — every point shows as an individual pin.
-      algorithm: new SuperClusterAlgorithm({ radius: 90, maxZoom: 15 }),
+      // 'individual' → Noop = every point is its own pin, never grouped.
+      // 'cluster'    → radius (grouping tightness) + maxZoom (declutter to pins past this zoom).
+      algorithm: mode === 'individual'
+        ? new NoopAlgorithm()
+        : new SuperClusterAlgorithm({ radius: 90, maxZoom: 15 }),
     })
     return () => clusterer.clearMarkers()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [map, markerLib, points])
+  }, [map, markerLib, points, mode])
 
   // Highlight the selected marker without rebuilding the whole cluster layer.
   useEffect(() => {
@@ -616,14 +625,16 @@ function Sidebar({
 
   const activeImage = allImages[activeImageIdx] || null
 
-  const { typeCounts, years } = useMemo(() => {
-    const typeCounts = {}
+  const { typeCounts, densityCounts, years } = useMemo(() => {
+    const typeCounts = {}, densityCounts = {}
     const yearSet = new Set()
     allGraffiti.forEach(g => {
-      typeCounts[g.style] = (typeCounts[g.style] || 0) + 1
+      const st = (g.styles && g.styles.length) ? g.styles : (g.style ? [g.style] : [])
+      st.forEach(s => { typeCounts[s] = (typeCounts[s] || 0) + 1 })
+      if (g.density) densityCounts[g.density] = (densityCounts[g.density] || 0) + 1
       if (g.year) yearSet.add(g.year)
     })
-    return { typeCounts, years: Array.from(yearSet).sort() }
+    return { typeCounts, densityCounts, years: Array.from(yearSet).sort() }
   }, [allGraffiti])
 
   const toggle = (key, val) => onFilterChange(prev => {
@@ -632,7 +643,7 @@ function Sidebar({
     return { ...prev, [key]: set }
   })
 
-  const activeFilterCount = filters.styles.size + filters.years.size
+  const activeFilterCount = filters.styles.size + filters.densities.size + filters.years.size
   const totalM2 = useMemo(() => graffiti.reduce((a, g) => a + (g.size_m2 || 0), 0), [graffiti])
 
   const formatDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : null
@@ -680,7 +691,7 @@ function Sidebar({
 
       {filtersOpen && <div className="filters-block">
         <FilterSection title={t('filter.type')} activeCount={filters.styles.size}>
-          {['tag', 'throwup', 'piece'].map(style => {
+          {['tag', 'throwup', 'piece', 'mural'].map(style => {
             const active = filters.styles.has(style)
             return (
               <button key={style}
@@ -692,6 +703,25 @@ function Sidebar({
                 <span className="filter-dot" style={{ background: STYLE_COLORS[style] }} />
                 <span className="filter-count">{typeCounts[style] || 0}</span>
                 <span className="filter-name">{(STYLE_LABELS[style] ? STYLE_LABELS[style]() : style)}</span>
+              </button>
+            )
+          })}
+        </FilterSection>
+
+        <FilterSection title={t('filter.density')} activeCount={filters.densities.size}>
+          {['light', 'medium', 'heavy'].map(dk => {
+            const active = filters.densities.has(dk)
+            const color = DENSITY_COLORS[dk]
+            return (
+              <button key={dk}
+                className={'filter-btn' + (active ? ' active' : '')}
+                style={{ borderColor: active ? color : '#E9E5DA', background: active ? color + '22' : '#fff' }}
+                onClick={() => toggle('densities', dk)}
+                aria-pressed={active}
+              >
+                <span className="filter-dot" style={{ background: color }} />
+                <span className="filter-count">{densityCounts[dk] || 0}</span>
+                <span className="filter-name">{t('density.' + dk)}</span>
               </button>
             )
           })}
@@ -979,7 +1009,8 @@ export default function App() {
   const [selected, setSelected] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [filters, setFilters] = useState({ styles: new Set(), years: new Set(), state: 'all' })
+  const [filters, setFilters] = useState({ styles: new Set(), densities: new Set(), years: new Set(), state: 'all' })
+  const [clusterMode, setClusterMode] = useState('cluster')   // 'cluster' | 'individual'
   const [panTo, setPanTo] = useState(null)
   const [user, setUser] = useState(null)
   const [showAuth, setShowAuth] = useState(false)
@@ -1135,7 +1166,9 @@ export default function App() {
     if (g.cluster) return true
     if (filters.state === 'active' && g.cleaned) return false
     if (filters.state === 'cleaned' && !g.cleaned) return false
-    if (filters.styles.size > 0 && !filters.styles.has(g.style)) return false
+    const gStyles = (g.styles && g.styles.length) ? g.styles : (g.style ? [g.style] : [])
+    if (filters.styles.size > 0 && !gStyles.some(s => filters.styles.has(s))) return false
+    if (filters.densities.size > 0 && !filters.densities.has(g.density)) return false
     if (filters.years.size > 0 && !filters.years.has(g.year)) return false
     return true
   }), [allGraffiti, filters])
@@ -1151,7 +1184,7 @@ export default function App() {
   const selectedId = selected?.id ?? null
 
   const resetFilters = useCallback(() => {
-    setFilters({ styles: new Set(), years: new Set(), state: 'all' })
+    setFilters({ styles: new Set(), densities: new Set(), years: new Set(), state: 'all' })
   }, [])
 
   const deselect = useCallback(() => setSelected(null), [])
@@ -1254,9 +1287,25 @@ export default function App() {
                   points={individuals}
                   selectedId={selectedId}
                   onSelect={handleSelect}
+                  mode={clusterMode}
                 />
               </Map>
             </APIProvider>
+
+            <div className="map-cluster-toggle" role="group" aria-label={t('map.viewmode')}>
+              <button
+                className={clusterMode === 'cluster' ? 'on' : ''}
+                onClick={() => setClusterMode('cluster')}
+              >
+                {t('map.clusters')}
+              </button>
+              <button
+                className={clusterMode === 'individual' ? 'on' : ''}
+                onClick={() => setClusterMode('individual')}
+              >
+                {t('map.individual')}
+              </button>
+            </div>
           </div>
         </div>
       </div>

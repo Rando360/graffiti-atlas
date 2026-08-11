@@ -21,7 +21,8 @@ export default function ModerationPanel({ onClose }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [busyId, setBusyId] = useState(null)
-  const [typeOverride, setTypeOverride] = useState({})
+  const [stylesSel, setStylesSel] = useState({})   // key -> array of types (multi-select)
+  const [densitySel, setDensitySel] = useState({}) // key -> 'light'|'medium'|'heavy'
   const [surfaceSel, setSurfaceSel] = useState({}) // pending id -> surface_type
   const [sizeSel, setSizeSel] = useState({})       // pending id -> size in m²
   const [nearbySel, setNearbySel] = useState({})   // pending id -> selected nearby graffiti
@@ -180,19 +181,29 @@ export default function ModerationPanel({ onClose }) {
     }
   }
 
+  // Current types for a photo: local edit → existing styles[] → legacy single style.
+  const stylesFor = (k, im) => stylesSel[k] ?? im?.styles ?? (im?.style ? [im.style] : [])
+  const toggleStyle = (k, s, current) => setStylesSel(prev => {
+    const cur = prev[k] ?? current ?? []
+    return { ...prev, [k]: cur.includes(s) ? cur.filter(x => x !== s) : [...cur, s] }
+  })
+  const setDensity = (k, d) => setDensitySel(prev => ({ ...prev, [k]: prev[k] === d ? undefined : d }))
+
   // Build the approve payload for a marker: per-photo classifications when it
   // has real image ids, else a single marker-level classification.
   const approveBodyFor = (g) => {
     const imgs = (g.images && g.images.length) ? g.images : []
     const photos = imgs.filter(im => im.id).map(im => ({
       image_id: im.id,
-      style: typeOverride[im.id] ?? im.style ?? null,
+      styles: stylesFor(im.id, im),
+      density: densitySel[im.id] ?? im.density ?? null,
       surface_type: surfaceSel[im.id] ?? im.surface_type ?? null,
       size_m2: sizeSel[im.id] ?? im.size_m2 ?? null,
     }))
     if (photos.length) return { photos }
     return {
-      style: typeOverride[g.id] ?? g.style ?? null,
+      styles: stylesFor(g.id, g),
+      density: densitySel[g.id] ?? null,
       surface_type: surfaceSel[g.id] ?? g.surface_type ?? null,
       size_m2: sizeSel[g.id] ?? null,
     }
@@ -255,6 +266,12 @@ export default function ModerationPanel({ onClose }) {
     { key: 'throwup', label: t('style.throwup') },
     { key: 'piece', label: t('style.piece') },
     { key: 'mural', label: t('style.mural') },
+  ]
+
+  const DENSITIES = [
+    { key: 'light', label: t('density.light') },
+    { key: 'medium', label: t('density.medium') },
+    { key: 'heavy', label: t('density.heavy') },
   ]
 
   const SURFACES = [
@@ -422,6 +439,7 @@ export default function ModerationPanel({ onClose }) {
                       <th>{t('mod.col.photo')}</th>
                       <th>{t('report.col.city')}</th>
                       <th>{t('mod.type')}</th>
+                      <th>{t('mod.density')}</th>
                       <th>{t('mod.surface')}</th>
                       <th>m²</th>
                       <th>{t('mod.col.actions')}</th>
@@ -470,14 +488,30 @@ export default function ModerationPanel({ onClose }) {
                             <td>
                               <div className="mod-tbl-types">
                                 {STYLES.map(s => {
-                                  const cur = typeOverride[k] ?? im.style
+                                  const cur = stylesFor(k, im)
                                   return (
                                     <button
                                       key={s.key}
-                                      className={'mod-tbl-type' + (cur === s.key ? ' on' : '')}
-                                      onClick={() => setTypeOverride(prev => ({ ...prev, [k]: prev[k] === s.key ? null : s.key }))}
+                                      className={'mod-tbl-type' + (cur.includes(s.key) ? ' on' : '')}
+                                      onClick={() => toggleStyle(k, s.key, cur)}
                                     >
                                       {s.label}
+                                    </button>
+                                  )
+                                })}
+                              </div>
+                            </td>
+                            <td>
+                              <div className="mod-tbl-types">
+                                {DENSITIES.map(d => {
+                                  const cur = densitySel[k] ?? im.density
+                                  return (
+                                    <button
+                                      key={d.key}
+                                      className={'mod-tbl-type dens' + (cur === d.key ? ' on' : '')}
+                                      onClick={() => setDensity(k, d.key)}
+                                    >
+                                      {d.label}
                                     </button>
                                   )
                                 })}
@@ -549,14 +583,30 @@ export default function ModerationPanel({ onClose }) {
                     <div className="mod-type-row">
                       <span className="mod-type-lbl">{t('mod.type')}</span>
                       {STYLES.map(s => {
-                        const current = typeOverride[g.id] ?? g.style
+                        const cur = stylesFor(g.id, g)
                         return (
                           <button
                             key={s.key}
-                            className={'mod-type' + (current === s.key ? ' on' : '')}
-                            onClick={() => setTypeOverride(prev => ({ ...prev, [g.id]: s.key }))}
+                            className={'mod-type' + (cur.includes(s.key) ? ' on' : '')}
+                            onClick={() => toggleStyle(g.id, s.key, cur)}
                           >
                             {s.label}
+                          </button>
+                        )
+                      })}
+                    </div>
+
+                    <div className="mod-type-row">
+                      <span className="mod-type-lbl">{t('mod.density')}</span>
+                      {DENSITIES.map(d => {
+                        const cur = densitySel[g.id] ?? g.density
+                        return (
+                          <button
+                            key={d.key}
+                            className={'mod-type' + (cur === d.key ? ' on' : '')}
+                            onClick={() => setDensity(g.id, d.key)}
+                          >
+                            {d.label}
                           </button>
                         )
                       })}
@@ -664,7 +714,7 @@ export default function ModerationPanel({ onClose }) {
                             disabled={!nearbySel[g.id] || busyId === g.id}
                             onClick={() => act(
                               `${API_URL}/moderation/graffiti/${g.id}/approve-at-location`,
-                              g.id, { target_id: nearbySel[g.id].id, style: typeOverride[g.id] ?? g.style, surface_type: surfaceSel[g.id] ?? g.surface_type ?? null, size_m2: sizeSel[g.id] ?? null }
+                              g.id, { target_id: nearbySel[g.id].id, styles: stylesFor(g.id, g), density: densitySel[g.id] ?? null, surface_type: surfaceSel[g.id] ?? g.surface_type ?? null, size_m2: sizeSel[g.id] ?? null }
                             )}
                           >
                             {t('mod.newAtLocation')}
@@ -677,11 +727,7 @@ export default function ModerationPanel({ onClose }) {
                       <button
                         className="mod-approve"
                         disabled={busyId === g.id}
-                        onClick={() => act(
-                          `${API_URL}/moderation/graffiti/${g.id}/approve`,
-                          g.id,
-                          { style: typeOverride[g.id] ?? g.style, surface_type: surfaceSel[g.id] ?? g.surface_type ?? null, size_m2: sizeSel[g.id] ?? null }
-                        )}
+                        onClick={() => approveMarker(g)}
                       >
                         {t('mod.approve')}
                       </button>

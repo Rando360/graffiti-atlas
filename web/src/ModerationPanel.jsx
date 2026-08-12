@@ -595,8 +595,13 @@ export default function ModerationPanel({ onClose }) {
                             {j === 0 && (
                               <td className="mod-tbl-actions" rowSpan={rs}>
                                 {classify ? (
-                                  <button className="mod-approve sm" disabled={busyId === g.id}
-                                    title={t('mod.reclassify.save')} onClick={() => saveReclassify(g)}>💾</button>
+                                  <>
+                                    <button className="mod-approve sm" disabled={busyId === g.id}
+                                      title={t('mod.reclassify.save')} onClick={() => saveReclassify(g)}>💾</button>
+                                    <button className="mod-reject sm" disabled={busyId === g.id}
+                                      title={t('mod.reclassify.delete')}
+                                      onClick={() => { if (window.confirm(t('mod.reclassify.confirmDelete'))) act(`${API_URL}/moderation/graffiti/${g.id}/reject`, g.id) }}>🗑</button>
+                                  </>
                                 ) : (
                                   <>
                                     <button className="mod-approve sm" disabled={busyId === g.id}

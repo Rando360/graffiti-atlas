@@ -215,6 +215,7 @@ def list_approved_fast(
     cnt = (service.table("graffiti")
            .select("id", count="exact")
            .eq("status", "approved")
+           .eq("reclassified", False)
            .limit(1)
            .execute())
     total = cnt.count or 0
@@ -272,6 +273,12 @@ def reclassify_graffiti(graffiti_id: str, body: ReclassifyBody, user: dict = Dep
                     "graffiti_id": graffiti_id, **fields, "model_version": "moderator",
                 }).execute()
             updated = 1
+
+    # Mark done so it drops out of the reclassify backlog and never reappears.
+    service.table("graffiti").update({
+        "reclassified": True,
+        "updated_at": datetime.utcnow().isoformat(),
+    }).eq("id", graffiti_id).execute()
 
     return {"status": "reclassified", "id": graffiti_id, "images_updated": updated}
 
@@ -341,6 +348,7 @@ def approve_graffiti(graffiti_id: str, body: ApproveBody = None, user: dict = De
     service = _service()
     update = {
         "status": "approved",
+        "reclassified": True,   # classified with the current fields → not in the reclassify backlog
         "updated_at": datetime.utcnow().isoformat(),
     }
     if body and body.size_m2 is not None and 0 < body.size_m2 <= 10000:
@@ -465,6 +473,7 @@ def approve_at_location(graffiti_id: str, body: TargetBody, user: dict = Depends
     update = {
         "location_id": loc,
         "status": "approved",
+        "reclassified": True,
         "updated_at": datetime.utcnow().isoformat(),
     }
     if body.size_m2 is not None and 0 < body.size_m2 <= 10000:

@@ -4,7 +4,18 @@
 --  walk keeps same-city photos together. Measurement (size_m2) is returned for
 --  display only — the reclassify endpoint never writes it.
 --  Run once in the Supabase SQL editor.
+--
+--  A "reclassified" flag keeps the list to the current backlog only:
+--   • saving a photo marks it done → it won't reappear;
+--   • photos approved through normal moderation are marked done automatically
+--     → new photos never enter this list.
 -- ============================================================================
+
+-- Flag: false = still in the reclassify backlog. Existing approved photos start
+-- at false (the backlog); everything approved from now on is set true on approve.
+alter table public.graffiti
+  add column if not exists reclassified boolean not null default false;
+
 CREATE OR REPLACE FUNCTION public.get_approved_graffiti_bulk(
   p_limit integer DEFAULT 100, p_offset integer DEFAULT 0)
  RETURNS TABLE(
@@ -20,7 +31,7 @@ AS $function$
       ST_X(g.location::geometry) AS lng,
       g.date_observed, g.created_at
     FROM public.graffiti g
-    WHERE g.status = 'approved'
+    WHERE g.status = 'approved' AND g.reclassified = false
     ORDER BY g.city NULLS LAST, g.created_at DESC, g.id
     LIMIT p_limit OFFSET p_offset
   )

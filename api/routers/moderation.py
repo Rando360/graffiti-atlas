@@ -230,9 +230,10 @@ def list_approved_fast(
 
 
 class ReclassifyBody(BaseModel):
-    photos: list[PhotoClass] | None = None   # per-image styles + density
+    photos: list[PhotoClass] | None = None   # per-image styles + density + surface
     styles: list[str] | None = None          # marker-level fallback
     density: str | None = None
+    surface_type: str | None = None
 
 
 @router.post("/graffiti/{graffiti_id}/reclassify")
@@ -241,16 +242,16 @@ def reclassify_graffiti(graffiti_id: str, body: ReclassifyBody, user: dict = Dep
     size_m2 (measurement is preserved) or status."""
     service = _service()
 
-    def type_density_only(styles, style, density):
-        f = _class_fields(styles, style, density, None, None)
-        f.pop("surface_type", None)
+    def reclass_fields(styles, style, density, surface):
+        # types + density + surface, but NEVER size_m2 (measurement preserved).
+        f = _class_fields(styles, style, density, surface, None)
         f.pop("size_m2", None)
         return f
 
     updated = 0
     if body.photos:
         for ph in body.photos:
-            fields = type_density_only(ph.styles, ph.style, ph.density)
+            fields = reclass_fields(ph.styles, ph.style, ph.density, ph.surface_type)
             if not fields:
                 continue
             existing = service.table("classifications").select("id").eq("image_id", ph.image_id).execute()
@@ -263,7 +264,7 @@ def reclassify_graffiti(graffiti_id: str, body: ReclassifyBody, user: dict = Dep
                 }).execute()
             updated += 1
     else:
-        fields = type_density_only(body.styles, None, body.density)
+        fields = reclass_fields(body.styles, None, body.density, body.surface_type)
         if fields:
             existing = service.table("classifications").select("id").eq("graffiti_id", graffiti_id).execute()
             if existing.data:

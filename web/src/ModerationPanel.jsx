@@ -228,9 +228,14 @@ export default function ModerationPanel({ onClose }) {
       image_id: im.id,
       styles: stylesFor(im.id, im),
       density: densitySel[im.id] ?? im.density ?? null,
+      surface_type: surfaceSel[im.id] ?? im.surface_type ?? null,
     }))
     if (photos.length) return { photos }
-    return { styles: stylesFor(g.id, g), density: densitySel[g.id] ?? null }
+    return {
+      styles: stylesFor(g.id, g),
+      density: densitySel[g.id] ?? null,
+      surface_type: surfaceSel[g.id] ?? g.surface_type ?? null,
+    }
   }
   const saveReclassify = (g) =>
     act(`${API_URL}/moderation/graffiti/${g.id}/reclassify`, g.id, reclassifyBodyFor(g))
@@ -557,12 +562,20 @@ export default function ModerationPanel({ onClose }) {
                               </div>
                             </td>
                             <td>
-                              <select className="mod-tbl-select"
-                                value={surfaceSel[k] ?? im.surface_type ?? ''}
-                                onChange={e => setSurfaceSel(prev => ({ ...prev, [k]: e.target.value || undefined }))}>
-                                <option value="">—</option>
-                                {SURFACES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
-                              </select>
+                              <div className="mod-tbl-types">
+                                {SURFACES.map(s => {
+                                  const cur = surfaceSel[k] ?? im.surface_type
+                                  return (
+                                    <button
+                                      key={s.key}
+                                      className={'mod-tbl-type surf' + (cur === s.key ? ' on' : '')}
+                                      onClick={() => setSurfaceSel(prev => ({ ...prev, [k]: prev[k] === s.key ? undefined : s.key }))}
+                                    >
+                                      {s.label}
+                                    </button>
+                                  )
+                                })}
+                              </div>
                             </td>
                             <td>
                               <div className="mod-tbl-size-cell">

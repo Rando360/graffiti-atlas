@@ -1712,8 +1712,9 @@ a.header-btn.mod { text-decoration: none; display: inline-flex; align-items: cen
 }
 .mod-tbl-type:hover { border-color: var(--accent,#E85D26); }
 .mod-tbl-type.on { background: var(--accent,#E85D26); border-color: var(--accent,#E85D26); color: #fff; }
-/* Density chips use a coverage ramp so they read apart from type chips. */
+/* Density + surface chips use distinct "on" colours so the three columns read apart. */
 .mod-tbl-type.dens.on { background: #E0912B; border-color: #E0912B; }
+.mod-tbl-type.surf.on { background: #3B82F6; border-color: #3B82F6; }
 .mod-tbl-select { padding: 6px 8px; border: 1.5px solid var(--border,#E9E5DA); border-radius: 8px; font-size: 12.5px; font-family: inherit; color: var(--text,#2A2520); background: var(--surface,#fff); cursor: pointer; max-width: 130px; }
 .mod-tbl-select:focus { outline: none; border-color: var(--accent,#E85D26); }
 .mod-tbl-size { max-width: 88px; }

@@ -29,17 +29,20 @@ AS $function$
     SELECT g.id, g.city,
       ST_Y(g.location::geometry) AS lat,
       ST_X(g.location::geometry) AS lng,
-      g.date_observed, g.created_at
+      g.date_observed, g.created_at,
+      -- Geohash clusters nearby photos next to each other, so duplicates of the
+      -- same spot land adjacent in the list (easy to compare + delete).
+      ST_GeoHash(g.location::geometry, 9) AS geohash
     FROM public.graffiti g
     WHERE g.status = 'approved' AND g.reclassified = false
-    ORDER BY g.city NULLS LAST, g.created_at DESC, g.id
+    ORDER BY g.city NULLS LAST, ST_GeoHash(g.location::geometry, 9), g.id
     LIMIT p_limit OFFSET p_offset
   )
   SELECT a.id, a.city, a.lat, a.lng, a.date_observed, a.created_at,
-    (SELECT i.s3_key_thumb FROM public.images i WHERE i.graffiti_id = a.id ORDER BY i.s3_key_thumb LIMIT 1) AS s3_key_thumb,
+    (SELECT COALESCE(i.s3_key_thumb, i.s3_key_medium, i.s3_key_full) FROM public.images i WHERE i.graffiti_id = a.id ORDER BY i.s3_key_thumb NULLS LAST LIMIT 1) AS s3_key_thumb,
     NULL::text AS style, NULL::text AS surface_type,
     COALESCE((SELECT jsonb_agg(jsonb_build_object(
-        'id', i.id, 'key', i.s3_key_thumb,
+        'id', i.id, 'key', COALESCE(i.s3_key_thumb, i.s3_key_medium, i.s3_key_full),
         'style',        (SELECT c.style        FROM public.classifications c WHERE c.image_id = i.id LIMIT 1),
         'styles',       (SELECT c.styles       FROM public.classifications c WHERE c.image_id = i.id LIMIT 1),
         'density',      (SELECT c.density      FROM public.classifications c WHERE c.image_id = i.id LIMIT 1),
@@ -48,5 +51,5 @@ AS $function$
       ) ORDER BY i.s3_key_thumb)
       FROM public.images i WHERE i.graffiti_id = a.id), '[]'::jsonb) AS images
   FROM appr a
-  ORDER BY a.city NULLS LAST, a.created_at DESC, a.id
+  ORDER BY a.city NULLS LAST, a.geohash, a.id
 $function$;

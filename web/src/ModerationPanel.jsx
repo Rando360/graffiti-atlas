@@ -260,7 +260,7 @@ export default function ModerationPanel({ onClose }) {
   const runBulk = async (kind) => {
     const ids = bulk.filter(g => selected.has(g.id)).map(g => g.id)
     if (!ids.length || bulkBusy) return
-    if (kind === 'reject' && !window.confirm(t('mod.bulk.confirmReject'))) return
+    if (kind === 'reject' && !window.confirm(t(classify ? 'mod.reclassify.confirmDelete' : 'mod.bulk.confirmReject'))) return
     if (kind === 'approve' && !window.confirm(`${t('mod.bulk.confirmApprove')} (${ids.length})`)) return
     setBulkBusy(true); setError(null)
     const headers = await authHeader()
@@ -431,10 +431,16 @@ export default function ModerationPanel({ onClose }) {
                     <>
                       <span className="mod-tbl-selcount">{selectedCount} {t('mod.bulk.selected')}</span>
                       {classify ? (
-                        <button className="mod-tbl-bulk approve" disabled={bulkBusy}
-                          onClick={() => runBulk('reclassify')}>
-                          {bulkBusy ? t('common.loading') : `${t('mod.reclassify.save')} (${selectedCount})`}
-                        </button>
+                        <>
+                          <button className="mod-tbl-bulk approve" disabled={bulkBusy}
+                            onClick={() => runBulk('reclassify')}>
+                            {bulkBusy ? t('common.loading') : `${t('mod.reclassify.save')} (${selectedCount})`}
+                          </button>
+                          <button className="mod-tbl-bulk reject" disabled={bulkBusy}
+                            onClick={() => runBulk('reject')}>
+                            {t('mod.reclassify.delete')} ({selectedCount})
+                          </button>
+                        </>
                       ) : (
                         <>
                           <button className="mod-tbl-bulk approve" disabled={bulkBusy}

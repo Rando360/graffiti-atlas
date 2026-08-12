@@ -195,6 +195,87 @@ def list_pending_fast(
     }
 
 
+@router.get("/approved-fast")
+def list_approved_fast(
+    limit: int = 100,
+    offset: int = 0,
+    user: dict = Depends(require_admin),
+):
+    """Paginated APPROVED list for re-classifying older photos (add types +
+    density). Ordered by city. Read-only apart from the reclassify endpoint."""
+    limit = max(1, min(limit, 500))
+    offset = max(0, offset)
+
+    service = _service()
+    page = service.rpc("get_approved_graffiti_bulk",
+                       {"p_limit": limit, "p_offset": offset}).execute().data or []
+    for p in page:
+        p["nearby"] = []
+
+    cnt = (service.table("graffiti")
+           .select("id", count="exact")
+           .eq("status", "approved")
+           .limit(1)
+           .execute())
+    total = cnt.count or 0
+
+    return {
+        "pending": page,     # same shape as pending-fast so the table can reuse it
+        "total": total,
+        "offset": offset,
+        "limit": limit,
+        "has_more": offset + len(page) < total,
+    }
+
+
+class ReclassifyBody(BaseModel):
+    photos: list[PhotoClass] | None = None   # per-image styles + density
+    styles: list[str] | None = None          # marker-level fallback
+    density: str | None = None
+
+
+@router.post("/graffiti/{graffiti_id}/reclassify")
+def reclassify_graffiti(graffiti_id: str, body: ReclassifyBody, user: dict = Depends(require_admin)):
+    """Update ONLY types + density on an already-approved graffiti. Never touches
+    size_m2 (measurement is preserved) or status."""
+    service = _service()
+
+    def type_density_only(styles, style, density):
+        f = _class_fields(styles, style, density, None, None)
+        f.pop("surface_type", None)
+        f.pop("size_m2", None)
+        return f
+
+    updated = 0
+    if body.photos:
+        for ph in body.photos:
+            fields = type_density_only(ph.styles, ph.style, ph.density)
+            if not fields:
+                continue
+            existing = service.table("classifications").select("id").eq("image_id", ph.image_id).execute()
+            if existing.data:
+                service.table("classifications").update(fields).eq("image_id", ph.image_id).execute()
+            else:
+                service.table("classifications").insert({
+                    "graffiti_id": graffiti_id, "image_id": ph.image_id,
+                    **fields, "model_version": "moderator",
+                }).execute()
+            updated += 1
+    else:
+        fields = type_density_only(body.styles, None, body.density)
+        if fields:
+            existing = service.table("classifications").select("id").eq("graffiti_id", graffiti_id).execute()
+            if existing.data:
+                service.table("classifications").update(fields).eq("graffiti_id", graffiti_id).execute()
+            else:
+                service.table("classifications").insert({
+                    "graffiti_id": graffiti_id, **fields, "model_version": "moderator",
+                }).execute()
+            updated = 1
+
+    return {"status": "reclassified", "id": graffiti_id, "images_updated": updated}
+
+
 @router.get("/pending-points")
 def pending_points(user: dict = Depends(require_admin)):
     """All pending bulk points (id + coords + thumbnail) for the moderation map —

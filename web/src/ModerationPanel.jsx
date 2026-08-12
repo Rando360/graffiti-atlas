@@ -18,6 +18,7 @@ export default function ModerationPanel({ onClose }) {
   const [bulkLimit, setBulkLimit] = useState(100) // how many of the pending pool to load
   const [bulkLoading, setBulkLoading] = useState(false)
   const [bulkLoaded, setBulkLoaded] = useState(false)
+  const [bulkKind, setBulkKind] = useState('pending')  // 'pending' | 'approved' (reclassify)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [busyId, setBusyId] = useState(null)
@@ -65,17 +66,20 @@ export default function ModerationPanel({ onClose }) {
 
   // Bulk pending list (self-imported YOLO scans) for the fast table view.
   // Skips the per-item nearby lookup and paginates server-side.
-  const loadBulk = useCallback(async (limit = 100) => {
+  const loadBulk = useCallback(async (limit = 100, kind = 'pending') => {
     setBulkLoading(true); setError(null)
     try {
       const headers = await authHeader()
-      const res = await fetch(`${API_URL}/moderation/pending-fast?limit=${limit}&offset=0`, { headers })
+      const path = kind === 'approved' ? 'approved-fast' : 'pending-fast'
+      const res = await fetch(`${API_URL}/moderation/${path}?limit=${limit}&offset=0`, { headers })
       if (res.status === 403) throw new Error(t('mod.err.forbidden'))
       const j = await res.json()
       setBulk(j.pending || [])
       setBulkTotal(j.total || 0)
       setBulkLimit(limit)
       setBulkLoaded(true)
+      setBulkKind(kind)
+      setSelected(new Set())
     } catch (e) {
       setError(e.message)
     } finally {
@@ -83,10 +87,15 @@ export default function ModerationPanel({ onClose }) {
     }
   }, [authHeader])
 
-  // Load bulk scans the first time the table or grid view is opened.
+  // Load the right dataset for the current view: pending for table/grid,
+  // approved for reclassify. Reload when the required kind changes.
   useEffect(() => {
-    if ((viewMode === 'table' || viewMode === 'grid') && !bulkLoaded && !bulkLoading) loadBulk(100)
-  }, [viewMode, bulkLoaded, bulkLoading, loadBulk])
+    const wantApproved = viewMode === 'reclassify'
+    const wantTable = viewMode === 'table' || viewMode === 'grid' || viewMode === 'reclassify'
+    if (!wantTable || bulkLoading) return
+    const kind = wantApproved ? 'approved' : 'pending'
+    if (!bulkLoaded || bulkKind !== kind) loadBulk(100, kind)
+  }, [viewMode, bulkLoaded, bulkKind, bulkLoading, loadBulk])
 
   // Load all pending coordinates for the map view.
   const loadMapPoints = useCallback(async () => {
@@ -212,6 +221,20 @@ export default function ModerationPanel({ onClose }) {
   const approveMarker = (g) =>
     act(`${API_URL}/moderation/graffiti/${g.id}/approve`, g.id, approveBodyFor(g))
 
+  // Reclassify: only types + density (never size or status).
+  const reclassifyBodyFor = (g) => {
+    const imgs = (g.images && g.images.length) ? g.images : []
+    const photos = imgs.filter(im => im.id).map(im => ({
+      image_id: im.id,
+      styles: stylesFor(im.id, im),
+      density: densitySel[im.id] ?? im.density ?? null,
+    }))
+    if (photos.length) return { photos }
+    return { styles: stylesFor(g.id, g), density: densitySel[g.id] ?? null }
+  }
+  const saveReclassify = (g) =>
+    act(`${API_URL}/moderation/graffiti/${g.id}/reclassify`, g.id, reclassifyBodyFor(g))
+
   // ── Table multi-select ──────────────────────────────────────────────────
   const toggleRow = (id) => setSelected(s => {
     const n = new Set(s)
@@ -242,11 +265,15 @@ export default function ModerationPanel({ onClose }) {
         const id = ids[i++]
         const g = bulk.find(x => x.id === id)
         try {
-          let url = `${API_URL}/moderation/graffiti/${id}/${kind === 'approve' ? 'approve' : 'reject'}`
+          const action = kind === 'approve' ? 'approve' : kind === 'reclassify' ? 'reclassify' : 'reject'
+          let url = `${API_URL}/moderation/graffiti/${id}/${action}`
           const opts = { method: 'POST', headers }
           if (kind === 'approve') {
             opts.headers = { ...headers, 'Content-Type': 'application/json' }
             opts.body = JSON.stringify(g ? approveBodyFor(g) : {})
+          } else if (kind === 'reclassify') {
+            opts.headers = { ...headers, 'Content-Type': 'application/json' }
+            opts.body = JSON.stringify(g ? reclassifyBodyFor(g) : {})
           }
           const res = await fetch(url, opts)
           if (res.ok) {
@@ -294,6 +321,7 @@ export default function ModerationPanel({ onClose }) {
   ]
 
   const formatDate = (d) => d ? new Date(d).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : ''
+  const classify = viewMode === 'reclassify'   // reclassifying approved photos (types + density only)
 
   return (
     <div className="mod-overlay" onClick={onClose}>
@@ -316,6 +344,7 @@ export default function ModerationPanel({ onClose }) {
               <button className={viewMode === 'table' ? 'on' : ''} onClick={() => setViewMode('table')}>{t('mod.view.table')}</button>
               <button className={viewMode === 'grid' ? 'on' : ''} onClick={() => setViewMode('grid')}>{t('mod.view.grid')}</button>
               <button className={viewMode === 'map' ? 'on' : ''} onClick={() => setViewMode('map')}>{t('mod.view.map')}</button>
+              <button className={viewMode === 'reclassify' ? 'on' : ''} onClick={() => setViewMode('reclassify')}>{t('mod.view.reclassify')}</button>
             </div>
           )}
         </div>
@@ -331,7 +360,7 @@ export default function ModerationPanel({ onClose }) {
               ) : (
                 <ModerationMap points={mapPoints} onLink={linkPoints} onDelete={deleteMapPoint} />
               )
-            ) : (viewMode === 'table' || viewMode === 'grid') ? (
+            ) : (viewMode === 'table' || viewMode === 'grid' || viewMode === 'reclassify') ? (
               bulkLoading && bulk.length === 0 ? (
                 <div className="mod-empty">{t('common.loading')}</div>
               ) : bulk.length === 0 ? (
@@ -391,18 +420,28 @@ export default function ModerationPanel({ onClose }) {
               ) : (
               <div className="mod-table-wrap">
                 <div className="mod-tbl-bar">
-                  <span className="mod-tbl-count">{bulk.length} / {bulkTotal} {t('mod.bulk.pending')}</span>
+                  <span className="mod-tbl-count">{bulk.length} / {bulkTotal} {classify ? t('mod.reclassify.count') : t('mod.bulk.pending')}</span>
+                  {classify && <span className="mod-grid-hint">{t('mod.reclassify.hint')}</span>}
                   {selectedCount > 0 ? (
                     <>
                       <span className="mod-tbl-selcount">{selectedCount} {t('mod.bulk.selected')}</span>
-                      <button className="mod-tbl-bulk approve" disabled={bulkBusy}
-                        onClick={() => runBulk('approve')}>
-                        {bulkBusy ? t('common.loading') : `${t('mod.approve')} (${selectedCount})`}
-                      </button>
-                      <button className="mod-tbl-bulk reject" disabled={bulkBusy}
-                        onClick={() => runBulk('reject')}>
-                        {t('mod.reject')} ({selectedCount})
-                      </button>
+                      {classify ? (
+                        <button className="mod-tbl-bulk approve" disabled={bulkBusy}
+                          onClick={() => runBulk('reclassify')}>
+                          {bulkBusy ? t('common.loading') : `${t('mod.reclassify.save')} (${selectedCount})`}
+                        </button>
+                      ) : (
+                        <>
+                          <button className="mod-tbl-bulk approve" disabled={bulkBusy}
+                            onClick={() => runBulk('approve')}>
+                            {bulkBusy ? t('common.loading') : `${t('mod.approve')} (${selectedCount})`}
+                          </button>
+                          <button className="mod-tbl-bulk reject" disabled={bulkBusy}
+                            onClick={() => runBulk('reject')}>
+                            {t('mod.reject')} ({selectedCount})
+                          </button>
+                        </>
+                      )}
                       <button className="mod-tbl-loadmore" disabled={bulkBusy}
                         onClick={() => setSelected(new Set())}>
                         {t('mod.bulk.clearSel')}
@@ -414,12 +453,12 @@ export default function ModerationPanel({ onClose }) {
                         <button
                           className="mod-tbl-loadmore"
                           disabled={bulkLoading}
-                          onClick={() => loadBulk(bulkLimit + 100)}
+                          onClick={() => loadBulk(bulkLimit + 100, bulkKind)}
                         >
                           {bulkLoading ? t('common.loading') : t('mod.bulk.loadmore')}
                         </button>
                       )}
-                      <button className="mod-tbl-loadmore" disabled={bulkLoading} onClick={() => loadBulk(bulkLimit)}>
+                      <button className="mod-tbl-loadmore" disabled={bulkLoading} onClick={() => loadBulk(bulkLimit, bulkKind)}>
                         {t('mod.bulk.refresh')}
                       </button>
                     </>
@@ -542,10 +581,17 @@ export default function ModerationPanel({ onClose }) {
                             </td>
                             {j === 0 && (
                               <td className="mod-tbl-actions" rowSpan={rs}>
-                                <button className="mod-approve sm" disabled={busyId === g.id}
-                                  onClick={() => approveMarker(g)}>✓</button>
-                                <button className="mod-reject sm" disabled={busyId === g.id}
-                                  onClick={() => act(`${API_URL}/moderation/graffiti/${g.id}/reject`, g.id)}>✕</button>
+                                {classify ? (
+                                  <button className="mod-approve sm" disabled={busyId === g.id}
+                                    title={t('mod.reclassify.save')} onClick={() => saveReclassify(g)}>💾</button>
+                                ) : (
+                                  <>
+                                    <button className="mod-approve sm" disabled={busyId === g.id}
+                                      onClick={() => approveMarker(g)}>✓</button>
+                                    <button className="mod-reject sm" disabled={busyId === g.id}
+                                      onClick={() => act(`${API_URL}/moderation/graffiti/${g.id}/reject`, g.id)}>✕</button>
+                                  </>
+                                )}
                               </td>
                             )}
                           </tr>

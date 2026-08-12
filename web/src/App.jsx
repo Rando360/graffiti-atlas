@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef, useMemo, memo, lazy, Suspense } from 'react'
 import { APIProvider, Map, AdvancedMarker, useMap, useMapsLibrary } from '@vis.gl/react-google-maps'
-import { MarkerClusterer, SuperClusterAlgorithm, NoopAlgorithm } from '@googlemaps/markerclusterer'
+import { MarkerClusterer, SuperClusterAlgorithm } from '@googlemaps/markerclusterer'
 const AuthModal = lazy(() => import('./AuthModal'))
 const UploadModal = lazy(() => import('./UploadModal'))
 const ModerationPanel = lazy(() => import('./ModerationPanel'))
@@ -138,10 +138,12 @@ function ClusteredMarkers({ points, selectedId, onSelect, mode = 'cluster' }) {
     }
     const clusterer = new MarkerClusterer({
       map, markers, renderer,
-      // 'individual' → Noop = every point is its own pin, never grouped.
-      // 'cluster'    → radius (grouping tightness) + maxZoom (declutter to pins past this zoom).
+      // 'individual' → radius 0 = never group, but SuperCluster still culls to the
+      //   viewport, so only on-screen pins render (Noop rendered ALL points at once,
+      //   which crawled at city zoom).
+      // 'cluster'    → radius (grouping tightness) + maxZoom (declutter past this zoom).
       algorithm: mode === 'individual'
-        ? new NoopAlgorithm()
+        ? new SuperClusterAlgorithm({ radius: 0, maxZoom: 24 })
         : new SuperClusterAlgorithm({ radius: 90, maxZoom: 15 }),
     })
     return () => clusterer.clearMarkers()

@@ -19,6 +19,7 @@ export default function ModerationPanel({ onClose }) {
   const [bulkLoading, setBulkLoading] = useState(false)
   const [bulkLoaded, setBulkLoaded] = useState(false)
   const [bulkKind, setBulkKind] = useState('pending')  // 'pending' | 'approved' (reclassify)
+  const [classifyLayout, setClassifyLayout] = useState('table')  // reclassify: 'table' | 'grid'
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [busyId, setBusyId] = useState(null)
@@ -327,6 +328,7 @@ export default function ModerationPanel({ onClose }) {
 
   const formatDate = (d) => d ? new Date(d).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : ''
   const classify = viewMode === 'reclassify'   // reclassifying approved photos (types + density only)
+  const showGrid = viewMode === 'grid' || (classify && classifyLayout === 'grid')
 
   return (
     <div className="mod-overlay" onClick={onClose}>
@@ -370,18 +372,30 @@ export default function ModerationPanel({ onClose }) {
                 <div className="mod-empty">{t('common.loading')}</div>
               ) : bulk.length === 0 ? (
                 <div className="mod-empty">{t('mod.empty.bulk')}</div>
-              ) : viewMode === 'grid' ? (
+              ) : showGrid ? (
                 <div className="mod-grid-wrap">
                   <div className="mod-tbl-bar">
-                    <span className="mod-tbl-count">{bulk.length} / {bulkTotal} {t('mod.bulk.pending')}</span>
+                    <span className="mod-tbl-count">{bulk.length} / {bulkTotal} {classify ? t('mod.reclassify.count') : t('mod.bulk.pending')}</span>
+                    {classify && (
+                      <div className="mod-viewtoggle">
+                        <button className={classifyLayout === 'table' ? 'on' : ''} onClick={() => setClassifyLayout('table')}>{t('mod.view.table')}</button>
+                        <button className={classifyLayout === 'grid' ? 'on' : ''} onClick={() => setClassifyLayout('grid')}>{t('mod.view.grid')}</button>
+                      </div>
+                    )}
                     {selectedCount > 0 ? (
                       <>
                         <span className="mod-tbl-selcount">{selectedCount} {t('mod.bulk.selected')}</span>
+                        {classify ? (
+                          <button className="mod-tbl-bulk approve" disabled={bulkBusy} onClick={() => runBulk('reclassify')}>
+                            {bulkBusy ? t('common.loading') : `${t('mod.reclassify.save')} (${selectedCount})`}
+                          </button>
+                        ) : (
+                          <button className="mod-tbl-bulk approve" disabled={bulkBusy} onClick={() => runBulk('approve')}>
+                            {t('mod.approve')} ({selectedCount})
+                          </button>
+                        )}
                         <button className="mod-tbl-bulk reject" disabled={bulkBusy} onClick={() => runBulk('reject')}>
-                          {bulkBusy ? t('common.loading') : `${t('mod.reject')} (${selectedCount})`}
-                        </button>
-                        <button className="mod-tbl-bulk approve" disabled={bulkBusy} onClick={() => runBulk('approve')}>
-                          {t('mod.approve')} ({selectedCount})
+                          {bulkBusy ? t('common.loading') : `${classify ? t('mod.reclassify.delete') : t('mod.reject')} (${selectedCount})`}
                         </button>
                         <button className="mod-tbl-loadmore" disabled={bulkBusy} onClick={() => setSelected(new Set())}>
                           {t('mod.bulk.clearSel')}
@@ -389,13 +403,13 @@ export default function ModerationPanel({ onClose }) {
                       </>
                     ) : (
                       <>
-                        <span className="mod-grid-hint">{t('mod.grid.hint')}</span>
+                        <span className="mod-grid-hint">{classify ? t('mod.reclassify.hint') : t('mod.grid.hint')}</span>
                         {bulk.length < bulkTotal && (
-                          <button className="mod-tbl-loadmore" disabled={bulkLoading} onClick={() => loadBulk(bulkLimit + 100)}>
+                          <button className="mod-tbl-loadmore" disabled={bulkLoading} onClick={() => loadBulk(bulkLimit + 100, bulkKind)}>
                             {bulkLoading ? t('common.loading') : t('mod.bulk.loadmore')}
                           </button>
                         )}
-                        <button className="mod-tbl-loadmore" disabled={bulkLoading} onClick={() => loadBulk(bulkLimit)}>
+                        <button className="mod-tbl-loadmore" disabled={bulkLoading} onClick={() => loadBulk(bulkLimit, bulkKind)}>
                           {t('mod.bulk.refresh')}
                         </button>
                       </>
@@ -416,6 +430,14 @@ export default function ModerationPanel({ onClose }) {
                             title={t('mod.grid.zoom')}
                             onClick={(e) => { e.stopPropagation(); if (key) setZoomImg({ url: `${CLOUDFRONT}/${key}` }) }}
                           >⤢</button>
+                          {classify && (
+                            <button
+                              className="mod-grid-del"
+                              title={t('mod.reclassify.delete')}
+                              disabled={busyId === g.id}
+                              onClick={(e) => { e.stopPropagation(); if (window.confirm(t('mod.reclassify.confirmDelete'))) act(`${API_URL}/moderation/graffiti/${g.id}/reject`, g.id) }}
+                            >🗑</button>
+                          )}
                           {on && <span className="mod-grid-check">✓</span>}
                         </div>
                       )
@@ -426,6 +448,12 @@ export default function ModerationPanel({ onClose }) {
               <div className="mod-table-wrap">
                 <div className="mod-tbl-bar">
                   <span className="mod-tbl-count">{bulk.length} / {bulkTotal} {classify ? t('mod.reclassify.count') : t('mod.bulk.pending')}</span>
+                  {classify && (
+                    <div className="mod-viewtoggle">
+                      <button className={classifyLayout === 'table' ? 'on' : ''} onClick={() => setClassifyLayout('table')}>{t('mod.view.table')}</button>
+                      <button className={classifyLayout === 'grid' ? 'on' : ''} onClick={() => setClassifyLayout('grid')}>{t('mod.view.grid')}</button>
+                    </div>
+                  )}
                   {classify && <span className="mod-grid-hint">{t('mod.reclassify.hint')}</span>}
                   {selectedCount > 0 ? (
                     <>

@@ -1673,6 +1673,8 @@ a.header-btn.mod { text-decoration: none; display: inline-flex; align-items: cen
 .mod-grid-count { position: absolute; bottom: 6px; left: 6px; padding: 1px 7px; border-radius: 10px; background: rgba(0,0,0,0.65); color: #fff; font-size: 11px; font-weight: 700; }
 .mod-grid-zoom { position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; border: none; border-radius: 50%; background: rgba(0,0,0,0.55); color: #fff; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .mod-grid-zoom:hover { background: rgba(0,0,0,0.8); }
+.mod-grid-del { position: absolute; bottom: 6px; right: 6px; width: 26px; height: 26px; border: none; border-radius: 50%; background: rgba(180,30,30,0.75); color: #fff; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.mod-grid-del:hover { background: rgba(180,30,30,0.95); }
 .mod-table-wrap { overflow-x: auto; }
 .mod-tbl-bar {
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;

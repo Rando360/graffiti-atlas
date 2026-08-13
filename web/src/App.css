@@ -501,8 +501,9 @@ button { font-family: inherit; }
 }
 .map-cluster-toggle button.on { background: var(--accent,#E4572E); color: #fff; }
 @media (max-width: 720px) {
-  .map-cluster-toggle { top: 8px; right: 8px; }
-  .map-cluster-toggle button { padding: 5px 10px; font-size: 12px; }
+  /* Drop it below the 52px header + notch so it isn't hidden behind the search bar. */
+  .map-cluster-toggle { top: calc(60px + env(safe-area-inset-top, 0px)); right: 8px; z-index: 6; }
+  .map-cluster-toggle button { padding: 6px 12px; font-size: 12.5px; }
 }
 
 /* ── LIGHTBOX ────────────────────────────────────────── */

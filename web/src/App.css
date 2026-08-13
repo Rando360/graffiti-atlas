@@ -1674,7 +1674,15 @@ a.header-btn.mod { text-decoration: none; display: inline-flex; align-items: cen
 .mod-grid-zoom { position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; border: none; border-radius: 50%; background: rgba(0,0,0,0.55); color: #fff; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .mod-grid-zoom:hover { background: rgba(0,0,0,0.8); }
 .mod-table-wrap { overflow-x: auto; }
-.mod-tbl-bar { display: flex; align-items: center; gap: 10px; padding: 4px 2px 10px; flex-wrap: wrap; }
+.mod-tbl-bar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  /* Stay pinned to the top while the table scrolls. Negative side margins let the
+     background span the full width of the padded panel body. */
+  position: sticky; top: 0; z-index: 4;
+  margin: 0 -22px; padding: 10px 22px;
+  background: var(--surface,#fff);
+  border-bottom: 1px solid var(--border,#E9E5DA);
+}
 .mod-tbl-count { font-size: 12.5px; font-weight: 600; color: var(--text-2,#6E675C); }
 .mod-tbl-loadmore { margin-left: 0; border: 1.5px solid var(--border,#E9E5DA); background: var(--surface,#fff); color: var(--text,#2A2520); padding: 6px 14px; border-radius: 8px; font-size: 12.5px; font-weight: 600; font-family: inherit; cursor: pointer; }
 .mod-tbl-loadmore:disabled { opacity: 0.5; cursor: default; }
@@ -1689,7 +1697,7 @@ a.header-btn.mod { text-decoration: none; display: inline-flex; align-items: cen
 .mod-tbl-bulk.reject { background: #E4572E; }
 .mod-tbl-bulk:hover:not(:disabled) { filter: brightness(1.05); }
 .mod-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.mod-table th { text-align: left; padding: 8px 10px; background: var(--bg,#FAF8F2); font-weight: 600; color: var(--text,#2A2520); position: sticky; top: 0; border-bottom: 1px solid var(--border,#E9E5DA); white-space: nowrap; z-index: 1; }
+.mod-table th { text-align: left; padding: 8px 10px; background: var(--bg,#FAF8F2); font-weight: 600; color: var(--text,#2A2520); position: sticky; top: 46px; border-bottom: 1px solid var(--border,#E9E5DA); white-space: nowrap; z-index: 1; }
 .mod-table td { padding: 6px 10px; border-bottom: 1px solid var(--border,#E9E5DA); vertical-align: middle; }
 .mod-table tr.busy { opacity: 0.45; }
 .mod-tbl-thumb { width: 320px; height: 240px; object-fit: cover; border-radius: 6px; cursor: zoom-in; display: block; background: #EDEAE2; }

@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { t, getLanguage } from './i18n'
+import { useSeo } from './seo'
 
 /* Lightweight inline renderer for our legal content.
    Content is authored as structured blocks (headings, paragraphs, lists,
@@ -56,6 +57,10 @@ export default function LegalPage({ content }) {
   const navigate = useNavigate()
   const lang = getLanguage()
   const doc = content[lang] || content.fr || content.en
+  useSeo({
+    title: `${doc.title} — GraffitiAtlas`,
+    description: `${doc.title} · GraffitiAtlas, la carte collaborative des graffitis de Lyon et Grenoble.`,
+  })
   const updatedLabel = t('legal.updated')
   const dateStr = doc.updated
     ? new Date(doc.updated).toLocaleDateString(lang, { day: 'numeric', month: 'long', year: 'numeric' })

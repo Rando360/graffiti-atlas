@@ -2,6 +2,7 @@ import { useState, useEffect, lazy, Suspense } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { t, getLanguage, setLanguage, LANGUAGES } from './i18n'
 import { supabase } from './supabase'
+import { useSeo } from './seo'
 
 const AuthModal = lazy(() => import('./AuthModal'))
 const SettingsPanel = lazy(() => import('./SettingsPanel'))
@@ -50,6 +51,11 @@ function Pin({ color, size = 30 }) {
 
 export default function Landing() {
   const navigate = useNavigate()
+  useSeo({
+    title: 'GraffitiAtlas — Carte collaborative des graffitis de Lyon et Grenoble',
+    description: 'Découvrez et explorez les graffitis de Lyon, Grenoble et bientôt toute la France. Détections par IA, imagerie de terrain et données ouvertes Panoramax.',
+    path: '/',
+  })
   const goMap = () => navigate('/map')
 
   const [user, setUser] = useState(null)

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from './supabase'
 import { t } from './i18n'
+import { useSeo } from './seo'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
 
@@ -44,6 +45,11 @@ function BarRow({ label, n, max, color }) {
 
 export default function StatsPage() {
   const navigate = useNavigate()
+  useSeo({
+    title: 'Statistiques du graffiti à Lyon et Grenoble — GraffitiAtlas',
+    description: 'Chiffres et tendances : nombre d\'œuvres recensées, surfaces détectées et répartition des graffitis à Lyon et Grenoble.',
+    path: '/stats',
+  })
   const [stats, setStats] = useState(null)
   const [status, setStatus] = useState('loading')   // loading | ok | forbidden | error
 

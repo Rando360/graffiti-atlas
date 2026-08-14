@@ -7,6 +7,7 @@ const ModerationPanel = lazy(() => import('./ModerationPanel'))
 const ReportPanel = lazy(() => import('./ReportPanel'))
 const SettingsPanel = lazy(() => import('./SettingsPanel'))
 import { t, syncLanguageFromProfile } from './i18n'
+import { useSeo } from './seo'
 import { supabase } from './supabase'
 import './App.css'
 
@@ -1006,6 +1007,11 @@ const CITY_CENTERS = {
 
 export default function App() {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+  useSeo({
+    title: 'Carte des graffitis de Lyon et Grenoble — GraffitiAtlas',
+    description: 'Explorez la carte interactive des graffitis : tags, throw-ups, fresques et stickers à Lyon et Grenoble, avec localisation, densité et Street View.',
+    path: '/map',
+  })
 
   const [allGraffiti, setAllGraffiti] = useState([])
   const [selected, setSelected] = useState(null)

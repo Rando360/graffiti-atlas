@@ -421,6 +421,8 @@ const STRINGS = {
   'mod.map.legend.close': { fr: 'Proche (doublon possible)', en: 'Close (possible duplicate)', es: 'Cercano (posible duplicado)', de: 'Nah (mögliches Duplikat)', it: 'Vicino (possibile duplicato)' },
   'mod.map.legend.iso': { fr: 'Isolé', en: 'Isolated', es: 'Aislado', de: 'Isoliert', it: 'Isolato' },
   'mod.map.legend.approved': { fr: 'Approuvé (existant)', en: 'Approved (existing)', es: 'Aprobado (existente)', de: 'Genehmigt (vorhanden)', it: 'Approvato (esistente)' },
+  'mod.map.dupGroups': { fr: 'groupes de photos proches (cliquez pour localiser)', en: 'groups of close photos (click one to locate it)', es: 'grupos de fotos cercanas (haz clic para ubicar)', de: 'Gruppen naher Fotos (zum Finden anklicken)', it: 'gruppi di foto vicine (clicca per localizzare)' },
+  'mod.map.dupsEmpty': { fr: 'Aucune photo trop proche à vérifier.', en: 'No too-close photos to review.', es: 'No hay fotos demasiado cercanas para revisar.', de: 'Keine zu nahen Fotos zu prüfen.', it: 'Nessuna foto troppo vicina da verificare.' },
   'mod.map.legend.picked': { fr: 'Sélectionné', en: 'Selected', es: 'Seleccionado', de: 'Ausgewählt', it: 'Selezionato' },
   'mod.grid.hint': { fr: 'Cliquez pour sélectionner les doublons proches, puis rejetez.', en: 'Click to select nearby duplicates, then reject.', es: 'Haz clic para seleccionar duplicados cercanos y recházalos.', de: 'Klicken, um nahe Duplikate auszuwählen, dann ablehnen.', it: 'Clicca per selezionare i duplicati vicini, poi rifiuta.' },
   'mod.grid.zoom': { fr: 'Agrandir', en: 'Enlarge', es: 'Ampliar', de: 'Vergrößern', it: 'Ingrandisci' },

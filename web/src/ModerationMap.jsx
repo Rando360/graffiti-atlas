@@ -14,6 +14,17 @@ function haversine(a, b) {
   return 2 * R * Math.asin(Math.sqrt(x))
 }
 
+// Pans/zooms the map to a chosen point when you click a photo in the panel below.
+function FocusPanner({ focus }) {
+  const map = useMap()
+  useEffect(() => {
+    if (!map || !focus) return
+    map.panTo({ lat: focus.lat, lng: focus.lng })
+    if ((map.getZoom() || 0) < 19) map.setZoom(19)
+  }, [map, focus])
+  return null
+}
+
 function BoundsWatcher({ points, onBounds }) {
   const map = useMap()
   useEffect(() => {
@@ -40,16 +51,28 @@ export default function ModerationMap({ points, onLink, onDelete }) {
   const [bounds, setBounds] = useState(null)
   const [version, setVersion] = useState(0)   // bump to snap dragged markers back
   const [compare, setCompare] = useState([])  // up to 2 selected points
+  const [focus, setFocus] = useState(null)    // point the map is panned to
+
+  // Group points that are within DUP_M of each other into clusters (connected
+  // components). Each group of 2+ is a set of "too close" photos to review together.
+  const dupGroups = useMemo(() => {
+    const n = points.length
+    const parent = new Array(n)
+    for (let i = 0; i < n; i++) parent[i] = i
+    const find = (x) => { while (parent[x] !== x) { parent[x] = parent[parent[x]]; x = parent[x] } return x }
+    for (let i = 0; i < n; i++)
+      for (let j = i + 1; j < n; j++)
+        if (haversine(points[i], points[j]) <= DUP_M) { const a = find(i), b = find(j); if (a !== b) parent[a] = b }
+    const m = new Map()
+    for (let i = 0; i < n; i++) { const r = find(i); if (!m.has(r)) m.set(r, []); m.get(r).push(points[i]) }
+    return Array.from(m.values()).filter(g => g.length > 1).sort((a, b) => b.length - a.length)
+  }, [points])
 
   const dupIds = useMemo(() => {
     const s = new Set()
-    for (let i = 0; i < points.length; i++) {
-      for (let j = i + 1; j < points.length; j++) {
-        if (haversine(points[i], points[j]) <= DUP_M) { s.add(points[i].id); s.add(points[j].id) }
-      }
-    }
+    dupGroups.forEach(g => g.forEach(p => s.add(p.id)))
     return s
-  }, [points])
+  }, [dupGroups])
 
   const visible = useMemo(() => {
     if (!bounds) return points.slice(0, 500)
@@ -65,6 +88,12 @@ export default function ModerationMap({ points, onLink, onDelete }) {
     if (cur.length < 2) return [...cur, p]
     return [cur[1], p]  // keep last picked, replace the oldest
   })
+
+  // Clicking a photo in the panel: locate it on the map and add to the compare pair
+  // (without toggling it off if clicked again).
+  const selectForCompare = (p) => setCompare(cur =>
+    cur.find(x => x.id === p.id) ? cur : (cur.length < 2 ? [...cur, p] : [cur[1], p]))
+  const focusOn = (p) => { setFocus({ lat: p.lat, lng: p.lng, id: p.id, k: Date.now() }); selectForCompare(p) }
 
   const doMerge = async () => {
     if (compare.length !== 2) return
@@ -113,6 +142,7 @@ export default function ModerationMap({ points, onLink, onDelete }) {
           <Map className="mod-map-canvas" defaultCenter={center} defaultZoom={16} gestureHandling="greedy"
                mapId="graffiti-atlas-map" clickableIcons={false}>
             <BoundsWatcher points={points} onBounds={setBounds} />
+            <FocusPanner focus={focus} />
             {visible.map(p => (
               <AdvancedMarker
                 key={p.id + ':' + version}
@@ -167,6 +197,33 @@ export default function ModerationMap({ points, onLink, onDelete }) {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Split panel: every group of too-close photos, side by side. Click a photo
+          to locate it on the map above; 🗑 deletes it. */}
+      <div className="mod-map-dups">
+        <div className="mod-dups-head">
+          {dupGroups.length
+            ? `${dupGroups.length} ${t('mod.map.dupGroups')}`
+            : t('mod.map.dupsEmpty')}
+        </div>
+        {dupGroups.map((group, gi) => (
+          <div className="mod-dupgroup" key={gi}>
+            {group.map(p => (
+              <div className={'mod-dupcard'
+                + (compareIds.has(p.id) ? ' sel' : '')
+                + (p.status === 'approved' ? ' appr' : '')} key={p.id}>
+                {p.key
+                  ? <img src={`${CLOUDFRONT}/${p.key}`} alt="" loading="lazy" onClick={() => focusOn(p)} />
+                  : <div className="mod-dupcard-noimg" onClick={() => focusOn(p)}>—</div>}
+                {p.status === 'approved' && <span className="mod-dupcard-badge">{t('mod.map.legend.approved')}</span>}
+                {onDelete && (
+                  <button className="mod-dupcard-del" title={t('mod.map.delete')} onClick={() => doDelete(p)}>🗑</button>
+                )}
+              </div>
+            ))}
+          </div>
+        ))}
       </div>
     </div>
   )

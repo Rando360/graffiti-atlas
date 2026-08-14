@@ -55,6 +55,7 @@ export default function ModerationMap({ points, onLink, onDelete, ignoredPairs, 
   const [version, setVersion] = useState(0)   // bump to snap dragged markers back
   const [compare, setCompare] = useState([])  // up to 2 selected points
   const [focus, setFocus] = useState(null)    // point the map is panned to
+  const [zoomUrl, setZoomUrl] = useState(null) // enlarged photo (lightbox)
 
   // Group points that are within DUP_M of each other into clusters (connected
   // components). Each group of 2+ is a set of "too close" photos to review together.
@@ -151,97 +152,113 @@ export default function ModerationMap({ points, onLink, onDelete, ignoredPairs, 
         <span className="mod-map-hint">{t('mod.map.compareHint')}</span>
       </div>
 
-      <div className="mod-map">
-        <APIProvider apiKey={API_KEY}>
-          <Map className="mod-map-canvas" defaultCenter={center} defaultZoom={16} gestureHandling="greedy"
-               mapId="graffiti-atlas-map" clickableIcons={false}>
-            <BoundsWatcher points={points} onBounds={setBounds} />
-            <FocusPanner focus={focus} />
-            {visible.map(p => (
-              <AdvancedMarker
-                key={p.id + ':' + version}
-                position={{ lat: p.lat, lng: p.lng }}
-                draggable
-                onDragEnd={(e) => handleDrop(p, e)}
-                title={t('mod.map.dragTip')}
-              >
-                {/* Click handled on the DOM element (not the draggable marker, which
-                    swallows clicks as drags). Larger transparent hit area, centred on the point. */}
-                <div className="mod-map-hit" onClick={() => toggleCompare(p)}>
-                  <span className={'mod-map-pin'
-                    + (p.status === 'approved' ? ' appr' : '')
-                    + (dupIds.has(p.id) ? ' dup' : '')
-                    + (compareIds.has(p.id) ? ' sel' : '')} />
-                </div>
-              </AdvancedMarker>
-            ))}
-          </Map>
-        </APIProvider>
+      <div className="mod-map-split">
+        <div className="mod-map">
+          <APIProvider apiKey={API_KEY}>
+            <Map className="mod-map-canvas" defaultCenter={center} defaultZoom={16} gestureHandling="greedy"
+                 mapId="graffiti-atlas-map" clickableIcons={false}>
+              <BoundsWatcher points={points} onBounds={setBounds} />
+              <FocusPanner focus={focus} />
+              {visible.map(p => (
+                <AdvancedMarker
+                  key={p.id + ':' + version}
+                  position={{ lat: p.lat, lng: p.lng }}
+                  draggable
+                  onDragEnd={(e) => handleDrop(p, e)}
+                  title={t('mod.map.dragTip')}
+                >
+                  {/* Click handled on the DOM element (not the draggable marker, which
+                      swallows clicks as drags). Larger transparent hit area, centred on the point. */}
+                  <div className="mod-map-hit" onClick={() => toggleCompare(p)}>
+                    <span className={'mod-map-pin'
+                      + (p.status === 'approved' ? ' appr' : '')
+                      + (dupIds.has(p.id) ? ' dup' : '')
+                      + (compareIds.has(p.id) ? ' sel' : '')} />
+                  </div>
+                </AdvancedMarker>
+              ))}
+            </Map>
+          </APIProvider>
 
-        <div className="mod-map-legend">
-          <span><i className="mod-map-dot dup" /> {t('mod.map.legend.close')}</span>
-          <span><i className="mod-map-dot" /> {t('mod.map.legend.iso')}</span>
-          <span><i className="mod-map-dot appr" /> {t('mod.map.legend.approved')}</span>
-          <span><i className="mod-map-dot sel" /> {t('mod.map.legend.picked')}</span>
-        </div>
-
-        {compare.length > 0 && (
-          <div className="mod-map-compare">
-            {compare.map(p => (
-              <div className="mod-map-cmp" key={p.id}>
-                {p.key
-                  ? <img src={`${CLOUDFRONT}/${p.key}`} alt="" />
-                  : <div className="mod-map-cmp-noimg">—</div>}
-                <div className="mod-map-cmp-row">
-                  <span className="mod-map-cmp-meta">{p.lat.toFixed(5)}, {p.lng.toFixed(5)}</span>
-                  {onDelete && (
-                    <button className="mod-map-cmp-del" onClick={() => doDelete(p)}>{t('mod.map.delete')}</button>
-                  )}
-                </div>
-              </div>
-            ))}
-            <div className="mod-map-cmp-actions">
-              {compare.length === 2
-                ? <div className="mod-map-dist">{Math.round(haversine(compare[0], compare[1]))} m {t('mod.map.apart')}</div>
-                : <div className="mod-map-hint">{t('mod.map.pick2')}</div>}
-              {compare.length === 2 && (
-                <button className="mod-tbl-bulk approve" onClick={doMerge}>{t('mod.map.merge')}</button>
-              )}
-              {compare.length === 2 && onIgnorePair && (
-                <button className="mod-tbl-loadmore" onClick={doIgnore}>{t('mod.map.ignore')}</button>
-              )}
-              <button className="mod-tbl-loadmore" onClick={() => setCompare([])}>{t('mod.map.clear')}</button>
-            </div>
+          <div className="mod-map-legend">
+            <span><i className="mod-map-dot dup" /> {t('mod.map.legend.close')}</span>
+            <span><i className="mod-map-dot" /> {t('mod.map.legend.iso')}</span>
+            <span><i className="mod-map-dot appr" /> {t('mod.map.legend.approved')}</span>
+            <span><i className="mod-map-dot sel" /> {t('mod.map.legend.picked')}</span>
           </div>
-        )}
-      </div>
-
-      {/* Split panel: every group of too-close photos, side by side. Click a photo
-          to locate it on the map above; 🗑 deletes it. */}
-      <div className="mod-map-dups">
-        <div className="mod-dups-head">
-          {dupGroups.length
-            ? `${dupGroups.length} ${t('mod.map.dupGroups')}`
-            : t('mod.map.dupsEmpty')}
         </div>
-        {dupGroups.map((group, gi) => (
-          <div className="mod-dupgroup" key={gi}>
-            {group.map(p => (
-              <div className={'mod-dupcard'
-                + (compareIds.has(p.id) ? ' sel' : '')
-                + (p.status === 'approved' ? ' appr' : '')} key={p.id}>
-                {p.key
-                  ? <img src={`${CLOUDFRONT}/${p.key}`} alt="" loading="lazy" onClick={() => focusOn(p)} />
-                  : <div className="mod-dupcard-noimg" onClick={() => focusOn(p)}>—</div>}
-                {p.status === 'approved' && <span className="mod-dupcard-badge">{t('mod.map.legend.approved')}</span>}
-                {onDelete && (
-                  <button className="mod-dupcard-del" title={t('mod.map.delete')} onClick={() => doDelete(p)}>🗑</button>
+
+        {/* Right-hand review column: selected pair on top, all close-photo groups below. */}
+        <div className="mod-map-side">
+          {compare.length > 0 && (
+            <div className="mod-map-compare">
+              {compare.map(p => (
+                <div className="mod-map-cmp" key={p.id}>
+                  {p.key
+                    ? <img src={`${CLOUDFRONT}/${p.key}`} alt="" onClick={() => setZoomUrl(`${CLOUDFRONT}/${p.key}`)} />
+                    : <div className="mod-map-cmp-noimg">—</div>}
+                  <div className="mod-map-cmp-row">
+                    <span className="mod-map-cmp-meta">{p.lat.toFixed(5)}, {p.lng.toFixed(5)}</span>
+                    {onDelete && (
+                      <button className="mod-map-cmp-del" onClick={() => doDelete(p)}>{t('mod.map.delete')}</button>
+                    )}
+                  </div>
+                </div>
+              ))}
+              <div className="mod-map-cmp-actions">
+                {compare.length === 2
+                  ? <div className="mod-map-dist">{Math.round(haversine(compare[0], compare[1]))} m {t('mod.map.apart')}</div>
+                  : <div className="mod-map-hint">{t('mod.map.pick2')}</div>}
+                {compare.length === 2 && (
+                  <button className="mod-tbl-bulk approve" onClick={doMerge}>{t('mod.map.merge')}</button>
                 )}
+                {compare.length === 2 && onIgnorePair && (
+                  <button className="mod-tbl-loadmore" onClick={doIgnore}>{t('mod.map.ignore')}</button>
+                )}
+                <button className="mod-tbl-loadmore" onClick={() => setCompare([])}>{t('mod.map.clear')}</button>
+              </div>
+            </div>
+          )}
+
+          {/* Every group of too-close photos. Click a photo to locate it on the map;
+              ⤢ enlarges it; 🗑 deletes it. */}
+          <div className="mod-map-dups">
+            <div className="mod-dups-head">
+              {dupGroups.length
+                ? `${dupGroups.length} ${t('mod.map.dupGroups')}`
+                : t('mod.map.dupsEmpty')}
+            </div>
+            {dupGroups.map((group, gi) => (
+              <div className="mod-dupgroup" key={gi}>
+                {group.map(p => (
+                  <div className={'mod-dupcard'
+                    + (compareIds.has(p.id) ? ' sel' : '')
+                    + (p.status === 'approved' ? ' appr' : '')} key={p.id}>
+                    {p.key
+                      ? <img src={`${CLOUDFRONT}/${p.key}`} alt="" loading="lazy" onClick={() => focusOn(p)} />
+                      : <div className="mod-dupcard-noimg" onClick={() => focusOn(p)}>—</div>}
+                    {p.status === 'approved' && <span className="mod-dupcard-badge">{t('mod.map.legend.approved')}</span>}
+                    {p.key && (
+                      <button className="mod-dupcard-zoom" title={t('mod.grid.zoom')}
+                        onClick={(e) => { e.stopPropagation(); setZoomUrl(`${CLOUDFRONT}/${p.key}`) }}>⤢</button>
+                    )}
+                    {onDelete && (
+                      <button className="mod-dupcard-del" title={t('mod.map.delete')} onClick={() => doDelete(p)}>🗑</button>
+                    )}
+                  </div>
+                ))}
               </div>
             ))}
           </div>
-        ))}
+        </div>
       </div>
+
+      {zoomUrl && (
+        <div className="mod-zoom" onClick={() => setZoomUrl(null)}>
+          <img src={zoomUrl} alt="" onClick={(e) => e.stopPropagation()} />
+          <button className="mod-zoom-close" onClick={() => setZoomUrl(null)} aria-label={t('common.close')}>✕</button>
+        </div>
+      )}
     </div>
   )
 }

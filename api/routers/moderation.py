@@ -302,6 +302,25 @@ def pending_points(user: dict = Depends(require_admin)):
     return {"points": out}
 
 
+@router.get("/all-points")
+def all_points(user: dict = Depends(require_admin)):
+    """Every point (approved + pending) for the moderation map — the whole dataset
+    at once, so overlaps between new and already-published photos are visible."""
+    service = _service()
+    pts, step, off = [], 1000, 0
+    while True:
+        chunk = service.rpc("get_all_points",
+                            {"p_limit": step, "p_offset": off}).execute().data or []
+        pts += chunk
+        if len(chunk) < step:
+            break
+        off += step
+    out = [{"id": p["id"], "lat": p["lat"], "lng": p["lng"],
+            "key": p.get("s3_key_thumb"), "status": p.get("status")}
+           for p in pts if p.get("lat") is not None and p.get("lng") is not None]
+    return {"points": out}
+
+
 @router.post("/graffiti/{graffiti_id}/link-to/{target_id}")
 def link_to_location(graffiti_id: str, target_id: str, user: dict = Depends(require_admin)):
     """Consolidate two nearby points into one location: give this point the

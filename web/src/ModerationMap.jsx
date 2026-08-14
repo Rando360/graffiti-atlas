@@ -54,7 +54,7 @@ export default function ModerationMap({ points, onLink, onDelete }) {
   const visible = useMemo(() => {
     if (!bounds) return points.slice(0, 500)
     return points.filter(p =>
-      p.lat <= bounds.n && p.lat >= bounds.s && p.lng <= bounds.e && p.lng >= bounds.w).slice(0, 1500)
+      p.lat <= bounds.n && p.lat >= bounds.s && p.lng <= bounds.e && p.lng >= bounds.w).slice(0, 2500)
   }, [points, bounds])
 
   const compareIds = useMemo(() => new Set(compare.map(p => p.id)), [compare])
@@ -125,6 +125,7 @@ export default function ModerationMap({ points, onLink, onDelete }) {
                     swallows clicks as drags). Larger transparent hit area, centred on the point. */}
                 <div className="mod-map-hit" onClick={() => toggleCompare(p)}>
                   <span className={'mod-map-pin'
+                    + (p.status === 'approved' ? ' appr' : '')
                     + (dupIds.has(p.id) ? ' dup' : '')
                     + (compareIds.has(p.id) ? ' sel' : '')} />
                 </div>
@@ -136,6 +137,7 @@ export default function ModerationMap({ points, onLink, onDelete }) {
         <div className="mod-map-legend">
           <span><i className="mod-map-dot dup" /> {t('mod.map.legend.close')}</span>
           <span><i className="mod-map-dot" /> {t('mod.map.legend.iso')}</span>
+          <span><i className="mod-map-dot appr" /> {t('mod.map.legend.approved')}</span>
           <span><i className="mod-map-dot sel" /> {t('mod.map.legend.picked')}</span>
         </div>
 

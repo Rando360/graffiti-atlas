@@ -103,7 +103,7 @@ export default function ModerationPanel({ onClose }) {
     setMapLoading(true); setError(null)
     try {
       const headers = await authHeader()
-      const res = await fetch(`${API_URL}/moderation/pending-points`, { headers })
+      const res = await fetch(`${API_URL}/moderation/all-points`, { headers })
       if (res.status === 403) throw new Error(t('mod.err.forbidden'))
       const j = await res.json()
       setMapPoints(j.points || [])
@@ -525,9 +525,18 @@ export default function ModerationPanel({ onClose }) {
                   </thead>
                   <tbody>
                     {bulk.map(g => {
-                      const imgs = (g.images && g.images.length)
+                      const rawImgs = (g.images && g.images.length)
                         ? g.images
                         : [{ id: null, key: g.s3_key_thumb }]
+                      // Collapse repeated image records (same key) so a photo isn't listed twice.
+                      const seenImg = new Set()
+                      const deduped = rawImgs.filter(im => {
+                        const key = im.key || im.id
+                        if (!key || seenImg.has(key)) return false
+                        seenImg.add(key)
+                        return true
+                      })
+                      const imgs = deduped.length ? deduped : rawImgs.slice(0, 1)
                       const rs = imgs.length
                       const multi = rs > 1
                       return imgs.map((im, j) => {

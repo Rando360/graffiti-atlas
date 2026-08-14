@@ -69,7 +69,7 @@ export default function ModerationMap({ points, onLink, onDelete, ignoredPairs, 
             && !ignored.has(pairKey(points[i].id, points[j].id))) {   // skip dismissed pairs
           const a = find(i), b = find(j); if (a !== b) parent[a] = b
         }
-    const m = new Map()
+    const m = new globalThis.Map()   // NB: `Map` here is the vis.gl component, use the built-in
     for (let i = 0; i < n; i++) { const r = find(i); if (!m.has(r)) m.set(r, []); m.get(r).push(points[i]) }
     return Array.from(m.values()).filter(g => g.length > 1).sort((a, b) => b.length - a.length)
   }, [points, ignored])

@@ -32,9 +32,10 @@ export default function ModerationPanel({ onClose }) {
   const [blurTarget, setBlurTarget] = useState(null)    // { id, url }
   const [measureTarget, setMeasureTarget] = useState(null)  // { id, url }
   const [bust, setBust] = useState({})                  // cache-buster per id
-  const [mapPoints, setMapPoints] = useState([])        // pending coords for the map view
+  const [mapPoints, setMapPoints] = useState([])        // all coords for the map view
   const [mapLoaded, setMapLoaded] = useState(false)
   const [mapLoading, setMapLoading] = useState(false)
+  const [ignoredPairs, setIgnoredPairs] = useState(() => new Set()) // "a|b" pairs to not flag
   const [selected, setSelected] = useState(() => new Set()) // table: checked row ids
   const [bulkBusy, setBulkBusy] = useState(false)          // bulk approve/reject running
 
@@ -103,10 +104,15 @@ export default function ModerationPanel({ onClose }) {
     setMapLoading(true); setError(null)
     try {
       const headers = await authHeader()
-      const res = await fetch(`${API_URL}/moderation/all-points`, { headers })
+      const [res, iRes] = await Promise.all([
+        fetch(`${API_URL}/moderation/all-points`, { headers }),
+        fetch(`${API_URL}/moderation/ignored-pairs`, { headers }),
+      ])
       if (res.status === 403) throw new Error(t('mod.err.forbidden'))
       const j = await res.json()
       setMapPoints(j.points || [])
+      const ij = iRes.ok ? await iRes.json() : { pairs: [] }
+      setIgnoredPairs(new Set((ij.pairs || []).map(([a, b]) => [a, b].sort().join('|'))))
       setMapLoaded(true)
     } catch (e) {
       setError(e.message)
@@ -128,6 +134,20 @@ export default function ModerationPanel({ onClose }) {
       if (!res.ok) throw new Error(t('mod.err.failed'))
       // consolidated — drop the dragged point from the map
       setMapPoints(ps => ps.filter(p => p.id !== srcId))
+    } catch (e) {
+      setError(e.message)
+    }
+  }, [authHeader])
+
+  // Mark two points as "not duplicates" so they stop being flagged together.
+  const ignorePair = useCallback(async (a, b) => {
+    try {
+      const headers = await authHeader()
+      const res = await fetch(`${API_URL}/moderation/ignore-pair`,
+        { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ a, b }) })
+      if (!res.ok) throw new Error(t('mod.err.failed'))
+      setIgnoredPairs(s => new Set(s).add([a, b].sort().join('|')))
     } catch (e) {
       setError(e.message)
     }
@@ -365,7 +385,8 @@ export default function ModerationPanel({ onClose }) {
               mapLoading ? (
                 <div className="mod-empty">{t('common.loading')}</div>
               ) : (
-                <ModerationMap points={mapPoints} onLink={linkPoints} onDelete={deleteMapPoint} />
+                <ModerationMap points={mapPoints} onLink={linkPoints} onDelete={deleteMapPoint}
+                  ignoredPairs={ignoredPairs} onIgnorePair={ignorePair} />
               )
             ) : (viewMode === 'table' || viewMode === 'grid' || viewMode === 'reclassify') ? (
               bulkLoading && bulk.length === 0 ? (

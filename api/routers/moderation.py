@@ -321,6 +321,31 @@ def all_points(user: dict = Depends(require_admin)):
     return {"points": out}
 
 
+class PairBody(BaseModel):
+    a: str
+    b: str
+
+
+@router.get("/ignored-pairs")
+def get_ignored_pairs(user: dict = Depends(require_admin)):
+    """Pairs of points a moderator marked as 'not duplicates' — excluded from
+    close-photo flagging."""
+    service = _service()
+    rows = service.table("ignored_dup_pairs").select("a, b").execute().data or []
+    return {"pairs": [[r["a"], r["b"]] for r in rows]}
+
+
+@router.post("/ignore-pair")
+def ignore_pair(body: PairBody, user: dict = Depends(require_admin)):
+    """Remember that these two photos are NOT duplicates of each other."""
+    if body.a == body.b:
+        raise HTTPException(status_code=400, detail="Même point")
+    a, b = sorted([body.a, body.b])   # order-independent key
+    service = _service()
+    service.table("ignored_dup_pairs").upsert({"a": a, "b": b}).execute()
+    return {"status": "ignored", "a": a, "b": b}
+
+
 @router.post("/graffiti/{graffiti_id}/link-to/{target_id}")
 def link_to_location(graffiti_id: str, target_id: str, user: dict = Depends(require_admin)):
     """Consolidate two nearby points into one location: give this point the

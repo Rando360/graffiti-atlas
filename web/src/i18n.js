@@ -416,6 +416,7 @@ const STRINGS = {
   'map.individual': { fr: 'Individuels', en: 'Individual', es: 'Individuales', de: 'Einzeln', it: 'Individuali' },
   'mod.map.merge': { fr: 'Regrouper', en: 'Merge', es: 'Unir', de: 'Zusammenführen', it: 'Unisci' },
   'mod.map.clear': { fr: 'Effacer', en: 'Clear', es: 'Borrar', de: 'Leeren', it: 'Cancella' },
+  'mod.map.ignore': { fr: 'Ignorer cette paire', en: 'Ignore this pair', es: 'Ignorar este par', de: 'Dieses Paar ignorieren', it: 'Ignora questa coppia' },
   'mod.map.delete': { fr: 'Supprimer', en: 'Delete', es: 'Eliminar', de: 'Löschen', it: 'Elimina' },
   'mod.map.confirmDelete': { fr: 'Supprimer ce point en attente ?', en: 'Delete this pending point?', es: '¿Eliminar este punto pendiente?', de: 'Diesen ausstehenden Punkt löschen?', it: 'Eliminare questo punto in attesa?' },
   'mod.map.legend.close': { fr: 'Proche (doublon possible)', en: 'Close (possible duplicate)', es: 'Cercano (posible duplicado)', de: 'Nah (mögliches Duplikat)', it: 'Vicino (possibile duplicato)' },

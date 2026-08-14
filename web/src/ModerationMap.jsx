@@ -47,7 +47,10 @@ function BoundsWatcher({ points, onBounds }) {
   return null
 }
 
-export default function ModerationMap({ points, onLink, onDelete }) {
+const pairKey = (a, b) => (a < b ? a + '|' + b : b + '|' + a)
+
+export default function ModerationMap({ points, onLink, onDelete, ignoredPairs, onIgnorePair }) {
+  const ignored = ignoredPairs || new Set()
   const [bounds, setBounds] = useState(null)
   const [version, setVersion] = useState(0)   // bump to snap dragged markers back
   const [compare, setCompare] = useState([])  // up to 2 selected points
@@ -62,11 +65,14 @@ export default function ModerationMap({ points, onLink, onDelete }) {
     const find = (x) => { while (parent[x] !== x) { parent[x] = parent[parent[x]]; x = parent[x] } return x }
     for (let i = 0; i < n; i++)
       for (let j = i + 1; j < n; j++)
-        if (haversine(points[i], points[j]) <= DUP_M) { const a = find(i), b = find(j); if (a !== b) parent[a] = b }
+        if (haversine(points[i], points[j]) <= DUP_M
+            && !ignored.has(pairKey(points[i].id, points[j].id))) {   // skip dismissed pairs
+          const a = find(i), b = find(j); if (a !== b) parent[a] = b
+        }
     const m = new Map()
     for (let i = 0; i < n; i++) { const r = find(i); if (!m.has(r)) m.set(r, []); m.get(r).push(points[i]) }
     return Array.from(m.values()).filter(g => g.length > 1).sort((a, b) => b.length - a.length)
-  }, [points])
+  }, [points, ignored])
 
   const dupIds = useMemo(() => {
     const s = new Set()
@@ -74,13 +80,15 @@ export default function ModerationMap({ points, onLink, onDelete }) {
     return s
   }, [dupGroups])
 
-  const visible = useMemo(() => {
-    if (!bounds) return points.slice(0, 500)
-    return points.filter(p =>
-      p.lat <= bounds.n && p.lat >= bounds.s && p.lng <= bounds.e && p.lng >= bounds.w).slice(0, 2500)
-  }, [points, bounds])
-
   const compareIds = useMemo(() => new Set(compare.map(p => p.id)), [compare])
+
+  // Only flagged (too-close) points + whatever you've selected get individual
+  // markers — rendering all ~1400 points as draggable markers hangs the browser.
+  const visible = useMemo(() => {
+    const inB = p => !bounds || (p.lat <= bounds.n && p.lat >= bounds.s && p.lng <= bounds.e && p.lng >= bounds.w)
+    return points.filter(p =>
+      inB(p) && (dupIds.has(p.id) || compareIds.has(p.id) || focus?.id === p.id)).slice(0, 1500)
+  }, [points, bounds, dupIds, compareIds, focus])
   const center = points.length ? { lat: points[0].lat, lng: points[0].lng } : { lat: 45.188, lng: 5.724 }
 
   const toggleCompare = (p) => setCompare(cur => {
@@ -106,6 +114,12 @@ export default function ModerationMap({ points, onLink, onDelete }) {
     if (!onDelete || !window.confirm(t('mod.map.confirmDelete'))) return
     await onDelete(p.id)
     setCompare(c => c.filter(x => x.id !== p.id))
+  }
+
+  const doIgnore = async () => {
+    if (compare.length !== 2 || !onIgnorePair) return
+    await onIgnorePair(compare[0].id, compare[1].id)   // never flag these two together again
+    setCompare([])
   }
 
   const handleDrop = async (p, e) => {
@@ -192,6 +206,9 @@ export default function ModerationMap({ points, onLink, onDelete }) {
                 : <div className="mod-map-hint">{t('mod.map.pick2')}</div>}
               {compare.length === 2 && (
                 <button className="mod-tbl-bulk approve" onClick={doMerge}>{t('mod.map.merge')}</button>
+              )}
+              {compare.length === 2 && onIgnorePair && (
+                <button className="mod-tbl-loadmore" onClick={doIgnore}>{t('mod.map.ignore')}</button>
               )}
               <button className="mod-tbl-loadmore" onClick={() => setCompare([])}>{t('mod.map.clear')}</button>
             </div>

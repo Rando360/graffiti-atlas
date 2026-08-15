@@ -381,10 +381,10 @@ def link_to_location(graffiti_id: str, target_id: str, user: dict = Depends(requ
         "location_id": loc,
         "updated_at": datetime.utcnow().isoformat(),
     }).eq("id", graffiti_id).execute()
-    # The merged-away point is now consolidated into the target's location, so
-    # every close pair involving it is resolved — drop them all (order-independent).
+    # Both merged photos are considered handled — resolve every close pair
+    # involving either of them so they both leave the review (order-independent).
     service.table("dup_pairs").delete().or_(
-        f"a.eq.{graffiti_id},b.eq.{graffiti_id}").execute()
+        f"a.eq.{graffiti_id},b.eq.{graffiti_id},a.eq.{target_id},b.eq.{target_id}").execute()
     return {"status": "linked", "id": graffiti_id, "target": target_id, "location_id": loc}
 
 

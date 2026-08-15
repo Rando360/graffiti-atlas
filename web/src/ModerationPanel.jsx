@@ -124,6 +124,20 @@ export default function ModerationPanel({ onClose }) {
     if (viewMode === 'map' && !mapLoaded && !mapLoading) loadMapPoints()
   }, [viewMode, mapLoaded, mapLoading, loadMapPoints])
 
+  // Re-read the authoritative open pairs (no re-scan) so the map + count always
+  // reflect what's actually resolved in the database.
+  const refreshPairs = useCallback(async () => {
+    try {
+      const headers = await authHeader()
+      const res = await fetch(`${API_URL}/moderation/dup-pairs`, { headers })
+      if (res.ok) {
+        const j = await res.json()
+        setMapPoints(j.points || [])
+        setMapEdges(j.edges || [])
+      }
+    } catch { /* keep current view */ }
+  }, [authHeader])
+
   // Link one point into another's location (consolidate — nothing deleted).
   const linkPoints = useCallback(async (srcId, targetId) => {
     try {
@@ -131,12 +145,11 @@ export default function ModerationPanel({ onClose }) {
       const res = await fetch(`${API_URL}/moderation/graffiti/${srcId}/link-to/${targetId}`,
         { method: 'POST', headers })
       if (!res.ok) throw new Error(t('mod.err.failed'))
-      // pair resolved — drop this edge (points stay; they may pair with others)
-      setMapEdges(es => es.filter(([a, b]) => !((a === srcId && b === targetId) || (a === targetId && b === srcId))))
+      await refreshPairs()   // authoritative: pair is now resolved
     } catch (e) {
       setError(e.message)
     }
-  }, [authHeader])
+  }, [authHeader, refreshPairs])
 
   // Mark two points as "not duplicates" so they stop being flagged together.
   const ignorePair = useCallback(async (a, b) => {
@@ -146,11 +159,11 @@ export default function ModerationPanel({ onClose }) {
         { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' },
           body: JSON.stringify({ a, b }) })
       if (!res.ok) throw new Error(t('mod.err.failed'))
-      setMapEdges(es => es.filter(([x, y]) => !((x === a && y === b) || (x === b && y === a))))
+      await refreshPairs()
     } catch (e) {
       setError(e.message)
     }
-  }, [authHeader])
+  }, [authHeader, refreshPairs])
 
   // Reject/delete a point straight from the map view.
   const deleteMapPoint = useCallback(async (id) => {
@@ -159,12 +172,11 @@ export default function ModerationPanel({ onClose }) {
       const res = await fetch(`${API_URL}/moderation/graffiti/${id}/reject`,
         { method: 'POST', headers })
       if (!res.ok) throw new Error(t('mod.err.failed'))
-      setMapPoints(ps => ps.filter(p => p.id !== id))
-      setMapEdges(es => es.filter(([a, b]) => a !== id && b !== id))
+      await refreshPairs()
     } catch (e) {
       setError(e.message)
     }
-  }, [authHeader])
+  }, [authHeader, refreshPairs])
 
   const act = async (url, id, body) => {
     setBusyId(id)

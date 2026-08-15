@@ -381,9 +381,10 @@ def link_to_location(graffiti_id: str, target_id: str, user: dict = Depends(requ
         "location_id": loc,
         "updated_at": datetime.utcnow().isoformat(),
     }).eq("id", graffiti_id).execute()
-    # This pair is now resolved — drop it so it stops being flagged.
-    pa, pb = sorted([graffiti_id, target_id])
-    service.table("dup_pairs").delete().eq("a", pa).eq("b", pb).execute()
+    # The merged-away point is now consolidated into the target's location, so
+    # every close pair involving it is resolved — drop them all (order-independent).
+    service.table("dup_pairs").delete().or_(
+        f"a.eq.{graffiti_id},b.eq.{graffiti_id}").execute()
     return {"status": "linked", "id": graffiti_id, "target": target_id, "location_id": loc}
 
 

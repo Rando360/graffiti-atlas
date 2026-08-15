@@ -144,6 +144,8 @@ export default function ModerationMap({ points, onLink, onDelete, ignoredPairs, 
   if (!API_KEY) return <div className="mod-empty">{t('mod.map.nokey')}</div>
   if (!points.length) return <div className="mod-empty">{t('mod.empty.bulk')}</div>
 
+  const svPoint = focus   // the last point you clicked drives the single Street View
+
   return (
     <div className="mod-map-wrap">
       <div className="mod-map-bar">
@@ -152,114 +154,114 @@ export default function ModerationMap({ points, onLink, onDelete, ignoredPairs, 
         <span className="mod-map-hint">{t('mod.map.compareHint')}</span>
       </div>
 
-      <div className="mod-map-split">
-        <div className="mod-map">
-          <APIProvider apiKey={API_KEY}>
-            <Map className="mod-map-canvas" defaultCenter={center} defaultZoom={16} gestureHandling="greedy"
-                 mapId="graffiti-atlas-map" clickableIcons={false}>
-              <BoundsWatcher points={points} onBounds={setBounds} />
-              <FocusPanner focus={focus} />
-              {visible.map(p => (
-                <AdvancedMarker
-                  key={p.id + ':' + version}
-                  position={{ lat: p.lat, lng: p.lng }}
-                  draggable
-                  onDragEnd={(e) => handleDrop(p, e)}
-                  title={t('mod.map.dragTip')}
-                >
-                  {/* Click handled on the DOM element (not the draggable marker, which
-                      swallows clicks as drags). Larger transparent hit area, centred on the point. */}
-                  <div className="mod-map-hit" onClick={() => toggleCompare(p)}>
-                    <span className={'mod-map-pin'
-                      + (p.status === 'approved' ? ' appr' : '')
-                      + (dupIds.has(p.id) ? ' dup' : '')
-                      + (compareIds.has(p.id) ? ' sel' : '')} />
-                  </div>
-                </AdvancedMarker>
-              ))}
-            </Map>
-          </APIProvider>
-
-          <div className="mod-map-legend">
-            <span><i className="mod-map-dot dup" /> {t('mod.map.legend.close')}</span>
-            <span><i className="mod-map-dot" /> {t('mod.map.legend.iso')}</span>
-            <span><i className="mod-map-dot appr" /> {t('mod.map.legend.approved')}</span>
-            <span><i className="mod-map-dot sel" /> {t('mod.map.legend.picked')}</span>
-          </div>
-        </div>
-
-        {/* Right-hand review column: selected pair on top, all close-photo groups below. */}
-        <div className="mod-map-side">
-          {compare.length > 0 && (
-            <div className="mod-map-compare">
-              {compare.map(p => (
-                <div className="mod-map-cmp" key={p.id}>
-                  {p.key
-                    ? <img src={`${CLOUDFRONT}/${p.key}`} alt="" onClick={() => setZoomUrl(`${CLOUDFRONT}/${p.key}`)} />
-                    : <div className="mod-map-cmp-noimg">—</div>}
-                  {API_KEY && (
-                    <iframe
-                      className="mod-map-cmp-sv"
-                      title={`Street View ${p.lat.toFixed(5)},${p.lng.toFixed(5)}`}
-                      src={`https://www.google.com/maps/embed/v1/streetview?key=${API_KEY}&location=${p.lat},${p.lng}&fov=90&pitch=0`}
-                      loading="lazy"
-                      referrerPolicy="no-referrer-when-downgrade"
-                    />
-                  )}
-                  <div className="mod-map-cmp-row">
-                    <span className="mod-map-cmp-meta">{p.lat.toFixed(5)}, {p.lng.toFixed(5)}</span>
-                    {onDelete && (
-                      <button className="mod-map-cmp-del" onClick={() => doDelete(p)}>{t('mod.map.delete')}</button>
-                    )}
-                  </div>
+      {/* Top: the map. */}
+      <div className="mod-map">
+        <APIProvider apiKey={API_KEY}>
+          <Map className="mod-map-canvas" defaultCenter={center} defaultZoom={16} gestureHandling="greedy"
+               mapId="graffiti-atlas-map" clickableIcons={false}>
+            <BoundsWatcher points={points} onBounds={setBounds} />
+            <FocusPanner focus={focus} />
+            {visible.map(p => (
+              <AdvancedMarker
+                key={p.id + ':' + version}
+                position={{ lat: p.lat, lng: p.lng }}
+                draggable
+                onDragEnd={(e) => handleDrop(p, e)}
+                title={t('mod.map.dragTip')}
+              >
+                <div className="mod-map-hit" onClick={() => { toggleCompare(p); setFocus({ lat: p.lat, lng: p.lng, id: p.id, k: Date.now() }) }}>
+                  <span className={'mod-map-pin'
+                    + (p.status === 'approved' ? ' appr' : '')
+                    + (dupIds.has(p.id) ? ' dup' : '')
+                    + (compareIds.has(p.id) ? ' sel' : '')} />
                 </div>
-              ))}
-              <div className="mod-map-cmp-actions">
-                {compare.length === 2
-                  ? <div className="mod-map-dist">{Math.round(haversine(compare[0], compare[1]))} m {t('mod.map.apart')}</div>
-                  : <div className="mod-map-hint">{t('mod.map.pick2')}</div>}
-                {compare.length === 2 && (
-                  <button className="mod-tbl-bulk approve" onClick={doMerge}>{t('mod.map.merge')}</button>
+              </AdvancedMarker>
+            ))}
+          </Map>
+        </APIProvider>
+
+        <div className="mod-map-legend">
+          <span><i className="mod-map-dot dup" /> {t('mod.map.legend.close')}</span>
+          <span><i className="mod-map-dot" /> {t('mod.map.legend.iso')}</span>
+          <span><i className="mod-map-dot appr" /> {t('mod.map.legend.approved')}</span>
+          <span><i className="mod-map-dot sel" /> {t('mod.map.legend.picked')}</span>
+        </div>
+      </div>
+
+      {/* Bottom: one Street View of the point you last clicked — tells same-side
+          from across-the-street. */}
+      <div className="mod-map-sv-wrap">
+        {svPoint && API_KEY
+          ? <iframe
+              key={`${svPoint.lat},${svPoint.lng}`}
+              className="mod-map-sv"
+              title="Street View"
+              src={`https://www.google.com/maps/embed/v1/streetview?key=${API_KEY}&location=${svPoint.lat},${svPoint.lng}&fov=90&pitch=0`}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          : <div className="mod-map-sv-empty">{t('mod.map.svHint')}</div>}
+      </div>
+
+      {compare.length > 0 && (
+        <div className="mod-map-compare">
+          {compare.map(p => (
+            <div className="mod-map-cmp" key={p.id}>
+              {p.key
+                ? <img src={`${CLOUDFRONT}/${p.key}`} alt="" onClick={() => setZoomUrl(`${CLOUDFRONT}/${p.key}`)} />
+                : <div className="mod-map-cmp-noimg">—</div>}
+              <div className="mod-map-cmp-row">
+                <span className="mod-map-cmp-meta">{p.lat.toFixed(5)}, {p.lng.toFixed(5)}</span>
+                {onDelete && (
+                  <button className="mod-map-cmp-del" onClick={() => doDelete(p)}>{t('mod.map.delete')}</button>
                 )}
-                {compare.length === 2 && onIgnorePair && (
-                  <button className="mod-tbl-loadmore" onClick={doIgnore}>{t('mod.map.ignore')}</button>
-                )}
-                <button className="mod-tbl-loadmore" onClick={() => setCompare([])}>{t('mod.map.clear')}</button>
               </div>
             </div>
-          )}
+          ))}
+          <div className="mod-map-cmp-actions">
+            {compare.length === 2
+              ? <div className="mod-map-dist">{Math.round(haversine(compare[0], compare[1]))} m {t('mod.map.apart')}</div>
+              : <div className="mod-map-hint">{t('mod.map.pick2')}</div>}
+            {compare.length === 2 && (
+              <button className="mod-tbl-bulk approve" onClick={doMerge}>{t('mod.map.merge')}</button>
+            )}
+            {compare.length === 2 && onIgnorePair && (
+              <button className="mod-tbl-loadmore" onClick={doIgnore}>{t('mod.map.ignore')}</button>
+            )}
+            <button className="mod-tbl-loadmore" onClick={() => setCompare([])}>{t('mod.map.clear')}</button>
+          </div>
+        </div>
+      )}
 
-          {/* Every group of too-close photos. Click a photo to locate it on the map;
-              ⤢ enlarges it; 🗑 deletes it. */}
-          <div className="mod-map-dups">
-            <div className="mod-dups-head">
-              {dupGroups.length
-                ? `${dupGroups.length} ${t('mod.map.dupGroups')}`
-                : t('mod.map.dupsEmpty')}
-            </div>
-            {dupGroups.map((group, gi) => (
-              <div className="mod-dupgroup" key={gi}>
-                {group.map(p => (
-                  <div className={'mod-dupcard'
-                    + (compareIds.has(p.id) ? ' sel' : '')
-                    + (p.status === 'approved' ? ' appr' : '')} key={p.id}>
-                    {p.key
-                      ? <img src={`${CLOUDFRONT}/${p.key}`} alt="" loading="lazy" onClick={() => focusOn(p)} />
-                      : <div className="mod-dupcard-noimg" onClick={() => focusOn(p)}>—</div>}
-                    {p.status === 'approved' && <span className="mod-dupcard-badge">{t('mod.map.legend.approved')}</span>}
-                    {p.key && (
-                      <button className="mod-dupcard-zoom" title={t('mod.grid.zoom')}
-                        onClick={(e) => { e.stopPropagation(); setZoomUrl(`${CLOUDFRONT}/${p.key}`) }}>⤢</button>
-                    )}
-                    {onDelete && (
-                      <button className="mod-dupcard-del" title={t('mod.map.delete')} onClick={() => doDelete(p)}>🗑</button>
-                    )}
-                  </div>
-                ))}
+      {/* Every group of too-close photos. Click a photo to locate it + show its
+          Street View above; ⤢ enlarges it; 🗑 deletes it. */}
+      <div className="mod-map-dups">
+        <div className="mod-dups-head">
+          {dupGroups.length
+            ? `${dupGroups.length} ${t('mod.map.dupGroups')}`
+            : t('mod.map.dupsEmpty')}
+        </div>
+        {dupGroups.map((group, gi) => (
+          <div className="mod-dupgroup" key={gi}>
+            {group.map(p => (
+              <div className={'mod-dupcard'
+                + (compareIds.has(p.id) ? ' sel' : '')
+                + (p.status === 'approved' ? ' appr' : '')} key={p.id}>
+                {p.key
+                  ? <img src={`${CLOUDFRONT}/${p.key}`} alt="" loading="lazy" onClick={() => focusOn(p)} />
+                  : <div className="mod-dupcard-noimg" onClick={() => focusOn(p)}>—</div>}
+                {p.status === 'approved' && <span className="mod-dupcard-badge">{t('mod.map.legend.approved')}</span>}
+                {p.key && (
+                  <button className="mod-dupcard-zoom" title={t('mod.grid.zoom')}
+                    onClick={(e) => { e.stopPropagation(); setZoomUrl(`${CLOUDFRONT}/${p.key}`) }}>⤢</button>
+                )}
+                {onDelete && (
+                  <button className="mod-dupcard-del" title={t('mod.map.delete')} onClick={() => doDelete(p)}>🗑</button>
+                )}
               </div>
             ))}
           </div>
-        </div>
+        ))}
       </div>
 
       {zoomUrl && (

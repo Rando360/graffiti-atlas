@@ -1672,6 +1672,8 @@ a.header-btn.mod { text-decoration: none; display: inline-flex; align-items: cen
 .mod-map-cmp { display: flex; flex-direction: column; gap: 5px; flex: 0 0 auto; }
 .mod-map-cmp img { width: 150px; height: 112px; object-fit: cover; border-radius: 8px; background: #EDEAE2; cursor: zoom-in; }
 .mod-map-cmp-noimg { width: 150px; height: 112px; border-radius: 8px; background: #EDEAE2; display: flex; align-items: center; justify-content: center; color: #9a9384; }
+/* Street View of each selected point — tells same-side from across-the-street. */
+.mod-map-cmp-sv { width: 150px; height: 110px; border: 0; border-radius: 8px; background: #EDEAE2; display: block; }
 .mod-map-cmp-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .mod-map-cmp-meta { font-size: 11px; color: var(--text-2,#6E675C); }
 .mod-map-cmp-del { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; border-radius: 6px; padding: 2px 9px; font-size: 11px; font-weight: 700; cursor: pointer; }

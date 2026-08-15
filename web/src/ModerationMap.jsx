@@ -197,6 +197,15 @@ export default function ModerationMap({ points, onLink, onDelete, ignoredPairs, 
                   {p.key
                     ? <img src={`${CLOUDFRONT}/${p.key}`} alt="" onClick={() => setZoomUrl(`${CLOUDFRONT}/${p.key}`)} />
                     : <div className="mod-map-cmp-noimg">—</div>}
+                  {API_KEY && (
+                    <iframe
+                      className="mod-map-cmp-sv"
+                      title={`Street View ${p.lat.toFixed(5)},${p.lng.toFixed(5)}`}
+                      src={`https://www.google.com/maps/embed/v1/streetview?key=${API_KEY}&location=${p.lat},${p.lng}&fov=90&pitch=0`}
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                    />
+                  )}
                   <div className="mod-map-cmp-row">
                     <span className="mod-map-cmp-meta">{p.lat.toFixed(5)}, {p.lng.toFixed(5)}</span>
                     {onDelete && (

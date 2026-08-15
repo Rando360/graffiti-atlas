@@ -82,11 +82,13 @@ export default function ModerationMap({ points, edges, onLink, onDelete, onIgnor
 
   const compareIds = useMemo(() => new Set(compare.map(p => p.id)), [compare])
 
-  // points now contains only pair-involved photos, so all of them get markers.
+  // Only points still involved in an open pair (plus whatever you have selected)
+  // get markers — so merged/ignored points drop off the map right away.
   const visible = useMemo(() => {
     const inB = p => !bounds || (p.lat <= bounds.n && p.lat >= bounds.s && p.lng <= bounds.e && p.lng >= bounds.w)
-    return points.filter(inB).slice(0, 1500)
-  }, [points, bounds])
+    return points.filter(p =>
+      inB(p) && (dupIds.has(p.id) || compareIds.has(p.id) || focus?.id === p.id)).slice(0, 1500)
+  }, [points, bounds, dupIds, compareIds, focus])
   const center = points.length ? { lat: points[0].lat, lng: points[0].lng } : { lat: 45.188, lng: 5.724 }
 
   const toggleCompare = (p) => setCompare(cur => {
@@ -105,7 +107,7 @@ export default function ModerationMap({ points, edges, onLink, onDelete, onIgnor
     if (compare.length !== 2) return
     if (!window.confirm(t('mod.map.confirmLink'))) return
     await onLink(compare[1].id, compare[0].id)   // link the 2nd into the 1st's location
-    setCompare(c => c.filter(x => x.id !== compare[1].id))
+    setCompare([])   // pair resolved — clear selection so both drop off the map
   }
 
   const doDelete = async (p) => {

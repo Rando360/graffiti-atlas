@@ -47,49 +47,46 @@ function BoundsWatcher({ points, onBounds }) {
   return null
 }
 
-const pairKey = (a, b) => (a < b ? a + '|' + b : b + '|' + a)
-
-export default function ModerationMap({ points, onLink, onDelete, ignoredPairs, onIgnorePair }) {
-  const ignored = ignoredPairs || new Set()
+export default function ModerationMap({ points, edges, onLink, onDelete, onIgnorePair }) {
   const [bounds, setBounds] = useState(null)
   const [version, setVersion] = useState(0)   // bump to snap dragged markers back
   const [compare, setCompare] = useState([])  // up to 2 selected points
   const [focus, setFocus] = useState(null)    // point the map is panned to
   const [zoomUrl, setZoomUrl] = useState(null) // enlarged photo (lightbox)
 
-  // Group points that are within DUP_M of each other into clusters (connected
-  // components). Each group of 2+ is a set of "too close" photos to review together.
+  // Groups come from the stored open pairs (edges), not on-the-fly distance maths.
+  // Connected components of the edge graph = clusters of close photos.
   const dupGroups = useMemo(() => {
-    const n = points.length
-    const parent = new Array(n)
-    for (let i = 0; i < n; i++) parent[i] = i
+    const idx = new globalThis.Map(points.map((p, i) => [p.id, i]))  // built-in Map, not vis.gl
+    const parent = points.map((_, i) => i)
     const find = (x) => { while (parent[x] !== x) { parent[x] = parent[parent[x]]; x = parent[x] } return x }
-    for (let i = 0; i < n; i++)
-      for (let j = i + 1; j < n; j++)
-        if (haversine(points[i], points[j]) <= DUP_M
-            && !ignored.has(pairKey(points[i].id, points[j].id))) {   // skip dismissed pairs
-          const a = find(i), b = find(j); if (a !== b) parent[a] = b
-        }
-    const m = new globalThis.Map()   // NB: `Map` here is the vis.gl component, use the built-in
-    for (let i = 0; i < n; i++) { const r = find(i); if (!m.has(r)) m.set(r, []); m.get(r).push(points[i]) }
+    ;(edges || []).forEach(([a, b]) => {
+      const ia = idx.get(a), ib = idx.get(b)
+      if (ia != null && ib != null) { const ra = find(ia), rb = find(ib); if (ra !== rb) parent[ra] = rb }
+    })
+    const inEdge = new Set()
+    ;(edges || []).forEach(([a, b]) => { inEdge.add(a); inEdge.add(b) })
+    const m = new globalThis.Map()
+    for (let i = 0; i < points.length; i++) {
+      if (!inEdge.has(points[i].id)) continue
+      const r = find(i); if (!m.has(r)) m.set(r, []); m.get(r).push(points[i])
+    }
     return Array.from(m.values()).filter(g => g.length > 1).sort((a, b) => b.length - a.length)
-  }, [points, ignored])
+  }, [points, edges])
 
   const dupIds = useMemo(() => {
     const s = new Set()
-    dupGroups.forEach(g => g.forEach(p => s.add(p.id)))
+    ;(edges || []).forEach(([a, b]) => { s.add(a); s.add(b) })
     return s
-  }, [dupGroups])
+  }, [edges])
 
   const compareIds = useMemo(() => new Set(compare.map(p => p.id)), [compare])
 
-  // Only flagged (too-close) points + whatever you've selected get individual
-  // markers — rendering all ~1400 points as draggable markers hangs the browser.
+  // points now contains only pair-involved photos, so all of them get markers.
   const visible = useMemo(() => {
     const inB = p => !bounds || (p.lat <= bounds.n && p.lat >= bounds.s && p.lng <= bounds.e && p.lng >= bounds.w)
-    return points.filter(p =>
-      inB(p) && (dupIds.has(p.id) || compareIds.has(p.id) || focus?.id === p.id)).slice(0, 1500)
-  }, [points, bounds, dupIds, compareIds, focus])
+    return points.filter(inB).slice(0, 1500)
+  }, [points, bounds])
   const center = points.length ? { lat: points[0].lat, lng: points[0].lng } : { lat: 45.188, lng: 5.724 }
 
   const toggleCompare = (p) => setCompare(cur => {
@@ -142,15 +139,15 @@ export default function ModerationMap({ points, onLink, onDelete, ignoredPairs, 
   }
 
   if (!API_KEY) return <div className="mod-empty">{t('mod.map.nokey')}</div>
-  if (!points.length) return <div className="mod-empty">{t('mod.empty.bulk')}</div>
+  if (!points.length) return <div className="mod-empty">{t('mod.map.dupsEmpty')}</div>
 
   const svPoint = focus   // the last point you clicked drives the single Street View
 
   return (
     <div className="mod-map-wrap">
       <div className="mod-map-bar">
-        <span className="mod-tbl-count">{points.length} {t('mod.bulk.pending')}</span>
-        <span className="mod-map-dup">{dupIds.size} {t('mod.map.close')}</span>
+        <span className="mod-map-dup">{(edges || []).length} {t('mod.map.close')}</span>
+        <span className="mod-tbl-count">{dupGroups.length} {t('mod.map.dupGroupsShort')}</span>
         <span className="mod-map-hint">{t('mod.map.compareHint')}</span>
       </div>
 

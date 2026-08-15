@@ -35,7 +35,7 @@ export default function ModerationPanel({ onClose }) {
   const [mapPoints, setMapPoints] = useState([])        // all coords for the map view
   const [mapLoaded, setMapLoaded] = useState(false)
   const [mapLoading, setMapLoading] = useState(false)
-  const [ignoredPairs, setIgnoredPairs] = useState(() => new Set()) // "a|b" pairs to not flag
+  const [mapEdges, setMapEdges] = useState([])          // stored open close-pairs [a,b]
   const [selected, setSelected] = useState(() => new Set()) // table: checked row ids
   const [bulkBusy, setBulkBusy] = useState(false)          // bulk approve/reject running
 
@@ -104,15 +104,14 @@ export default function ModerationPanel({ onClose }) {
     setMapLoading(true); setError(null)
     try {
       const headers = await authHeader()
-      const [res, iRes] = await Promise.all([
-        fetch(`${API_URL}/moderation/all-points`, { headers }),
-        fetch(`${API_URL}/moderation/ignored-pairs`, { headers }),
-      ])
+      // Fold any newly-added photos into the stored pair set (cheap after first run),
+      // then load the definitive open pairs.
+      await fetch(`${API_URL}/moderation/scan-pairs`, { method: 'POST', headers })
+      const res = await fetch(`${API_URL}/moderation/dup-pairs`, { headers })
       if (res.status === 403) throw new Error(t('mod.err.forbidden'))
       const j = await res.json()
       setMapPoints(j.points || [])
-      const ij = iRes.ok ? await iRes.json() : { pairs: [] }
-      setIgnoredPairs(new Set((ij.pairs || []).map(([a, b]) => [a, b].sort().join('|'))))
+      setMapEdges(j.edges || [])
       setMapLoaded(true)
     } catch (e) {
       setError(e.message)
@@ -132,8 +131,8 @@ export default function ModerationPanel({ onClose }) {
       const res = await fetch(`${API_URL}/moderation/graffiti/${srcId}/link-to/${targetId}`,
         { method: 'POST', headers })
       if (!res.ok) throw new Error(t('mod.err.failed'))
-      // consolidated — drop the dragged point from the map
-      setMapPoints(ps => ps.filter(p => p.id !== srcId))
+      // pair resolved — drop this edge (points stay; they may pair with others)
+      setMapEdges(es => es.filter(([a, b]) => !((a === srcId && b === targetId) || (a === targetId && b === srcId))))
     } catch (e) {
       setError(e.message)
     }
@@ -147,13 +146,13 @@ export default function ModerationPanel({ onClose }) {
         { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' },
           body: JSON.stringify({ a, b }) })
       if (!res.ok) throw new Error(t('mod.err.failed'))
-      setIgnoredPairs(s => new Set(s).add([a, b].sort().join('|')))
+      setMapEdges(es => es.filter(([x, y]) => !((x === a && y === b) || (x === b && y === a))))
     } catch (e) {
       setError(e.message)
     }
   }, [authHeader])
 
-  // Reject/delete a pending point straight from the map view.
+  // Reject/delete a point straight from the map view.
   const deleteMapPoint = useCallback(async (id) => {
     try {
       const headers = await authHeader()
@@ -161,6 +160,7 @@ export default function ModerationPanel({ onClose }) {
         { method: 'POST', headers })
       if (!res.ok) throw new Error(t('mod.err.failed'))
       setMapPoints(ps => ps.filter(p => p.id !== id))
+      setMapEdges(es => es.filter(([a, b]) => a !== id && b !== id))
     } catch (e) {
       setError(e.message)
     }
@@ -385,8 +385,8 @@ export default function ModerationPanel({ onClose }) {
               mapLoading ? (
                 <div className="mod-empty">{t('common.loading')}</div>
               ) : (
-                <ModerationMap points={mapPoints} onLink={linkPoints} onDelete={deleteMapPoint}
-                  ignoredPairs={ignoredPairs} onIgnorePair={ignorePair} />
+                <ModerationMap points={mapPoints} edges={mapEdges} onLink={linkPoints} onDelete={deleteMapPoint}
+                  onIgnorePair={ignorePair} />
               )
             ) : (viewMode === 'table' || viewMode === 'grid' || viewMode === 'reclassify') ? (
               bulkLoading && bulk.length === 0 ? (

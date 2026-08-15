@@ -326,23 +326,39 @@ class PairBody(BaseModel):
     b: str
 
 
-@router.get("/ignored-pairs")
-def get_ignored_pairs(user: dict = Depends(require_admin)):
-    """Pairs of points a moderator marked as 'not duplicates' — excluded from
-    close-photo flagging."""
+@router.post("/scan-pairs")
+def scan_pairs(user: dict = Depends(require_admin)):
+    """Fold newly-added photos into the stored close-pair set. Only measures
+    photos not scanned yet, so it's cheap after the first run."""
     service = _service()
-    rows = service.table("ignored_dup_pairs").select("a, b").execute().data or []
-    return {"pairs": [[r["a"], r["b"]] for r in rows]}
+    res = service.rpc("scan_dup_pairs", {}).execute()
+    return {"open_count": res.data if isinstance(res.data, int) else (res.data or 0)}
+
+
+@router.get("/dup-pairs")
+def dup_pairs(user: dict = Depends(require_admin)):
+    """The stored OPEN close pairs (definitive), with both points' coords +
+    thumbnails, for the moderation map."""
+    service = _service()
+    rows = service.rpc("get_open_dup_pairs", {}).execute().data or []
+    points, edges = {}, []
+    for r in rows:
+        a, b = r["a"], r["b"]
+        points[a] = {"id": a, "lat": r["a_lat"], "lng": r["a_lng"], "key": r["a_key"], "status": r["a_status"]}
+        points[b] = {"id": b, "lat": r["b_lat"], "lng": r["b_lng"], "key": r["b_key"], "status": r["b_status"]}
+        edges.append([a, b])
+    return {"points": list(points.values()), "edges": edges, "count": len(edges)}
 
 
 @router.post("/ignore-pair")
 def ignore_pair(body: PairBody, user: dict = Depends(require_admin)):
-    """Remember that these two photos are NOT duplicates of each other."""
+    """Mark these two photos as NOT duplicates of each other (they stop being
+    flagged together)."""
     if body.a == body.b:
         raise HTTPException(status_code=400, detail="Même point")
     a, b = sorted([body.a, body.b])   # order-independent key
     service = _service()
-    service.table("ignored_dup_pairs").upsert({"a": a, "b": b}).execute()
+    service.table("dup_pairs").upsert({"a": a, "b": b, "status": "ignored"}).execute()
     return {"status": "ignored", "a": a, "b": b}
 
 
@@ -365,6 +381,9 @@ def link_to_location(graffiti_id: str, target_id: str, user: dict = Depends(requ
         "location_id": loc,
         "updated_at": datetime.utcnow().isoformat(),
     }).eq("id", graffiti_id).execute()
+    # This pair is now resolved — drop it so it stops being flagged.
+    pa, pb = sorted([graffiti_id, target_id])
+    service.table("dup_pairs").delete().eq("a", pa).eq("b", pb).execute()
     return {"status": "linked", "id": graffiti_id, "target": target_id, "location_id": loc}
 
 
@@ -544,6 +563,9 @@ def reject_graffiti(graffiti_id: str, user: dict = Depends(require_admin)):
     exists = service.table("graffiti").select("id").eq("id", graffiti_id).execute()
     if not exists.data:
         raise HTTPException(status_code=404, detail="Graffiti introuvable")
+
+    # Any close pairs involving this point no longer apply.
+    service.table("dup_pairs").delete().or_(f"a.eq.{graffiti_id},b.eq.{graffiti_id}").execute()
 
     # A rejected community upload is removed entirely, including its S3 files,
     # so nothing unapproved lingers in storage.

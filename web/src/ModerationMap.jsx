@@ -154,6 +154,8 @@ export default function ModerationMap({ points, onLink, onDelete, ignoredPairs, 
         <span className="mod-map-hint">{t('mod.map.compareHint')}</span>
       </div>
 
+      <div className="mod-map-layout">
+        <div className="mod-map-left">
       {/* Top: the map. */}
       <div className="mod-map">
         <APIProvider apiKey={API_KEY}>
@@ -202,7 +204,9 @@ export default function ModerationMap({ points, onLink, onDelete, ignoredPairs, 
             />
           : <div className="mod-map-sv-empty">{t('mod.map.svHint')}</div>}
       </div>
+        </div>{/* /mod-map-left */}
 
+        <div className="mod-map-side">
       {compare.length > 0 && (
         <div className="mod-map-compare">
           {compare.map(p => (
@@ -263,6 +267,8 @@ export default function ModerationMap({ points, onLink, onDelete, ignoredPairs, 
           </div>
         ))}
       </div>
+        </div>{/* /mod-map-side */}
+      </div>{/* /mod-map-layout */}
 
       {zoomUrl && (
         <div className="mod-zoom" onClick={() => setZoomUrl(null)}>

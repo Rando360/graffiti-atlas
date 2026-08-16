@@ -41,7 +41,8 @@ class PhotoClass(BaseModel):
     style: str | None = None            # kept for back-compat; ignored if `styles` given
     styles: list[str] | None = None     # all types present in the photo
     density: str | None = None          # 'light' | 'medium' | 'heavy'
-    surface_type: str | None = None
+    surface_type: str | None = None     # back-compat; ignored if `surfaces` given
+    surfaces: list[str] | None = None   # all surfaces present in the photo
     size_m2: float | None = None
 
 
@@ -50,6 +51,7 @@ class ApproveBody(BaseModel):
     styles: list[str] | None = None
     density: str | None = None
     surface_type: str | None = None
+    surfaces: list[str] | None = None
     size_m2: float | None = None  # moderator's surface estimate in m²
     photos: list[PhotoClass] | None = None  # per-photo type/surface/size (multi-photo markers)
 
@@ -67,8 +69,8 @@ def _primary_style(styles, fallback=None):
     return max(vals, key=lambda s: _STYLE_RANK.get(s, -1))
 
 
-def _class_fields(styles, style, density, surface_type, size_m2):
-    """Build the classification column dict from multi-type + density inputs."""
+def _class_fields(styles, style, density, surface_type, size_m2, surfaces=None):
+    """Build the classification column dict from multi-type / multi-surface + density."""
     fields = {}
     sl = [s for s in (styles or []) if s]
     if sl:
@@ -79,7 +81,12 @@ def _class_fields(styles, style, density, surface_type, size_m2):
         fields["style"] = style
     if density in _DENSITY_OK:
         fields["density"] = density
-    if surface_type:
+    su = [s for s in (surfaces or []) if s]
+    if su:
+        fields["surfaces"] = su
+        fields["surface_type"] = su[0]     # primary surface (first)
+    elif surface_type:
+        fields["surfaces"] = [surface_type]
         fields["surface_type"] = surface_type
     if size_m2 is not None and 0 < size_m2 <= 10000:
         fields["size_m2"] = size_m2
@@ -234,6 +241,7 @@ class ReclassifyBody(BaseModel):
     styles: list[str] | None = None          # marker-level fallback
     density: str | None = None
     surface_type: str | None = None
+    surfaces: list[str] | None = None
 
 
 @router.post("/graffiti/{graffiti_id}/reclassify")
@@ -242,16 +250,16 @@ def reclassify_graffiti(graffiti_id: str, body: ReclassifyBody, user: dict = Dep
     size_m2 (measurement is preserved) or status."""
     service = _service()
 
-    def reclass_fields(styles, style, density, surface):
-        # types + density + surface, but NEVER size_m2 (measurement preserved).
-        f = _class_fields(styles, style, density, surface, None)
+    def reclass_fields(styles, style, density, surface, surfaces):
+        # types + density + surface(s), but NEVER size_m2 (measurement preserved).
+        f = _class_fields(styles, style, density, surface, None, surfaces)
         f.pop("size_m2", None)
         return f
 
     updated = 0
     if body.photos:
         for ph in body.photos:
-            fields = reclass_fields(ph.styles, ph.style, ph.density, ph.surface_type)
+            fields = reclass_fields(ph.styles, ph.style, ph.density, ph.surface_type, ph.surfaces)
             if not fields:
                 continue
             existing = service.table("classifications").select("id").eq("image_id", ph.image_id).execute()
@@ -264,7 +272,7 @@ def reclassify_graffiti(graffiti_id: str, body: ReclassifyBody, user: dict = Dep
                 }).execute()
             updated += 1
     else:
-        fields = reclass_fields(body.styles, None, body.density, body.surface_type)
+        fields = reclass_fields(body.styles, None, body.density, body.surface_type, body.surfaces)
         if fields:
             existing = service.table("classifications").select("id").eq("graffiti_id", graffiti_id).execute()
             if existing.data:
@@ -428,7 +436,7 @@ def approve_graffiti(graffiti_id: str, body: ApproveBody = None, user: dict = De
         # types / density / surface / size (used when a spot has different
         # graffiti per side).
         for ph in body.photos:
-            fields = _class_fields(ph.styles, ph.style, ph.density, ph.surface_type, ph.size_m2)
+            fields = _class_fields(ph.styles, ph.style, ph.density, ph.surface_type, ph.size_m2, ph.surfaces)
             if not fields:
                 continue
             existing = service.table("classifications").select("id") \
@@ -443,9 +451,9 @@ def approve_graffiti(graffiti_id: str, body: ApproveBody = None, user: dict = De
                     **fields,
                     "model_version": "moderator",
                 }).execute()
-    elif body and (body.style or body.styles or body.surface_type):
+    elif body and (body.style or body.styles or body.surface_type or body.surfaces):
         # Single classification for the whole marker (community uploads etc.).
-        fields = _class_fields(body.styles, body.style, body.density, body.surface_type, None)
+        fields = _class_fields(body.styles, body.style, body.density, body.surface_type, None, body.surfaces)
         existing = service.table("classifications").select("id") \
             .eq("graffiti_id", graffiti_id).is_("image_id", "null").execute()
         if existing.data:
@@ -507,6 +515,7 @@ class TargetBody(BaseModel):
     style: str | None = None
     styles: list[str] | None = None
     density: str | None = None
+    surfaces: list[str] | None = None
     size_m2: float | None = None
 
 
@@ -544,7 +553,7 @@ def approve_at_location(graffiti_id: str, body: TargetBody, user: dict = Depends
     if body.size_m2 is not None and 0 < body.size_m2 <= 10000:
         update["size_m2"] = body.size_m2
     service.table("graffiti").update(update).eq("id", graffiti_id).execute()
-    cfields = _class_fields(body.styles, body.style, body.density, None, None)
+    cfields = _class_fields(body.styles, body.style, body.density, None, None, body.surfaces)
     if cfields:
         existing = service.table("classifications").select("id").eq("graffiti_id", graffiti_id).execute()
         if existing.data:

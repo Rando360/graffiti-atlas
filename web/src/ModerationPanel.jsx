@@ -25,7 +25,7 @@ export default function ModerationPanel({ onClose }) {
   const [busyId, setBusyId] = useState(null)
   const [stylesSel, setStylesSel] = useState({})   // key -> array of types (multi-select)
   const [densitySel, setDensitySel] = useState({}) // key -> 'light'|'medium'|'heavy'
-  const [surfaceSel, setSurfaceSel] = useState({}) // pending id -> surface_type
+  const [surfacesSel, setSurfacesSel] = useState({}) // key -> array of surfaces (multi-select)
   const [sizeSel, setSizeSel] = useState({})       // pending id -> size in m²
   const [nearbySel, setNearbySel] = useState({})   // pending id -> selected nearby graffiti
   const [zoomImg, setZoomImg] = useState(null)     // { url } enlarged for comparison  // { graffitiId: style }
@@ -231,6 +231,13 @@ export default function ModerationPanel({ onClose }) {
   })
   const setDensity = (k, d) => setDensitySel(prev => ({ ...prev, [k]: prev[k] === d ? undefined : d }))
 
+  // Current surfaces for a photo: local edit → existing surfaces[] → legacy single.
+  const surfacesFor = (k, im) => surfacesSel[k] ?? im?.surfaces ?? (im?.surface_type ? [im.surface_type] : [])
+  const toggleSurface = (k, s, current) => setSurfacesSel(prev => {
+    const cur = prev[k] ?? current ?? []
+    return { ...prev, [k]: cur.includes(s) ? cur.filter(x => x !== s) : [...cur, s] }
+  })
+
   // Build the approve payload for a marker: per-photo classifications when it
   // has real image ids, else a single marker-level classification.
   const approveBodyFor = (g) => {
@@ -239,14 +246,14 @@ export default function ModerationPanel({ onClose }) {
       image_id: im.id,
       styles: stylesFor(im.id, im),
       density: densitySel[im.id] ?? im.density ?? null,
-      surface_type: surfaceSel[im.id] ?? im.surface_type ?? null,
+      surfaces: surfacesFor(im.id, im),
       size_m2: sizeSel[im.id] ?? im.size_m2 ?? null,
     }))
     if (photos.length) return { photos }
     return {
       styles: stylesFor(g.id, g),
       density: densitySel[g.id] ?? null,
-      surface_type: surfaceSel[g.id] ?? g.surface_type ?? null,
+      surfaces: surfacesFor(g.id, g),
       size_m2: sizeSel[g.id] ?? null,
     }
   }
@@ -254,20 +261,20 @@ export default function ModerationPanel({ onClose }) {
   const approveMarker = (g) =>
     act(`${API_URL}/moderation/graffiti/${g.id}/approve`, g.id, approveBodyFor(g))
 
-  // Reclassify: only types + density (never size or status).
+  // Reclassify: only types + density + surface (never size or status).
   const reclassifyBodyFor = (g) => {
     const imgs = (g.images && g.images.length) ? g.images : []
     const photos = imgs.filter(im => im.id).map(im => ({
       image_id: im.id,
       styles: stylesFor(im.id, im),
       density: densitySel[im.id] ?? im.density ?? null,
-      surface_type: surfaceSel[im.id] ?? im.surface_type ?? null,
+      surfaces: surfacesFor(im.id, im),
     }))
     if (photos.length) return { photos }
     return {
       styles: stylesFor(g.id, g),
       density: densitySel[g.id] ?? null,
-      surface_type: surfaceSel[g.id] ?? g.surface_type ?? null,
+      surfaces: surfacesFor(g.id, g),
     }
   }
   const saveReclassify = (g) =>
@@ -640,12 +647,12 @@ export default function ModerationPanel({ onClose }) {
                             <td>
                               <div className="mod-tbl-types">
                                 {SURFACES.map(s => {
-                                  const cur = surfaceSel[k] ?? im.surface_type
+                                  const cur = surfacesFor(k, im)
                                   return (
                                     <button
                                       key={s.key}
-                                      className={'mod-tbl-type surf' + (cur === s.key ? ' on' : '')}
-                                      onClick={() => setSurfaceSel(prev => ({ ...prev, [k]: prev[k] === s.key ? undefined : s.key }))}
+                                      className={'mod-tbl-type surf' + (cur.includes(s.key) ? ' on' : '')}
+                                      onClick={() => toggleSurface(k, s.key, cur)}
                                     >
                                       {s.label}
                                     </button>
@@ -755,12 +762,12 @@ export default function ModerationPanel({ onClose }) {
                     <div className="mod-type-row">
                       <span className="mod-type-lbl">{t('mod.surface')}</span>
                       {SURFACES.map(s => {
-                        const current = surfaceSel[g.id] ?? g.surface_type
+                        const cur = surfacesFor(g.id, g)
                         return (
                           <button
                             key={s.key}
-                            className={'mod-type' + (current === s.key ? ' on' : '')}
-                            onClick={() => setSurfaceSel(prev => ({ ...prev, [g.id]: prev[g.id] === s.key ? undefined : s.key }))}
+                            className={'mod-type' + (cur.includes(s.key) ? ' on' : '')}
+                            onClick={() => toggleSurface(g.id, s.key, cur)}
                           >
                             {s.label}
                           </button>
@@ -854,7 +861,7 @@ export default function ModerationPanel({ onClose }) {
                             disabled={!nearbySel[g.id] || busyId === g.id}
                             onClick={() => act(
                               `${API_URL}/moderation/graffiti/${g.id}/approve-at-location`,
-                              g.id, { target_id: nearbySel[g.id].id, styles: stylesFor(g.id, g), density: densitySel[g.id] ?? null, surface_type: surfaceSel[g.id] ?? g.surface_type ?? null, size_m2: sizeSel[g.id] ?? null }
+                              g.id, { target_id: nearbySel[g.id].id, styles: stylesFor(g.id, g), density: densitySel[g.id] ?? null, surfaces: surfacesFor(g.id, g), size_m2: sizeSel[g.id] ?? null }
                             )}
                           >
                             {t('mod.newAtLocation')}

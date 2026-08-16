@@ -179,7 +179,8 @@ async def upload_graffiti(
     style: str = Form(None),            # legacy single value
     styles: list[str] = Form(None),     # multi-select types
     density: str = Form(None),          # 'light' | 'medium' | 'heavy'
-    surface_type: str = Form(None),
+    surface_type: str = Form(None),     # legacy single
+    surfaces: list[str] = Form(None),   # multi-select surfaces
     note: str = Form(None),
     user: dict = Depends(get_current_user),
 ):
@@ -235,16 +236,19 @@ async def upload_graffiti(
     }).execute()
 
     sl = [s for s in (styles or []) if s] or ([style] if style else [])
-    if sl or surface_type or note or density:
+    su = [s for s in (surfaces or []) if s] or ([surface_type] if surface_type else [])
+    if sl or su or note or density:
         row = {
             "graffiti_id": graffiti_id,
-            "surface_type": surface_type,
             "description_fr": note,
             "model_version": "user_submission",
         }
         if sl:
             row["styles"] = sl
             row["style"] = max(sl, key=lambda s: _STYLE_RANK.get(s, -1))  # primary → pin colour
+        if su:
+            row["surfaces"] = su
+            row["surface_type"] = su[0]                                    # primary surface
         if density in ("light", "medium", "heavy"):
             row["density"] = density
         service.table("classifications").insert(row).execute()

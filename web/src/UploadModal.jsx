@@ -40,7 +40,7 @@ export default function UploadModal({ onClose, initialCenter }) {
   const [gpsFromPhoto, setGpsFromPhoto] = useState(false)
   const [styles, setStyles] = useState([])       // multi-select types
   const [density, setDensity] = useState(null)    // 'light' | 'medium' | 'heavy'
-  const [surface, setSurface] = useState(null)
+  const [surfaces, setSurfaces] = useState([])   // multi-select
   const [note, setNote] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
@@ -123,7 +123,7 @@ export default function UploadModal({ onClose, initialCenter }) {
       form.append('lng', pin.lng)
       styles.forEach(s => form.append('styles', s))
       if (density) form.append('density', density)
-      if (surface) form.append('surface_type', surface)
+      surfaces.forEach(s => form.append('surfaces', s))
       if (note.trim()) form.append('note', note.trim())
 
       const res = await fetch(`${API_URL}/uploads/graffiti`, {
@@ -278,8 +278,8 @@ export default function UploadModal({ onClose, initialCenter }) {
                     <button
                       key={o.key}
                       type="button"
-                      className={'ul-surface-chip' + (surface === o.key ? ' on' : '')}
-                      onClick={() => setSurface(surface === o.key ? null : o.key)}
+                      className={'ul-surface-chip' + (surfaces.includes(o.key) ? ' on' : '')}
+                      onClick={() => setSurfaces(cur => cur.includes(o.key) ? cur.filter(x => x !== o.key) : [...cur, o.key])}
                     >
                       {t(o.labelKey)}
                     </button>

@@ -672,10 +672,7 @@ function Sidebar({
           <span className="stat-num">{inViewTotal}</span>
           <span className="stat-lbl">{t('stats.inView')}</span>
         </div>
-        <div className="stat-box">
-          <span className="stat-num">{totalM2.toFixed(0)}</span>
-          <span className="stat-lbl">{t('stats.m2')}</span>
-        </div>
+        {/* m² detected hidden for now — unreliable when zoomed out (clusters carry no size). */}
         {loading && <div className="stat-loading"><span className="loading-dot" /></div>}
       </div>
 

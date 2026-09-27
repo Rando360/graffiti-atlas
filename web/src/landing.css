@@ -66,8 +66,8 @@
 .lp-hero {
   position: relative;
   max-width: 1180px; margin: 0 auto;
-  padding: 40px 28px 80px;
-  min-height: 78vh;
+  padding: 40px 28px 44px;
+  min-height: 62vh;
   display: flex; align-items: center;
 }
 

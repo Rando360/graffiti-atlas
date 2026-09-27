@@ -1845,12 +1845,12 @@ a.header-btn.mod { text-decoration: none; display: inline-flex; align-items: cen
 }
 
 /* ── Landing: live "by the numbers" data section ── */
-.lpd { max-width: 1040px; margin: 0 auto; padding: 40px 24px 8px; }
+.lpd { max-width: 1180px; margin: 0 auto; padding: 30px 28px 40px; }
 .lpd-eyebrow { color: #FF6B35; font-weight: 700; font-size: 11px; letter-spacing: .14em; margin: 0 0 4px; }
 .lpd-title { font-size: 26px; font-weight: 800; margin: 0 0 18px; letter-spacing: -.01em; color: #20241f; }
 .lpd-counters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
 .lpd-stat { background: #fff; border: 1px solid #ecebe4; border-radius: 12px; padding: 16px 12px; text-align: center; }
-.lpd-num { font-size: 28px; font-weight: 800; color: #0f766e; line-height: 1; }
+.lpd-num { font-size: 28px; font-weight: 800; color: #FF6B35; line-height: 1; }
 .lpd-lbl { font-size: 12px; color: #6b7280; margin-top: 6px; }
 .lpd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .lpd-card { background: #fff; border: 1px solid #ecebe4; border-radius: 14px; padding: 16px; }
@@ -1876,9 +1876,10 @@ a.header-btn.mod { text-decoration: none; display: inline-flex; align-items: cen
 .lpd-track { background: #f0efe9; border-radius: 6px; height: 9px; overflow: hidden; }
 .lpd-fill { height: 100%; border-radius: 6px; background: #14b8a6; transition: width 1s cubic-bezier(.2,.7,.2,1); }
 .lpd-bar .vv { text-align: right; color: #6b7280; font-weight: 600; }
-.lpd-years { display: flex; align-items: flex-end; gap: 6px; height: 64px; padding-top: 6px; }
-.lpd-yr { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; justify-content: flex-end; height: 100%; }
+.lpd-years { display: flex; align-items: flex-end; gap: 6px; padding-top: 6px; }
+.lpd-yr { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; justify-content: flex-end; }
 .lpd-yr .yb { width: 100%; background: #FF6B35; border-radius: 4px 4px 0 0; transition: height 1s cubic-bezier(.2,.7,.2,1); min-height: 2px; }
-.lpd-yr .yl { font-size: 9.5px; color: #9ca3af; }
+.lpd-yr .yv { font-size: 11px; font-weight: 700; color: #6b7280; }
+.lpd-yr .yl { font-size: 10.5px; color: #9ca3af; }
 .lpd-empty { color: #9ca3af; padding: 20px; text-align: center; }
 @media (max-width: 640px) { .lpd-counters { grid-template-columns: repeat(3, 1fr); } .lpd-grid { grid-template-columns: 1fr; } .lpd-num { font-size: 22px; } }

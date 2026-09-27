@@ -27,6 +27,12 @@ const D_COLORS = {
   surface: { concrete:'#8A8F98', brick:'#C2603F', metal:'#5B6570', painted_wall:'#14B8A6', wood:'#B98B4E', glass:'#7FB8C9', other:'#9AA0A6' },
 }
 const prettyKey = (k) => String(k).replace(/_/g, ' ')
+/* Localised label for a type / density / surface value (falls back to prettified key). */
+const labelFor = (tab, key) => {
+  const ns = tab === 'type' ? 'style.' : tab === 'density' ? 'density.' : 'surface.'
+  const l = t(ns + key)
+  return (l && !l.includes('.')) ? l : prettyKey(key)
+}
 
 /* Live "by the numbers" section — fetches aggregates and updates as data grows. */
 function DataSection() {
@@ -85,13 +91,13 @@ function DataSection() {
           {active.length ? (
             <div className="lpd-donutwrap">
               <div className="lpd-donut" style={{ background: `conic-gradient(${stops.join(',')})` }}>
-                <div className="lpd-hole"><span>{active[0].p}%</span><small>{prettyKey(active[0].key)}</small></div>
+                <div className="lpd-hole"><span>{active[0].p}%</span><small>{labelFor(tab, active[0].key)}</small></div>
               </div>
               <div className="lpd-legend">
                 {active.map(it => (
                   <div className="lpd-leg" key={it.key}>
                     <span className="lpd-dot" style={{ background: D_COLORS[tab][it.key] || '#9AA0A6' }} />
-                    <span className="nm">{prettyKey(it.key)}</span><span className="pc">{it.p}%</span>
+                    <span className="nm">{labelFor(tab, it.key)}</span><span className="pc">{it.p}%</span>
                   </div>
                 ))}
               </div>
@@ -100,7 +106,7 @@ function DataSection() {
         </div>
 
         <div className="lpd-card">
-          <div className="lpd-card-head"><span className="lpd-card-title">{t('landing.data.cities')}</span></div>
+          <div className="lpd-card-head"><span className="lpd-card-title">{t('landing.data.topcities')}</span></div>
           <div className="lpd-bars">
             {cities.map(c => (
               <div className="lpd-bar" key={c.key}>
@@ -116,8 +122,9 @@ function DataSection() {
               <div className="lpd-years">
                 {years.map(y => (
                   <div className="lpd-yr" key={y.key}>
-                    <div className="yb" style={{ height: (y.count / ymax * 100) + '%' }} />
-                    <span className="yl">{String(y.key).slice(2)}</span>
+                    <span className="yv">{fmt(y.count)}</span>
+                    <div className="yb" style={{ height: (y.count / ymax * 60) + 'px' }} />
+                    <span className="yl">{y.key}</span>
                   </div>
                 ))}
               </div>
@@ -292,13 +299,6 @@ export default function Landing() {
             </svg>
           </button>
 
-          <div className="lp-stats">
-            <div><strong>{stats.works}</strong><span>{t('landing.stat.works')}</span></div>
-            <div className="lp-stats-div" />
-            <div><strong>{stats.cities}</strong><span>{t('landing.stat.cities')}</span></div>
-            <div className="lp-stats-div" />
-            <div><strong>●</strong><span>{t('landing.stat.live')}</span></div>
-          </div>
         </div>
       </header>
 

@@ -71,8 +71,7 @@ function DataSection() {
       <h2 className="lpd-title">{t('landing.data.title')}</h2>
 
       <div className="lpd-counters">
-        <div className="lpd-stat"><div className="lpd-num">{fmt(d.works)}</div><div className="lpd-lbl">{t('landing.data.works')}</div></div>
-        <div className="lpd-stat"><div className="lpd-num">{fmt(d.photos)}</div><div className="lpd-lbl">{t('landing.data.photos')}</div></div>
+        <div className="lpd-stat"><div className="lpd-num">{fmt(d.works)}</div><div className="lpd-lbl">{t('landing.data.identified')}</div></div>
         <div className="lpd-stat"><div className="lpd-num">{fmt(d.cities)}</div><div className="lpd-lbl">{t('landing.data.cities')}</div></div>
       </div>
 

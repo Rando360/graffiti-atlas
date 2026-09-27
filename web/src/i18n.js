@@ -730,6 +730,7 @@ const STRINGS = {
   'landing.data.eyebrow': { fr: 'GRAFFITIATLAS · EN CHIFFRES', en: 'GRAFFITIATLAS · BY THE NUMBERS', es: 'GRAFFITIATLAS · EN CIFRAS', de: 'GRAFFITIATLAS · IN ZAHLEN', it: 'GRAFFITIATLAS · IN NUMERI' },
   'landing.data.title': { fr: 'La ville, documentée', en: 'The city, documented', es: 'La ciudad, documentada', de: 'Die Stadt, dokumentiert', it: 'La città, documentata' },
   'landing.data.works': { fr: 'œuvres cartographiées', en: 'works mapped', es: 'obras mapeadas', de: 'kartierte Werke', it: 'opere mappate' },
+  'landing.data.identified': { fr: 'graffitis identifiés', en: 'graffiti identified', es: 'grafitis identificados', de: 'erfasste Graffiti', it: 'graffiti identificati' },
   'landing.data.photos': { fr: 'photos cataloguées', en: 'photos catalogued', es: 'fotos catalogadas', de: 'katalogisierte Fotos', it: 'foto catalogate' },
   'landing.data.cities': { fr: 'villes', en: 'cities', es: 'ciudades', de: 'Städte', it: 'città' },
   'landing.data.breakdown': { fr: 'Répartition', en: 'Breakdown', es: 'Distribución', de: 'Aufschlüsselung', it: 'Ripartizione' },

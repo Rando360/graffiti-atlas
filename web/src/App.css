@@ -1848,7 +1848,7 @@ a.header-btn.mod { text-decoration: none; display: inline-flex; align-items: cen
 .lpd { max-width: 1180px; margin: 0 auto; padding: 30px 28px 40px; }
 .lpd-eyebrow { color: #FF6B35; font-weight: 700; font-size: 11px; letter-spacing: .14em; margin: 0 0 4px; }
 .lpd-title { font-size: 26px; font-weight: 800; margin: 0 0 18px; letter-spacing: -.01em; color: #20241f; }
-.lpd-counters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+.lpd-counters { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px; }
 .lpd-stat { background: #fff; border: 1px solid #ecebe4; border-radius: 12px; padding: 16px 12px; text-align: center; }
 .lpd-num { font-size: 28px; font-weight: 800; color: #FF6B35; line-height: 1; }
 .lpd-lbl { font-size: 12px; color: #6b7280; margin-top: 6px; }
@@ -1882,7 +1882,7 @@ a.header-btn.mod { text-decoration: none; display: inline-flex; align-items: cen
 .lpd-yr .yv { font-size: 11px; font-weight: 700; color: #6b7280; }
 .lpd-yr .yl { font-size: 10.5px; color: #9ca3af; }
 .lpd-empty { color: #9ca3af; padding: 20px; text-align: center; }
-@media (max-width: 640px) { .lpd-counters { grid-template-columns: repeat(3, 1fr); } .lpd-grid { grid-template-columns: 1fr; } .lpd-num { font-size: 22px; } }
+@media (max-width: 640px) { .lpd-counters { grid-template-columns: repeat(2, 1fr); } .lpd-grid { grid-template-columns: 1fr; } .lpd-num { font-size: 22px; } }
 
 /* ── Location-history photos: click to enlarge ── */
 .loc-entry-img { cursor: zoom-in; transition: opacity .15s; }

@@ -53,6 +53,7 @@ export default function ModerationMap({ points, edges, onLink, onDelete, onIgnor
   const [compare, setCompare] = useState([])  // up to 2 selected points
   const [focus, setFocus] = useState(null)    // point the map is panned to
   const [zoomUrl, setZoomUrl] = useState(null) // enlarged photo (lightbox)
+  const [qi, setQi] = useState(0)             // review-queue index
 
   // Groups come from the stored open pairs (edges), not on-the-fly distance maths.
   // Connected components of the edge graph = clusters of close photos.
@@ -102,6 +103,36 @@ export default function ModerationMap({ points, edges, onLink, onDelete, onIgnor
   const selectForCompare = (p) => setCompare(cur =>
     cur.find(x => x.id === p.id) ? cur : (cur.length < 2 ? [...cur, p] : [cur[1], p]))
   const focusOn = (p) => { setFocus({ lat: p.lat, lng: p.lng, id: p.id, k: Date.now() }); selectForCompare(p) }
+
+  // ── Review queue: show one close group at a time, act with a single click ──
+  const queueGroup = dupGroups.length ? dupGroups[Math.min(qi, dupGroups.length - 1)] : null
+
+  // Pan the map + drive Street View to the current group as the queue advances.
+  const queueKey = queueGroup ? queueGroup.map(p => p.id).join(',') : ''
+  useEffect(() => {
+    if (queueGroup && queueGroup[0]) {
+      setFocus({ lat: queueGroup[0].lat, lng: queueGroup[0].lng, id: queueGroup[0].id, k: Date.now() })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queueKey])
+
+  const mergeGroup = async (group) => {
+    if (!group || group.length < 2) return
+    if (!window.confirm(t('mod.map.confirmLink'))) return
+    const target = group[0].id
+    for (let i = 1; i < group.length; i++) await onLink(group[i].id, target)
+    setCompare([])   // resolved group drops out on the parent's refresh; next slides in
+  }
+
+  const ignoreGroup = async (group) => {
+    if (!group || !onIgnorePair) return
+    const ids = new Set(group.map(p => p.id))
+    const internal = (edges || []).filter(([a, b]) => ids.has(a) && ids.has(b))
+    for (const [a, b] of internal) await onIgnorePair(a, b)
+    setCompare([])
+  }
+
+  const skipGroup = () => setQi(i => i + 1)
 
   const doMerge = async () => {
     if (compare.length !== 2) return
@@ -206,6 +237,49 @@ export default function ModerationMap({ points, edges, onLink, onDelete, onIgnor
         </div>{/* /mod-map-left */}
 
         <div className="mod-map-side">
+      {/* One-click review queue: current close group, Merge / Ignore / Skip. */}
+      <div className="mod-review">
+        <div className="mod-review-head">
+          <span className="mod-review-title">{t('mod.map.review')}</span>
+          <span className="mod-review-count">{dupGroups.length} {t('mod.map.groupsLeft')}</span>
+        </div>
+        {queueGroup ? (
+          <>
+            <div className="mod-review-photos">
+              {queueGroup.map(p => (
+                <div className={'mod-review-card' + (p.status === 'approved' ? ' appr' : '')} key={p.id}>
+                  {p.key
+                    ? <img src={`${CLOUDFRONT}/${p.key}`} alt="" loading="lazy"
+                        onClick={() => setZoomUrl(`${CLOUDFRONT}/${p.key}`)} />
+                    : <div className="mod-review-noimg">—</div>}
+                  {p.status === 'approved' && <span className="mod-dupcard-badge">{t('mod.map.legend.approved')}</span>}
+                  {onDelete && (
+                    <button className="mod-dupcard-del" title={t('mod.map.delete')}
+                      onClick={() => doDelete(p)}>🗑</button>
+                  )}
+                </div>
+              ))}
+            </div>
+            {queueGroup.length === 2 && (
+              <div className="mod-review-dist">{Math.round(haversine(queueGroup[0], queueGroup[1]))} m {t('mod.map.apart')}</div>
+            )}
+            <div className="mod-review-actions">
+              <button className="mod-tbl-bulk approve" onClick={() => mergeGroup(queueGroup)}>
+                {queueGroup.length > 2 ? t('mod.map.mergeAll') : t('mod.map.merge')}
+              </button>
+              {onIgnorePair && (
+                <button className="mod-tbl-loadmore" onClick={() => ignoreGroup(queueGroup)}>
+                  {queueGroup.length > 2 ? t('mod.map.ignoreAll') : t('mod.map.ignore')}
+                </button>
+              )}
+              <button className="mod-tbl-loadmore" onClick={skipGroup}>{t('mod.map.skip')}</button>
+            </div>
+          </>
+        ) : (
+          <div className="mod-review-done">{t('mod.map.reviewDone')}</div>
+        )}
+      </div>
+
       {compare.length > 0 && (
         <div className="mod-map-compare">
           {compare.map(p => (

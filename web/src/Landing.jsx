@@ -20,6 +20,115 @@ const PLAY_URL = 'https://play.google.com/store/apps/details?id=io.graffitiatlas
 /* Marker colours mirror the real map (tag / throwup / piece / mural). */
 const PIN_COLORS = ['#7B5CF5', '#1DB870', '#3B82F6', '#E85D26']
 
+/* Colours for the live data section (mirror the map pins). */
+const D_COLORS = {
+  type:    { tag:'#7B5CF5', throwup:'#1DB870', piece:'#3B82F6', mural:'#E85D26', sticker:'#F5C542', other:'#9AA0A6' },
+  density: { light:'#9CC7F5', medium:'#3B82F6', heavy:'#1E40AF' },
+  surface: { concrete:'#8A8F98', brick:'#C2603F', metal:'#5B6570', painted_wall:'#14B8A6', wood:'#B98B4E', glass:'#7FB8C9', other:'#9AA0A6' },
+}
+const prettyKey = (k) => String(k).replace(/_/g, ' ')
+
+/* Live "by the numbers" section — fetches aggregates and updates as data grows. */
+function DataSection() {
+  const [d, setD] = useState(null)
+  const [tab, setTab] = useState('type')
+  useEffect(() => {
+    fetch(`${API_URL}/map/stats`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(x => { if (x && x.works != null) setD(x) })
+      .catch(() => { /* section stays hidden if it can't load */ })
+  }, [])
+  if (!d) return null
+
+  const fmt = (n) => Number(n || 0).toLocaleString(getLanguage())
+  const withPct = (items) => {
+    const tot = (items || []).reduce((s, i) => s + i.count, 0) || 1
+    return (items || []).map(i => ({ ...i, p: Math.round((i.count / tot) * 100) }))
+  }
+  const SETS = { type: d.by_type, density: d.by_density, surface: d.by_surface }
+  const tabs = ['type', 'density', 'surface'].filter(k => (SETS[k] || []).length)
+  const active = withPct((SETS[tab] || []).slice(0, 6))
+  let acc = 0
+  const stops = active.map(it => {
+    const c = D_COLORS[tab][it.key] || '#9AA0A6'
+    const s = `${c} ${acc}% ${acc + it.p}%`; acc += it.p; return s
+  })
+  if (acc < 100) stops.push(`#ecebe4 ${acc}% 100%`)
+  const cities = withPct(d.by_city || [])
+  const cmax = Math.max(1, ...cities.map(c => c.count))
+  const years = d.by_year || []
+  const ymax = Math.max(1, ...years.map(y => y.count))
+
+  return (
+    <section className="lpd">
+      <p className="lpd-eyebrow">{t('landing.data.eyebrow')}</p>
+      <h2 className="lpd-title">{t('landing.data.title')}</h2>
+
+      <div className="lpd-counters">
+        <div className="lpd-stat"><div className="lpd-num">{fmt(d.works)}</div><div className="lpd-lbl">{t('landing.data.works')}</div></div>
+        <div className="lpd-stat"><div className="lpd-num">{fmt(d.photos)}</div><div className="lpd-lbl">{t('landing.data.photos')}</div></div>
+        <div className="lpd-stat"><div className="lpd-num">{fmt(d.cities)}</div><div className="lpd-lbl">{t('landing.data.cities')}</div></div>
+      </div>
+
+      <div className="lpd-grid">
+        <div className="lpd-card">
+          <div className="lpd-card-head">
+            <span className="lpd-card-title">{t('landing.data.breakdown')}</span>
+            {tabs.length > 1 && (
+              <div className="lpd-toggle">
+                {tabs.map(k => (
+                  <button key={k} className={k === tab ? 'on' : ''} onClick={() => setTab(k)}>{t('landing.data.' + k)}</button>
+                ))}
+              </div>
+            )}
+          </div>
+          {active.length ? (
+            <div className="lpd-donutwrap">
+              <div className="lpd-donut" style={{ background: `conic-gradient(${stops.join(',')})` }}>
+                <div className="lpd-hole"><span>{active[0].p}%</span><small>{prettyKey(active[0].key)}</small></div>
+              </div>
+              <div className="lpd-legend">
+                {active.map(it => (
+                  <div className="lpd-leg" key={it.key}>
+                    <span className="lpd-dot" style={{ background: D_COLORS[tab][it.key] || '#9AA0A6' }} />
+                    <span className="nm">{prettyKey(it.key)}</span><span className="pc">{it.p}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : <div className="lpd-empty">—</div>}
+        </div>
+
+        <div className="lpd-card">
+          <div className="lpd-card-head"><span className="lpd-card-title">{t('landing.data.cities')}</span></div>
+          <div className="lpd-bars">
+            {cities.map(c => (
+              <div className="lpd-bar" key={c.key}>
+                <span className="nm">{c.key}</span>
+                <div className="lpd-track"><div className="lpd-fill" style={{ width: (c.count / cmax * 100) + '%' }} /></div>
+                <span className="vv">{fmt(c.count)}</span>
+              </div>
+            ))}
+          </div>
+          {years.length > 1 && (
+            <>
+              <div className="lpd-card-head" style={{ marginTop: 14 }}><span className="lpd-card-title">{t('landing.data.byyear')}</span></div>
+              <div className="lpd-years">
+                {years.map(y => (
+                  <div className="lpd-yr" key={y.key}>
+                    <div className="yb" style={{ height: (y.count / ymax * 100) + '%' }} />
+                    <span className="yl">{String(y.key).slice(2)}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 /* Scattered pins for the hero "living map" — fixed positions so it reads as a place. */
 const PINS = [
   { x: 12, y: 30, c: 0, d: 0.0 }, { x: 26, y: 62, c: 3, d: 0.6 },
@@ -192,6 +301,9 @@ export default function Landing() {
           </div>
         </div>
       </header>
+
+      {/* ── Live data section ── */}
+      <DataSection />
 
       {/* ── How it works ── */}
       <section className="lp-how">

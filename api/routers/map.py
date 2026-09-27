@@ -106,6 +106,14 @@ def get_location_timeline(location_id: str):
     return {"timeline": out}
 
 
+@router.get("/stats")
+def get_landing_stats():
+    """One-call aggregates for the landing-page 'by the numbers' section."""
+    supabase = get_supabase()
+    res = supabase.rpc("get_landing_stats", {}).execute()
+    return res.data or {}
+
+
 @router.get("/cities")
 def get_cities():
     supabase = get_supabase()

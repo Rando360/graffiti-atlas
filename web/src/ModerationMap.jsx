@@ -102,6 +102,17 @@ export default function ModerationMap({ points, edges, onLink, onDelete, onIgnor
 
   const compareIds = useMemo(() => new Set(compare.map(p => p.id)), [compare])
 
+  // ── Review queue: one close PAIR at a time. Declared before `visible` (which
+  //    highlights the current pair), or we hit a temporal-dead-zone error. ──
+  const pointById = useMemo(() => new globalThis.Map(points.map(p => [p.id, p])), [points])
+  const pairs = useMemo(
+    () => (edges || []).map(([a, b]) => [pointById.get(a), pointById.get(b)]).filter(pr => pr[0] && pr[1]),
+    [edges, pointById]
+  )
+  const pair = pairs.length ? pairs[Math.min(qi, pairs.length - 1)] : null
+  const pairKey = pair ? pair[0].id + ',' + pair[1].id : ''
+  const pairIds = useMemo(() => new Set(pair ? [pair[0].id, pair[1].id] : []), [pairKey])  // eslint-disable-line react-hooks/exhaustive-deps
+
   // Only points still involved in an open pair (plus whatever you have selected)
   // get markers — so merged/ignored points drop off the map right away.
   const visible = useMemo(() => {
@@ -123,19 +134,10 @@ export default function ModerationMap({ points, edges, onLink, onDelete, onIgnor
     cur.find(x => x.id === p.id) ? cur : (cur.length < 2 ? [...cur, p] : [cur[1], p]))
   const focusOn = (p) => { setFocus({ lat: p.lat, lng: p.lng, id: p.id, k: Date.now() }); selectForCompare(p) }
 
-  // ── Review queue: one close PAIR at a time (two photos side by side) ──
-  const pointById = useMemo(() => new globalThis.Map(points.map(p => [p.id, p])), [points])
-  const pairs = useMemo(
-    () => (edges || []).map(([a, b]) => [pointById.get(a), pointById.get(b)]).filter(pr => pr[0] && pr[1]),
-    [edges, pointById]
-  )
-  const pair = pairs.length ? pairs[Math.min(qi, pairs.length - 1)] : null
-
-  // Pan/zoom to the current pair as the queue advances.
-  const pairKey = pair ? pair[0].id + ',' + pair[1].id : ''
-  const pairIds = useMemo(() => new Set(pair ? [pair[0].id, pair[1].id] : []), [pairKey])  // eslint-disable-line react-hooks/exhaustive-deps
+  // Clear manual focus as the queue advances, so PairFitter frames both points
+  // and Street View falls back to pair[0].
   useEffect(() => {
-    setFocus(null)   // PairFitter frames both points; Street View falls back to pair[0]
+    setFocus(null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pairKey])
 

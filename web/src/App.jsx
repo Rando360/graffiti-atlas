@@ -612,6 +612,63 @@ function FilterSection({ title, activeCount, children, defaultOpen = true }) {
   )
 }
 
+/* Draggable before/after comparison of the oldest vs newest photo at a spot. */
+function BeforeAfter({ before, after, beforeLabel, afterLabel }) {
+  const ref = useRef(null)
+  const [pos, setPos] = useState(50)
+  const [w, setW] = useState(0)
+  const dragging = useRef(false)
+
+  useEffect(() => {
+    if (!ref.current) return
+    const measure = () => setW(ref.current ? ref.current.clientWidth : 0)
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(ref.current)
+    return () => ro.disconnect()
+  }, [])
+
+  useEffect(() => {
+    const at = (e) => (e.touches ? e.touches[0].clientX : e.clientX)
+    const move = (e) => {
+      if (!dragging.current || !ref.current) return
+      const r = ref.current.getBoundingClientRect()
+      setPos(Math.max(0, Math.min(100, ((at(e) - r.left) / r.width) * 100)))
+    }
+    const up = () => { dragging.current = false }
+    window.addEventListener('mousemove', move)
+    window.addEventListener('mouseup', up)
+    window.addEventListener('touchmove', move, { passive: true })
+    window.addEventListener('touchend', up)
+    return () => {
+      window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up)
+      window.removeEventListener('touchmove', move); window.removeEventListener('touchend', up)
+    }
+  }, [])
+
+  const start = (clientX) => {
+    dragging.current = true
+    if (ref.current) {
+      const r = ref.current.getBoundingClientRect()
+      setPos(Math.max(0, Math.min(100, ((clientX - r.left) / r.width) * 100)))
+    }
+  }
+
+  return (
+    <div className="ba" ref={ref}
+      onMouseDown={(e) => start(e.clientX)}
+      onTouchStart={(e) => start(e.touches[0].clientX)}>
+      <img className="ba-img" src={after} alt="" draggable="false" />
+      <div className="ba-clip" style={{ width: pos + '%' }}>
+        <img className="ba-img" src={before} alt="" draggable="false" style={{ width: w ? w + 'px' : '100%' }} />
+      </div>
+      <div className="ba-line" style={{ left: pos + '%' }}><span className="ba-handle">⇆</span></div>
+      <span className="ba-lbl ba-l">{beforeLabel}</span>
+      <span className="ba-lbl ba-r">{afterLabel}</span>
+    </div>
+  )
+}
+
 /* ══════════════════════════════════════════════════════
    SIDEBAR
    ══════════════════════════════════════════════════════ */
@@ -624,6 +681,7 @@ function Sidebar({
   const [allImages, setAllImages] = useState([])
   const [activeImageIdx, setActiveImageIdx] = useState(0)
   const [loadingImages, setLoadingImages] = useState(false)
+  const [historyZoom, setHistoryZoom] = useState(null)   // enlarged location-history photo
   const [copied, setCopied] = useState(false)
   const [address, setAddress] = useState(null)
 
@@ -885,6 +943,15 @@ function Sidebar({
                     dateStr={selected.date_observed}
                   />
                 )}
+
+                {historyZoom && (
+                  <div className="img-overlay" onClick={() => setHistoryZoom(null)} role="dialog" aria-modal="true" aria-label={t('lightbox.enlarged')}>
+                    <div className="img-overlay-inner" onClick={e => e.stopPropagation()}>
+                      <button className="img-overlay-close" onClick={() => setHistoryZoom(null)} aria-label={t('lightbox.close')}>✕</button>
+                      <img className="history-zoom-img" src={historyZoom} alt="" />
+                    </div>
+                  </div>
+                )}
               </>
             ) : null}
 
@@ -903,10 +970,25 @@ function Sidebar({
               {Array.isArray(timeline) && timeline.length > 1 && (
                 <div className="loc-history">
                   <span className="loc-history-title">{t('detail.history')}</span>
+                  {(() => {
+                    const wi = timeline.filter(e => e.image_url)
+                    const af = wi[0], bf = wi[wi.length - 1]
+                    if (!af || !bf || af.image_url === bf.image_url) return null
+                    return (
+                      <BeforeAfter
+                        before={bf.image_url} after={af.image_url}
+                        beforeLabel={bf.date_observed ? bf.date_observed.slice(0, 4) : '—'}
+                        afterLabel={af.removed_at
+                          ? `${t('mod.cleanedBadge')} ${af.removed_at.slice(0, 4)}`
+                          : (af.date_observed ? af.date_observed.slice(0, 4) : t('detail.current'))}
+                      />
+                    )
+                  })()}
                   {timeline.map((e2, i2) => (
                     <div key={e2.id} className={'loc-entry' + (e2.removed_at ? ' cleaned' : '')}>
                       {e2.image_url
-                        ? <img src={e2.image_url} alt="" loading="lazy" />
+                        ? <img src={e2.image_url} alt="" loading="lazy" className="loc-entry-img"
+                            onClick={() => setHistoryZoom(e2.image_url)} title={t('lightbox.enlarged')} />
                         : <div className="loc-entry-noimg" />}
                       <div className="loc-entry-meta">
                         <span className="loc-entry-date">

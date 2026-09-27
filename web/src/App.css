@@ -1883,3 +1883,19 @@ a.header-btn.mod { text-decoration: none; display: inline-flex; align-items: cen
 .lpd-yr .yl { font-size: 10.5px; color: #9ca3af; }
 .lpd-empty { color: #9ca3af; padding: 20px; text-align: center; }
 @media (max-width: 640px) { .lpd-counters { grid-template-columns: repeat(3, 1fr); } .lpd-grid { grid-template-columns: 1fr; } .lpd-num { font-size: 22px; } }
+
+/* ── Location-history photos: click to enlarge ── */
+.loc-entry-img { cursor: zoom-in; transition: opacity .15s; }
+.loc-entry-img:hover { opacity: .82; }
+.history-zoom-img { max-width: 88vw; max-height: 85vh; display: block; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,.4); }
+
+/* ── Before/after comparison slider (location history) ── */
+.ba { position: relative; width: 100%; overflow: hidden; border-radius: 10px; user-select: none; touch-action: none; cursor: ew-resize; margin-bottom: 12px; background: #eee; }
+.ba-img { display: block; width: 100%; height: auto; pointer-events: none; }
+.ba-clip { position: absolute; top: 0; left: 0; height: 100%; overflow: hidden; }
+.ba-clip .ba-img { height: 100%; width: auto; object-fit: cover; object-position: left top; }
+.ba-line { position: absolute; top: 0; bottom: 0; width: 2px; background: #fff; transform: translateX(-1px); box-shadow: 0 0 0 1px rgba(0,0,0,.25); pointer-events: none; }
+.ba-handle { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 30px; height: 30px; border-radius: 50%; background: #fff; display: grid; place-items: center; box-shadow: 0 2px 6px rgba(0,0,0,.35); font-size: 13px; color: #333; }
+.ba-lbl { position: absolute; bottom: 8px; padding: 2px 8px; border-radius: 6px; background: rgba(0,0,0,.62); color: #fff; font-size: 11px; font-weight: 700; pointer-events: none; }
+.ba-lbl.ba-l { left: 8px; }
+.ba-lbl.ba-r { right: 8px; }

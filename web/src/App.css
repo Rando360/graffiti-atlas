@@ -1772,3 +1772,19 @@ a.header-btn.mod { text-decoration: none; display: inline-flex; align-items: cen
 .mod-tbl-measure { width: 32px; height: 32px; padding: 0; border-radius: 8px; border: 1.5px solid var(--border,#E9E5DA); background: var(--surface,#fff); font-size: 15px; cursor: pointer; line-height: 1; }
 .mod-tbl-measure:hover:not(:disabled) { border-color: var(--accent,#E85D26); background: var(--bg,#FAF8F2); }
 .mod-tbl-measure:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Admin map tools (drag-to-merge + delete) ── */
+.marker-can.admin-draggable { cursor: grab; }
+.marker-can.admin-draggable:active { cursor: grabbing; }
+.action-btn.admin-delete {
+  background: #fdecec;
+  color: #b3261e;
+  border: 1px solid #f3c2bd;
+}
+.action-btn.admin-delete:hover { background: #f9d9d6; }
+.admin-hint {
+  margin: 8px 2px 0;
+  font-size: 12px;
+  color: #8a8a8a;
+  font-style: italic;
+}

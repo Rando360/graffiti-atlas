@@ -104,7 +104,16 @@ function sprayCanSVG(color) {
 /* Client-side clustering (AllTrails-style): smooth, non-overlapping bubbles that
    split as you zoom. Fed all individual points in view; MarkerClusterer groups
    them by screen distance. Clicking a cluster zooms in; a marker opens detail. */
-function ClusteredMarkers({ points, selectedId, onSelect, mode = 'cluster' }) {
+/* Great-circle distance in metres — used for admin drag-to-merge hit detection. */
+function haversineM(aLat, aLng, bLat, bLng) {
+  const R = 6371000, toR = Math.PI / 180
+  const dLat = (bLat - aLat) * toR, dLng = (bLng - aLng) * toR
+  const s = Math.sin(dLat / 2) ** 2 +
+    Math.cos(aLat * toR) * Math.cos(bLat * toR) * Math.sin(dLng / 2) ** 2
+  return 2 * R * Math.asin(Math.sqrt(s))
+}
+
+function ClusteredMarkers({ points, selectedId, onSelect, mode = 'cluster', isAdmin = false, onMerge }) {
   const map = useMap()
   const markerLib = useMapsLibrary('marker')   // wait until AdvancedMarkerElement exists
   // NB: `Map` in this module is the @vis.gl React component, so use the JS
@@ -124,6 +133,26 @@ function ClusteredMarkers({ points, selectedId, onSelect, mode = 'cluster' }) {
         elMap.current.set(g.id, el)
         const m = new AME({ position: { lat: g.lat, lng: g.lng }, content: el })
         m.addListener('click', () => onSelect(g))
+        if (isAdmin) {
+          m.gmpDraggable = true
+          el.classList.add('admin-draggable')
+          m.addListener('dragend', () => {
+            const pos = m.position
+            const dropLat = typeof pos?.lat === 'function' ? pos.lat() : pos.lat
+            const dropLng = typeof pos?.lng === 'function' ? pos.lng() : pos.lng
+            let best = null, bestD = Infinity
+            for (const q of points) {
+              if (q.id === g.id || typeof q.lat !== 'number' || typeof q.lng !== 'number') continue
+              const d = haversineM(dropLat, dropLng, q.lat, q.lng)
+              if (d < bestD) { bestD = d; best = q }
+            }
+            if (best && bestD <= 60 && onMerge) {
+              onMerge(g, best)          // dropped onto a neighbour → combine
+            } else {
+              m.position = { lat: g.lat, lng: g.lng }   // snap back — we don't move GPS
+            }
+          })
+        }
         return m
       })
     const renderer = {
@@ -149,7 +178,7 @@ function ClusteredMarkers({ points, selectedId, onSelect, mode = 'cluster' }) {
     })
     return () => clusterer.clearMarkers()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [map, markerLib, points, mode])
+  }, [map, markerLib, points, mode, isAdmin])
 
   // Highlight the selected marker without rebuilding the whole cluster layer.
   useEffect(() => {
@@ -589,6 +618,7 @@ function FilterSection({ title, activeCount, children, defaultOpen = true }) {
 function Sidebar({
   graffiti, allGraffiti, inViewTotal, hasClusters, timeline, selected, onSelect, loading, error,
   filters, onFilterChange, onResetFilters, cities, sheetOpen, onToggleSheet, apiKey, isMobile,
+  isAdmin, onDelete,
 }) {
   const [imgExpanded, setImgExpanded] = useState(false)
   const [allImages, setAllImages] = useState([])
@@ -936,7 +966,16 @@ function Sidebar({
                   }}>
                   {copied ? t('detail.linkCopied') : t('detail.share')}
                 </button>
+                {isAdmin && (
+                  <button className="action-btn admin-delete"
+                    onClick={() => onDelete && onDelete(selected)}>
+                    🗑 Supprimer
+                  </button>
+                )}
               </div>
+              {isAdmin && (
+                <p className="admin-hint">Admin : glissez un pin sur un autre pour les fusionner.</p>
+              )}
             </div>
           </div>
 
@@ -1167,6 +1206,44 @@ export default function App() {
     if (lastBoundsRef.current) fetchGraffiti(lastBoundsRef.current, lastZoomRef.current)
   }, [fetchGraffiti])
 
+  // Force a fresh map reload (bypasses the "bounds already loaded" cache) after an edit.
+  const refreshMap = useCallback(() => {
+    loadedRef.current = null
+    if (lastBoundsRef.current) fetchGraffiti(lastBoundsRef.current, lastZoomRef.current)
+  }, [fetchGraffiti])
+
+  // Admin-only POST to the moderation API with the current session token.
+  const adminAction = useCallback(async (path) => {
+    const { data: { session } } = await supabase.auth.getSession()
+    const token = session?.access_token
+    if (!token) { alert('Session expirée — reconnectez-vous.'); return false }
+    try {
+      const res = await fetch(`${API_URL}/moderation${path}`, {
+        method: 'POST', headers: { Authorization: `Bearer ${token}` },
+      })
+      return res.ok
+    } catch { return false }
+  }, [])
+
+  // Drag one pin onto another → merge (dragged point takes the target's location_id).
+  const handleMerge = useCallback(async (dragged, target) => {
+    if (!dragged || !target || dragged.id === target.id) { refreshMap(); return }
+    const ok = await adminAction(`/graffiti/${dragged.id}/link-to/${target.id}`)
+    if (!ok) alert('Fusion échouée.')
+    setSelected(null)
+    refreshMap()
+  }, [adminAction, refreshMap])
+
+  // Delete a marker (row + photo + S3), admin-only, with confirmation.
+  const handleDelete = useCallback(async (g) => {
+    if (!g) return
+    if (!window.confirm('Supprimer définitivement ce point et sa photo ?')) return
+    const ok = await adminAction(`/graffiti/${g.id}/reject`)
+    if (!ok) { alert('Suppression échouée.'); return }
+    setSelected(null)
+    refreshMap()
+  }, [adminAction, refreshMap])
+
   const filtered = useMemo(() => allGraffiti.filter(g => {
     if (g.cluster) return true
     if (filters.state === 'active' && g.cleaned) return false
@@ -1270,6 +1347,8 @@ export default function App() {
           onToggleSheet={() => setSheetOpen(o => !o)}
           apiKey={apiKey}
           isMobile={isMobile}
+          isAdmin={isAdmin}
+          onDelete={handleDelete}
         />
 
         <div className="right-panel">
@@ -1293,6 +1372,8 @@ export default function App() {
                   selectedId={selectedId}
                   onSelect={handleSelect}
                   mode={clusterMode}
+                  isAdmin={isAdmin}
+                  onMerge={handleMerge}
                 />
               </Map>
             </APIProvider>

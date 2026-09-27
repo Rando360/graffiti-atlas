@@ -25,6 +25,25 @@ function FocusPanner({ focus }) {
   return null
 }
 
+// Frame the map on the two points of the current review pair so both are visible.
+function PairFitter({ pair }) {
+  const map = useMap()
+  const aId = pair && pair[0] ? pair[0].id : null
+  const bId = pair && pair[1] ? pair[1].id : null
+  useEffect(() => {
+    if (!map || !pair || !pair[0] || !pair[1]) return
+    const b = new window.google.maps.LatLngBounds()
+    b.extend({ lat: pair[0].lat, lng: pair[0].lng })
+    b.extend({ lat: pair[1].lat, lng: pair[1].lng })
+    map.fitBounds(b, 150)
+    const l = window.google.maps.event.addListenerOnce(map, 'idle', () => {
+      if ((map.getZoom() || 0) > 20) map.setZoom(20)   // very-close pairs: don't slam to max
+    })
+    return () => { if (l) l.remove() }
+  }, [map, aId, bId])
+  return null
+}
+
 function BoundsWatcher({ points, onBounds }) {
   const map = useMap()
   useEffect(() => {
@@ -88,8 +107,8 @@ export default function ModerationMap({ points, edges, onLink, onDelete, onIgnor
   const visible = useMemo(() => {
     const inB = p => !bounds || (p.lat <= bounds.n && p.lat >= bounds.s && p.lng <= bounds.e && p.lng >= bounds.w)
     return points.filter(p =>
-      inB(p) && (dupIds.has(p.id) || compareIds.has(p.id) || focus?.id === p.id)).slice(0, 1500)
-  }, [points, bounds, dupIds, compareIds, focus])
+      inB(p) && (dupIds.has(p.id) || compareIds.has(p.id) || pairIds.has(p.id) || focus?.id === p.id)).slice(0, 1500)
+  }, [points, bounds, dupIds, compareIds, pairIds, focus])
   const center = points.length ? { lat: points[0].lat, lng: points[0].lng } : { lat: 45.188, lng: 5.724 }
 
   const toggleCompare = (p) => setCompare(cur => {
@@ -114,8 +133,9 @@ export default function ModerationMap({ points, edges, onLink, onDelete, onIgnor
 
   // Pan/zoom to the current pair as the queue advances.
   const pairKey = pair ? pair[0].id + ',' + pair[1].id : ''
+  const pairIds = useMemo(() => new Set(pair ? [pair[0].id, pair[1].id] : []), [pairKey])  // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (pair && pair[0]) setFocus({ lat: pair[0].lat, lng: pair[0].lng, id: pair[0].id, k: Date.now() })
+    setFocus(null)   // PairFitter frames both points; Street View falls back to pair[0]
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pairKey])
 
@@ -174,7 +194,7 @@ export default function ModerationMap({ points, edges, onLink, onDelete, onIgnor
   if (!API_KEY) return <div className="mod-empty">{t('mod.map.nokey')}</div>
   if (!points.length) return <div className="mod-empty">{t('mod.map.dupsEmpty')}</div>
 
-  const svPoint = focus   // the last point you clicked drives the single Street View
+  const svPoint = focus || (pair ? pair[0] : null)   // pair[0] drives Street View in the queue
 
   return (
     <div className="mod-map-wrap">
@@ -193,6 +213,7 @@ export default function ModerationMap({ points, edges, onLink, onDelete, onIgnor
                mapId="graffiti-atlas-map" clickableIcons={false}>
             <BoundsWatcher points={points} onBounds={setBounds} />
             <FocusPanner focus={focus} />
+            <PairFitter pair={pair} />
             {visible.map(p => (
               <AdvancedMarker
                 key={p.id + ':' + version}
@@ -205,7 +226,8 @@ export default function ModerationMap({ points, edges, onLink, onDelete, onIgnor
                   <span className={'mod-map-pin'
                     + (p.status === 'approved' ? ' appr' : '')
                     + (dupIds.has(p.id) ? ' dup' : '')
-                    + (compareIds.has(p.id) ? ' sel' : '')} />
+                    + (compareIds.has(p.id) ? ' sel' : '')
+                    + (pairIds.has(p.id) ? ' review' : '')} />
                 </div>
               </AdvancedMarker>
             ))}

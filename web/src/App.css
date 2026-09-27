@@ -1829,3 +1829,17 @@ a.header-btn.mod { text-decoration: none; display: inline-flex; align-items: cen
   box-shadow: 0 1px 4px rgba(0,0,0,.12); color: #444;
 }
 .map-edit-btn.on { background: #ff6b35; border-color: #ff6b35; color: #fff; }
+
+/* ── Current review pair: big pulsing orange pins so you can find them ── */
+.mod-map-pin.review {
+  background: #ff6b35 !important;
+  width: 20px; height: 20px;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 3px #ff6b35, 0 2px 6px rgba(0,0,0,.4);
+  z-index: 60;
+  animation: modReviewPulse 1.3s ease-in-out infinite;
+}
+@keyframes modReviewPulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(255,107,53,.9), 0 2px 6px rgba(0,0,0,.4); }
+  50%      { box-shadow: 0 0 0 9px rgba(255,107,53,.15), 0 2px 6px rgba(0,0,0,.4); }
+}

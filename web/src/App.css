@@ -1820,3 +1820,12 @@ a.header-btn.mod { text-decoration: none; display: inline-flex; align-items: cen
 .mod-review-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .mod-review-actions button { flex: 1 1 auto; }
 .mod-review-done { padding: 14px 6px; text-align: center; color: #6b7280; font-size: 14px; }
+
+/* ── Admin edit-mode toggle on the main map ── */
+.map-edit-toggle { position: absolute; top: 58px; right: 12px; z-index: 5; }
+.map-edit-btn {
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;
+  padding: 6px 12px; font-size: 13px; font-weight: 600; cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,.12); color: #444;
+}
+.map-edit-btn.on { background: #ff6b35; border-color: #ff6b35; color: #fff; }

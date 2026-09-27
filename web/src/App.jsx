@@ -1055,6 +1055,7 @@ export default function App() {
   const [error, setError] = useState(null)
   const [filters, setFilters] = useState({ styles: new Set(), densities: new Set(), years: new Set(), state: 'all' })
   const [clusterMode, setClusterMode] = useState('cluster')   // 'cluster' | 'individual'
+  const [editMode, setEditMode] = useState(false)   // admin: pins draggable + deletable only when ON
   const [panTo, setPanTo] = useState(null)
   const [user, setUser] = useState(null)
   const [showAuth, setShowAuth] = useState(false)
@@ -1228,6 +1229,9 @@ export default function App() {
   // Drag one pin onto another → merge (dragged point takes the target's location_id).
   const handleMerge = useCallback(async (dragged, target) => {
     if (!dragged || !target || dragged.id === target.id) { refreshMap(); return }
+    if (!window.confirm('Fusionner ces deux points ? La photo que vous déposez rejoint celle sur laquelle vous la lâchez.')) {
+      refreshMap(); return   // reverted — snap the dragged pin back
+    }
     const ok = await adminAction(`/graffiti/${dragged.id}/link-to/${target.id}`)
     if (!ok) alert('Fusion échouée.')
     setSelected(null)
@@ -1347,7 +1351,7 @@ export default function App() {
           onToggleSheet={() => setSheetOpen(o => !o)}
           apiKey={apiKey}
           isMobile={isMobile}
-          isAdmin={isAdmin}
+          isAdmin={isAdmin && editMode}
           onDelete={handleDelete}
         />
 
@@ -1372,7 +1376,7 @@ export default function App() {
                   selectedId={selectedId}
                   onSelect={handleSelect}
                   mode={clusterMode}
-                  isAdmin={isAdmin}
+                  isAdmin={isAdmin && editMode}
                   onMerge={handleMerge}
                 />
               </Map>
@@ -1392,6 +1396,18 @@ export default function App() {
                 {t('map.individual')}
               </button>
             </div>
+
+            {isAdmin && (
+              <div className="map-edit-toggle">
+                <button
+                  className={'map-edit-btn' + (editMode ? ' on' : '')}
+                  onClick={() => setEditMode(e => !e)}
+                  title="Mode édition : glisser pour fusionner, supprimer un point"
+                >
+                  {editMode ? '✏️ Édition activée' : '✏️ Édition'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

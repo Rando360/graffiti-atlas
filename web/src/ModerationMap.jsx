@@ -4,7 +4,7 @@ import { t } from './i18n'
 
 const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
 const CLOUDFRONT = 'https://d36hw3x1088tvv.cloudfront.net'
-const DUP_M = 8      // highlight any point within 8 m of another
+const DUP_M = 10     // highlight any point within 10 m of another
 const DROP_M = 25    // drop within 25 m of another point = link them
 
 function haversine(a, b) {
